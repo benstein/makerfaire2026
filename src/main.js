@@ -1,8 +1,10 @@
 // src/main.js
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
-import { STATES, getState, getTimeRemaining, startGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerHealth } from './game/player.js';
+import { STATES, getState, getTimeRemaining, startGame, goToTitle, updateTimer, endGame } from './game/gameState.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerHealth, getPlayerPos, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { aabb } from './game/collision.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -30,6 +32,7 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       startGame();
       resetPlayer(canvas.width, canvas.height);
+      resetEnemies();
     } else {
       goToTitle();
     }
@@ -39,6 +42,23 @@ function gameLoop(now) {
   if (state === STATES.PLAYING) {
     updateTimer(dt);
     updatePlayer(input, canvas.width, canvas.height, performance.now());
+
+    const now2 = performance.now();
+    updateEnemies(getPlayerPos(), now2, canvas.width, canvas.height);
+
+    // Enemy-player collisions
+    const playerBounds = getPlayerBounds();
+    const enemyList = getEnemies();
+    for (let i = enemyList.length - 1; i >= 0; i--) {
+      if (aabb(playerBounds, enemyList[i])) {
+        if (damagePlayer(now2)) {
+          removeEnemy(i);
+          if (getPlayerHealth() <= 0) {
+            endGame(false);
+          }
+        }
+      }
+    }
   }
 
   // Render
@@ -55,6 +75,7 @@ function gameLoop(now) {
     ctx.fillText('PRESS START', canvas.width / 2, canvas.height / 2 + 20);
   } else if (state === STATES.PLAYING) {
     drawPlayer(ctx, performance.now());
+    drawEnemies(ctx);
     ctx.fillStyle = '#fff';
     ctx.font = '18px monospace';
     ctx.textAlign = 'left';
