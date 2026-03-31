@@ -1,1 +1,1 @@
-{ "building": true, "name": "Jude", "description": "Lakes become LAVA", "steps": [{ "text": "Reading the current game...", "done": true }, { "text": "Turning lakes into bubbling lava...", "done": true }, { "text": "Updating the changelog...", "done": true }] }
+{ "building": false }

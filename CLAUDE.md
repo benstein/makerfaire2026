@@ -164,7 +164,7 @@ A pre-commit hook runs `vite build` before every commit. If there's a syntax err
 To reset the game to its original state:
 
 ```bash
-git checkout baseline -- src/ public/changelog.json index.html
+git checkout baseline -- src/ public/changelog.json index.html vite.config.js CLAUDE.md
 ```
 
 This restores all source files and the changelog. The browser will auto-reload via Vite.
