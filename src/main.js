@@ -2,9 +2,10 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, goToTitle, updateTimer, endGame } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerHealth, getPlayerPos, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerHealth, getPlayerPos, getPlayerBounds, damagePlayer, getPlayerFacing } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { aabb } from './game/collision.js';
+import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -33,6 +34,7 @@ function gameLoop(now) {
       startGame();
       resetPlayer(canvas.width, canvas.height);
       resetEnemies();
+      resetWeapons();
     } else {
       goToTitle();
     }
@@ -59,6 +61,25 @@ function gameLoop(now) {
         }
       }
     }
+
+    // Firing
+    if (input.fire || input.fireHeld) {
+      tryFire(getPlayerPos(), getPlayerFacing(), now2);
+    }
+    updateProjectiles(canvas.width, canvas.height);
+
+    // Projectile-enemy collisions
+    const projList = getProjectiles();
+    const enemyList2 = getEnemies();
+    for (let i = projList.length - 1; i >= 0; i--) {
+      for (let j = enemyList2.length - 1; j >= 0; j--) {
+        if (aabb(projList[i], enemyList2[j])) {
+          removeProjectile(i);
+          removeEnemy(j);
+          break;
+        }
+      }
+    }
   }
 
   // Render
@@ -76,6 +97,7 @@ function gameLoop(now) {
   } else if (state === STATES.PLAYING) {
     drawPlayer(ctx, performance.now());
     drawEnemies(ctx);
+    drawProjectiles(ctx);
     ctx.fillStyle = '#fff';
     ctx.font = '18px monospace';
     ctx.textAlign = 'left';
