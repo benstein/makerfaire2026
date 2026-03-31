@@ -9,5 +9,6 @@
   { "version": 8, "name": "Benny", "description": "Lights out! Pure black background" },
   { "version": 9, "name": "Benny", "description": "Bright white background!" },
   { "version": 10, "name": "Benny", "description": "Back to black!" },
-  { "version": 11, "name": "Benny", "description": "White again!" }
+  { "version": 11, "name": "Benny", "description": "White again!" },
+  { "version": 12, "name": "Benny", "description": "Back to black again!" }
 ]
