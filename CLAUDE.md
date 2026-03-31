@@ -16,17 +16,9 @@ This is a live exhibit game for kids at Maker Faire. Kids suggest changes ("make
 
 While you work, the game shows a full-screen build progress view with the kid's name, an animated gear, and a step-by-step checklist. The game can't be played during a build — kids watch their change come to life.
 
-**As your FIRST action** for every kid change, write `public/building.json` with your planned steps:
+**As your FIRST action** for every kid change, use the Write tool to write `public/building.json` with your planned steps. **NEVER use `echo` with bash** — the shell mangles special characters like `!` and `'` which silently breaks the JSON and the overlay won't appear.
 
-```bash
-echo '{ "building": true, "name": "KID_NAME", "description": "SHORT_DESCRIPTION", "steps": [{ "text": "Reading the current game...", "done": false }, { "text": "STEP_2_DESCRIPTION", "done": false }, { "text": "Updating the changelog...", "done": false }] }' > public/building.json
-```
-
-**As you complete each step**, re-write the file with that step marked done:
-
-```bash
-echo '{ "building": true, "name": "KID_NAME", "description": "SHORT_DESCRIPTION", "steps": [{ "text": "Reading the current game...", "done": true }, { "text": "STEP_2_DESCRIPTION", "done": false }, { "text": "Updating the changelog...", "done": false }] }' > public/building.json
-```
+**As you complete each step**, use the Write tool to re-write the file with that step marked done.
 
 The game polls this file every 1 second. Steps should be high-level and kid-friendly (e.g., "Adding rainbow background...", "Making enemies faster...", "Giving player 6 hearts..."). NOT source-code-level details.
 
