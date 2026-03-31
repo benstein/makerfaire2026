@@ -43,14 +43,14 @@ function gameLoop(now) {
   // --- Update ---
   if (state === STATES.PLAYING) {
     updateTimer(dt);
-    updatePlayer(input, width, height, now);
-    updateEnemies(getPlayerPos(), now, width, height);
+    updatePlayer(dt, input, width, height, now);
+    updateEnemies(dt, getPlayerPos(), now, width, height);
 
     // Firing
     if (input.fire || input.fireHeld) {
       tryFire(getPlayerPos(), getPlayerFacing(), now);
     }
-    updateProjectiles(width, height);
+    updateProjectiles(dt, width, height);
 
     // Projectile-enemy collisions
     const projList = getProjectiles();

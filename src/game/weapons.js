@@ -24,11 +24,12 @@ export function tryFire(playerPos, facing, now) {
   });
 }
 
-export function updateProjectiles(arenaWidth, arenaHeight) {
+export function updateProjectiles(dt, arenaWidth, arenaHeight) {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const p = projectiles[i];
-    p.x += p.vx;
-    p.y += p.vy;
+    const scale = dt / 16.67;
+    p.x += p.vx * scale;
+    p.y += p.vy * scale;
 
     if (p.x < -50 || p.x > arenaWidth + 50 || p.y < -50 || p.y > arenaHeight + 50) {
       projectiles.splice(i, 1);

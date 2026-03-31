@@ -32,7 +32,7 @@ function getCurrentSpawnInterval() {
   return start + (end - start) * progress;
 }
 
-export function updateEnemies(playerPos, now, arenaWidth, arenaHeight) {
+export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
   const interval = getCurrentSpawnInterval();
   if (now - lastSpawnTime > interval) {
     spawnEnemy(arenaWidth, arenaHeight);
@@ -45,8 +45,9 @@ export function updateEnemies(playerPos, now, arenaWidth, arenaHeight) {
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist > 0) {
-      enemy.x += (dx / dist) * CONFIG.enemySpeed;
-      enemy.y += (dy / dist) * CONFIG.enemySpeed;
+      const scale = dt / 16.67;
+      enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
+      enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
     }
   }
 }

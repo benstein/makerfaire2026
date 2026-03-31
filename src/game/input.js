@@ -15,17 +15,32 @@ let prevStart = false;
 
 const DEADZONE = 0.2;
 
+// Keyboard fallback — only when no gamepad connected
+const keys = {};
+window.addEventListener('keydown', (e) => { keys[e.key] = true; });
+window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+function pollKeyboard() {
+  state.stickX = (keys['d'] || keys['ArrowRight'] ? 1 : 0) - (keys['a'] || keys['ArrowLeft'] ? 1 : 0);
+  state.stickY = (keys['s'] || keys['ArrowDown'] ? 1 : 0) - (keys['w'] || keys['ArrowUp'] ? 1 : 0);
+
+  const fireNow = keys[' '] || false;
+  state.fire = fireNow && !prevFire;
+  state.fireHeld = fireNow;
+  prevFire = fireNow;
+
+  const startNow = keys['Enter'] || false;
+  state.start = startNow && !prevStart;
+  state.startHeld = startNow;
+  prevStart = startNow;
+}
+
 export function pollInput() {
   const gamepads = navigator.getGamepads();
   const gp = gamepads[0];
 
   if (!gp) {
-    state.stickX = 0;
-    state.stickY = 0;
-    state.fire = false;
-    state.start = false;
-    state.fireHeld = false;
-    state.startHeld = false;
+    pollKeyboard();
     return state;
   }
 
