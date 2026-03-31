@@ -1,6 +1,7 @@
 // src/game/player.js
 
 import { CONFIG } from './config.js';
+import { resolvePlayerWallCollision } from './walls.js';
 
 let x, y;
 let facingX = 0;
@@ -36,9 +37,15 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
     facingY = input.stickY / mag;
   }
 
+  // Clamp to arena bounds
   const half = CONFIG.playerSize / 2;
   x = Math.max(half, Math.min(arenaWidth - half, x));
   y = Math.max(half, Math.min(arenaHeight - half, y));
+
+  // Wall collision — push player out of any walls
+  const resolved = resolvePlayerWallCollision(x, y, CONFIG.playerSize);
+  x = resolved.x;
+  y = resolved.y;
 }
 
 export function drawPlayer(ctx, now) {

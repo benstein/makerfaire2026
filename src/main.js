@@ -13,6 +13,7 @@ import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus } from './ui/buildStatus.js';
 import { resetEarthquake, updateEarthquake, checkChasmCollision, getShakeOffset, drawEarthquake } from './game/earthquake.js';
+import { resetWalls, drawWalls } from './game/walls.js';
 
 // Boot
 const canvas = document.getElementById('game-canvas');
@@ -39,6 +40,7 @@ function gameLoop(now) {
       resetEnemies();
       resetWeapons();
       resetEarthquake();
+      resetWalls(width, height);
     } else {
       goToTitle();
     }
@@ -100,6 +102,7 @@ function gameLoop(now) {
     ctx.save();
     ctx.translate(shake.x, shake.y);
     drawEarthquake(ctx, width, height);
+    drawWalls(ctx);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
