@@ -4,6 +4,9 @@ export default defineConfig({
   root: '.',
   publicDir: 'public',
   server: {
-    open: false
+    open: false,
+    watch: {
+      ignored: ['**/building.json']
+    }
   }
 });

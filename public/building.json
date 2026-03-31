@@ -1,1 +1,1 @@
-{ "building": true, "name": "Pat", "description": "Enemies that shoot back\!", "steps": [{ "text": "Reading the current game...", "done": true }, { "text": "Teaching enemies to aim and fire...", "done": true }, { "text": "Drawing enemy projectiles...", "done": true }, { "text": "Adding collision with player...", "done": true }, { "text": "Updating the changelog...", "done": true }] }
+{ "building": false }
