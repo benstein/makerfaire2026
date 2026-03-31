@@ -30,7 +30,7 @@ export const CONFIG = {
   enemyFireChance: 0.3,    // chance each interval an enemy actually fires
 
   // Game
-  gameDuration: 30, // seconds
+  gameDuration: 45, // seconds
   arenaBackground: '#ffe0f0',
 
   // HUD

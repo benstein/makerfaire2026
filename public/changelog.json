@@ -4,5 +4,6 @@
   { "version": 3, "name": "Paul", "description": "Speed round! Timer cut to 30 seconds -- survive if you can!" },
   { "version": 4, "name": "Pat", "description": "Unicorns shoot rainbow stars at you! Dodge or get zapped!" },
   { "version": 5, "name": "Arin", "description": "Unicorns throw candy! It doesn't hurt -- it makes your teddy bear GROW!" },
-  { "version": 6, "name": "Ben", "description": "Deadly sparkly lakes! Step in one and it's instant game over!" }
+  { "version": 6, "name": "Ben", "description": "Deadly sparkly lakes! Step in one and it's instant game over!" },
+  { "version": 7, "name": "Arin", "description": "Timer extended to 45 seconds -- more time to survive!" }
 ]

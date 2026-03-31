@@ -1,1 +1,1 @@
-{ "building": true, "name": "Ben", "description": "Deadly lakes on the battlefield\!", "steps": [{ "text": "Reading the current game...", "done": true }, { "text": "Creating the lake system...", "done": true }, { "text": "Drawing sparkly lakes...", "done": true }, { "text": "Adding instant death on contact...", "done": true }, { "text": "Updating the changelog...", "done": true }] }
+{ "building": true, "name": "Arin", "description": "45 second timer\!", "steps": [{ "text": "Changing the timer...", "done": true }] }
