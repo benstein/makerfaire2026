@@ -17,7 +17,6 @@ export async function loadChangelog() {
     console.error('Failed to load changelog:', e);
   }
 
-  // Poll for updates every 5 seconds
   if (!pollTimer) {
     pollTimer = setInterval(async () => {
       try {
@@ -32,7 +31,6 @@ export async function loadChangelog() {
   }
 }
 
-// Clean up on HMR
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     clearInterval(pollTimer);

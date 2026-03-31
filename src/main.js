@@ -4,10 +4,9 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, growPlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, updateEnemyProjectiles, drawEnemyProjectiles, getEnemyProjectiles, removeEnemyProjectile } from './game/enemies.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
-import { resetLakes, checkLakeCollision, drawLakes } from './game/lakes.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -39,7 +38,6 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
-      resetLakes(width, height);
     } else {
       goToTitle();
     }
@@ -49,12 +47,6 @@ function gameLoop(now) {
   if (state === STATES.PLAYING) {
     updateTimer(dt);
     updatePlayer(dt, input, width, height, now);
-
-    // Lake death check — instant game over!
-    if (checkLakeCollision(getPlayerPos(), CONFIG.playerSize)) {
-      endGame(false);
-    }
-
     updateEnemies(dt, getPlayerPos(), now, width, height);
 
     // Firing
@@ -73,19 +65,6 @@ function gameLoop(now) {
           removeEnemy(j);
           break;
         }
-      }
-    }
-
-    // Enemy projectile update
-    updateEnemyProjectiles(dt, width, height);
-
-    // Enemy candy-player collisions — candy makes you bigger!
-    const eProjList = getEnemyProjectiles();
-    const pBounds = getPlayerBounds();
-    for (let i = eProjList.length - 1; i >= 0; i--) {
-      if (aabb(eProjList[i], pBounds)) {
-        removeEnemyProjectile(i);
-        growPlayer();
       }
     }
 
@@ -110,10 +89,8 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
-    drawLakes(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
-    drawEnemyProjectiles(ctx);
     drawProjectiles(ctx);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {

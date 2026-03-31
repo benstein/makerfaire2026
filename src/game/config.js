@@ -3,38 +3,32 @@
 // Many kid requests ("make enemies faster") are just config changes.
 
 export const CONFIG = {
-  // Player (teddy bear!)
+  // Player
   playerSpeed: 4,
-  playerSize: 34,
-  playerColor: '#c8956c',
+  playerSize: 28,
+  playerColor: '#ffffff',
   playerMaxHealth: 3,
   invincibilityDuration: 1000, // ms
 
-  // Enemies (unicorns!)
+  // Enemies
   enemySpeed: 2,
-  enemySize: 26,
-  enemyColor: '#e78de7',
+  enemySize: 22,
+  enemyColor: '#e74c3c',
   enemySpawnIntervalStart: 2000, // ms at game start
   enemySpawnIntervalEnd: 400,    // ms at game end (ramps down)
 
-  // Weapons (love hearts!)
+  // Weapons
   projectileSpeed: 7,
-  projectileSize: 8,
-  projectileColor: '#ff69b4',
+  projectileSize: 6,
+  projectileColor: '#ffffff',
   fireRateCooldown: 250, // ms between shots
 
-  // Enemy projectiles (stars from unicorn horns!)
-  enemyProjectileSpeed: 3.5,
-  enemyProjectileSize: 7,
-  enemyFireInterval: 3000, // ms between shots per enemy
-  enemyFireChance: 0.3,    // chance each interval an enemy actually fires
-
   // Game
-  gameDuration: 45, // seconds
-  arenaBackground: '#ffe0f0',
+  gameDuration: 60, // seconds
+  arenaBackground: '#1a1a2e',
 
   // HUD
-  heartColor: '#ff69b4',
-  timerColor: '#ff88cc',
+  heartColor: '#e74c3c',
+  timerColor: '#f1c40f',
   hudFontSize: 24,
 };

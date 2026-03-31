@@ -6,7 +6,7 @@
   <title>Maker Faire 2026</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #fff0f5; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a1a; }
     #game-container {
       display: flex;
       width: 100vw;
@@ -16,29 +16,29 @@
       flex: 3;
       min-width: 0;
       display: block;
-      background: #ffe0f0;
+      background: #1a1a2e;
     }
     #changelog-panel {
       flex: 1;
-      background: linear-gradient(180deg, #fff0f8, #f0e0ff, #e8f0ff);
+      background: #0f0f23;
       padding: 20px;
       overflow-y: auto;
       font-family: 'Courier New', monospace;
-      color: #886;
+      color: #ccc;
       display: flex;
       flex-direction: column;
     }
     #changelog-entries { flex: 1; }
     #controls-help {
-      border-top: 1px solid #f0c0d8;
+      border-top: 1px solid #333;
       padding-top: 16px;
       margin-top: 16px;
       font-size: 13px;
-      color: #b088a0;
+      color: #888;
       line-height: 1.8;
     }
     #controls-help h3 {
-      color: #ff69b4;
+      color: #f1c40f;
       font-size: 14px;
       text-transform: uppercase;
       letter-spacing: 2px;
@@ -49,26 +49,26 @@
       justify-content: space-between;
     }
     #controls-help .control-key {
-      color: #c070a0;
+      color: #ccc;
       font-weight: bold;
     }
     #changelog-panel h2 {
-      color: #ff69b4;
+      color: #f1c40f;
       font-size: 18px;
       text-transform: uppercase;
       letter-spacing: 2px;
       margin-bottom: 16px;
     }
     .changelog-entry {
-      border-left: 3px solid #ffb6c1;
+      border-left: 3px solid #555;
       padding-left: 10px;
       margin-bottom: 12px;
       font-size: 14px;
       line-height: 1.5;
     }
-    .changelog-entry .version { color: #ff69b4; font-weight: bold; }
-    .changelog-entry .name { color: #b088c0; }
-    .changelog-entry .desc { color: #887; }
+    .changelog-entry .version { color: #f1c40f; font-weight: bold; }
+    .changelog-entry .name { color: #888; }
+    .changelog-entry .desc { color: #ccc; }
   </style>
 </head>
 <body>
@@ -229,7 +229,6 @@
     // 3. Polls building.json every 500ms
 
     // STEP 1: Patch WebSocket BEFORE Vite's client connects.
-    // (This inline script runs before deferred module scripts.)
     (function() {
       var _WS = window.WebSocket;
       var buildingActive = sessionStorage.getItem('building') === 'true';
@@ -248,7 +247,7 @@
                 var data = JSON.parse(event.data);
                 if ((data.type === 'full-reload' || data.type === 'page-reload') && buildingActive) {
                   pendingReload = true;
-                  return; // swallow the reload
+                  return;
                 }
               } catch(e) {}
               fn.call(ws, event);
@@ -257,7 +256,6 @@
           }
         });
 
-        // Also intercept addEventListener-based handlers
         var origAEL = ws.addEventListener.bind(ws);
         ws.addEventListener = function(type, handler, opts) {
           if (type === 'message') {
@@ -283,7 +281,6 @@
       window.WebSocket.CLOSING = _WS.CLOSING;
       window.WebSocket.CLOSED = _WS.CLOSED;
 
-      // Expose controls for the poller below
       window.__buildOverlay = {
         setBuilding: function(v) { buildingActive = v; },
         isBuilding: function() { return buildingActive; },
@@ -302,7 +299,6 @@
       var ctrl = window.__buildOverlay;
       var wasBuilding = ctrl.isBuilding();
 
-      // Instant display from sessionStorage (no fetch delay)
       if (wasBuilding) {
         overlay.style.display = '';
         try {
@@ -314,7 +310,6 @@
       function updateDisplay(data) {
         nameEl.textContent = (data.name || 'Someone') + "'s Change";
         descEl.textContent = data.description || '';
-
         if (data.steps && data.steps.length) {
           var html = '';
           var doneCount = 0;
@@ -336,8 +331,6 @@
           barEl.style.width = '0%';
           pctEl.textContent = '';
         }
-
-        // Hide Vite error overlay if present
         var viteErr = document.querySelector('vite-error-overlay');
         if (viteErr) viteErr.style.display = 'none';
       }
@@ -354,13 +347,11 @@
               sessionStorage.setItem('buildData', JSON.stringify(data));
               updateDisplay(data);
             } else if (wasBuilding) {
-              // Build finished
               wasBuilding = false;
               ctrl.setBuilding(false);
               sessionStorage.removeItem('building');
               sessionStorage.removeItem('buildData');
               overlay.style.display = 'none';
-              // If Vite reloads were blocked, do one clean reload now
               if (ctrl.hasPendingReload()) {
                 location.reload();
               }
