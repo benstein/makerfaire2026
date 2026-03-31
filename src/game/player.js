@@ -7,6 +7,7 @@ let facingX = 0;
 let facingY = -1; // default facing up
 let health;
 let invincibleUntil = 0;
+let sizeScale = 1; // grows when hit by candy!
 
 export function resetPlayer(arenaWidth, arenaHeight) {
   x = arenaWidth / 2;
@@ -15,6 +16,7 @@ export function resetPlayer(arenaWidth, arenaHeight) {
   facingY = -1;
   health = CONFIG.playerMaxHealth;
   invincibleUntil = 0;
+  sizeScale = 1;
 }
 
 export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
@@ -46,10 +48,11 @@ export function drawPlayer(ctx, now) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
 
-  const s = CONFIG.playerSize;
+  const s = CONFIG.playerSize * sizeScale;
   const half = s / 2;
   ctx.save();
   ctx.translate(x, y);
+  ctx.scale(sizeScale, sizeScale);
 
   // Cute bouncing
   const bounce = Math.sin(now / 150) * 2;
@@ -167,8 +170,17 @@ export function getPlayerHealth() {
 }
 
 export function getPlayerBounds() {
-  const half = CONFIG.playerSize / 2;
-  return { x: x - half, y: y - half, w: CONFIG.playerSize, h: CONFIG.playerSize };
+  const size = CONFIG.playerSize * sizeScale;
+  const half = size / 2;
+  return { x: x - half, y: y - half, w: size, h: size };
+}
+
+export function growPlayer() {
+  sizeScale += 0.15;
+}
+
+export function getPlayerScale() {
+  return sizeScale;
 }
 
 export function isPlayerInvincible(now) {

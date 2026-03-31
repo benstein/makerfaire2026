@@ -205,7 +205,13 @@ export function drawEnemies(ctx) {
   }
 }
 
-const STAR_COLORS = ['#ff6b6b', '#ffa500', '#ffd700', '#b469ff', '#ff69b4'];
+const CANDY_COLORS = [
+  { body: '#ff6b6b', stripe: '#fff' },
+  { body: '#69b4ff', stripe: '#fff' },
+  { body: '#69ff69', stripe: '#ffd700' },
+  { body: '#ff69b4', stripe: '#fff' },
+  { body: '#b469ff', stripe: '#ffd700' },
+];
 
 export function drawEnemyProjectiles(ctx) {
   const now = performance.now();
@@ -213,38 +219,71 @@ export function drawEnemyProjectiles(ctx) {
     const p = enemyProjectiles[i];
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
-    const size = p.w * 0.6;
-    const spin = now / 150 + i * 2;
-    const color = STAR_COLORS[i % STAR_COLORS.length];
+    const size = p.w * 0.5;
+    const spin = now / 300 + i * 2;
+    const candy = CANDY_COLORS[i % CANDY_COLORS.length];
 
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(spin);
 
-    // Star shape
-    ctx.fillStyle = color;
+    // Candy wrapper shape — oval body with twisted ends
+    // Body
+    ctx.fillStyle = candy.body;
     ctx.beginPath();
-    for (let s = 0; s < 5; s++) {
-      const angle = (s * 4 * Math.PI) / 5 - Math.PI / 2;
-      const method = s === 0 ? 'moveTo' : 'lineTo';
-      ctx[method](Math.cos(angle) * size, Math.sin(angle) * size);
-    }
+    ctx.ellipse(0, 0, size * 1.1, size * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stripes on candy
+    ctx.strokeStyle = candy.stripe;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.3, -size * 0.7);
+    ctx.lineTo(-size * 0.3, size * 0.7);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(size * 0.3, -size * 0.7);
+    ctx.lineTo(size * 0.3, size * 0.7);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Wrapper twist — left
+    ctx.fillStyle = candy.body;
+    ctx.beginPath();
+    ctx.moveTo(-size * 1.1, -size * 0.15);
+    ctx.lineTo(-size * 1.7, -size * 0.45);
+    ctx.lineTo(-size * 1.7, size * 0.45);
+    ctx.lineTo(-size * 1.1, size * 0.15);
     ctx.closePath();
     ctx.fill();
 
-    // Bright center
-    ctx.fillStyle = '#fff';
+    // Wrapper twist — right
     ctx.beginPath();
-    ctx.arc(0, 0, size * 0.3, 0, Math.PI * 2);
+    ctx.moveTo(size * 1.1, -size * 0.15);
+    ctx.lineTo(size * 1.7, -size * 0.45);
+    ctx.lineTo(size * 1.7, size * 0.45);
+    ctx.lineTo(size * 1.1, size * 0.15);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shine
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(-size * 0.2, -size * 0.2, size * 0.3, size * 0.15, -0.5, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
 
-    // Trail sparkle
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = color;
+    // Sparkle trail
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = candy.body;
     ctx.beginPath();
-    ctx.arc(cx - p.vx * 3, cy - p.vy * 3, size * 0.5, 0, Math.PI * 2);
+    ctx.arc(cx - p.vx * 3, cy - p.vy * 3, size * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.2;
+    ctx.beginPath();
+    ctx.arc(cx - p.vx * 6, cy - p.vy * 6, size * 0.25, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
   }

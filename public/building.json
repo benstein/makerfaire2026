@@ -1,1 +1,1 @@
-{ "building": false }
+{ "building": true, "name": "Arin", "description": "Enemies shoot candy that makes you bigger\!", "steps": [{ "text": "Reading the current game...", "done": true }, { "text": "Turning enemy stars into candy...", "done": true }, { "text": "Making candy grow the teddy bear...", "done": true }, { "text": "Updating the changelog...", "done": true }] }

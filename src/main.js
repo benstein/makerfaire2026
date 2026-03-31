@@ -4,7 +4,7 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, growPlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, updateEnemyProjectiles, drawEnemyProjectiles, getEnemyProjectiles, removeEnemyProjectile } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
@@ -71,17 +71,13 @@ function gameLoop(now) {
     // Enemy projectile update
     updateEnemyProjectiles(dt, width, height);
 
-    // Enemy projectile-player collisions
+    // Enemy candy-player collisions — candy makes you bigger!
     const eProjList = getEnemyProjectiles();
     const pBounds = getPlayerBounds();
     for (let i = eProjList.length - 1; i >= 0; i--) {
       if (aabb(eProjList[i], pBounds)) {
         removeEnemyProjectile(i);
-        if (damagePlayer(now)) {
-          if (getPlayerHealth() <= 0) {
-            endGame(false);
-          }
-        }
+        growPlayer();
       }
     }
 
