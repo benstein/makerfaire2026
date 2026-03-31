@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     open: false,
     watch: {
-      ignored: ['**/building.json']
+      ignored: ['**/building.json', '**/changelog.json']
     }
   }
 });

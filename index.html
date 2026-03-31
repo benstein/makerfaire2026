@@ -223,7 +223,9 @@
     }
   </style>
   <script>
-    // Build overlay polling — runs independently of Vite modules
+    // Build overlay — runs independently of Vite modules.
+    // Uses sessionStorage to survive page reloads and blocks Vite's
+    // reload mechanism during builds so the overlay stays stable.
     (function() {
       var overlay = document.getElementById('build-overlay');
       var nameEl = document.getElementById('build-name');
@@ -231,51 +233,93 @@
       var stepsEl = document.getElementById('build-steps');
       var barEl = document.getElementById('build-bar');
       var pctEl = document.getElementById('build-pct');
-      var wasBuilding = false;
+      var isBuilding = false;
+      var originalReload = location.reload.bind(location);
+
+      // On boot: if sessionStorage says we were building, show overlay INSTANTLY
+      // (no fetch delay — covers the gap during Vite page reloads)
+      if (sessionStorage.getItem('building') === 'true') {
+        overlay.style.display = '';
+        isBuilding = true;
+        blockReloads();
+        // Restore last known content if available
+        try {
+          var cached = JSON.parse(sessionStorage.getItem('buildData'));
+          if (cached) updateDisplay(cached);
+        } catch(e) {}
+      }
+
+      function blockReloads() {
+        // Prevent Vite HMR from reloading the page during builds
+        Object.defineProperty(location, 'reload', {
+          configurable: true,
+          value: function() { /* blocked during build */ }
+        });
+        // Also block via window — some Vite versions use this
+        window.__vite_reload_blocked = true;
+      }
+
+      function unblockReloads() {
+        Object.defineProperty(location, 'reload', {
+          configurable: true,
+          value: originalReload
+        });
+        window.__vite_reload_blocked = false;
+      }
+
+      function updateDisplay(data) {
+        nameEl.textContent = (data.name || 'Someone') + "'s Change";
+        descEl.textContent = data.description || '';
+
+        if (data.steps && data.steps.length) {
+          var html = '';
+          var doneCount = 0;
+          for (var i = 0; i < data.steps.length; i++) {
+            var step = data.steps[i];
+            var isDone = step.done;
+            var isActive = !isDone && (i === 0 || data.steps[i-1].done);
+            if (isDone) doneCount++;
+            var cls = isDone ? 'done' : (isActive ? 'active' : 'pending');
+            var icon = isDone ? '\u2714' : (isActive ? '\u25CF' : '\u25CB');
+            html += '<div class="build-step ' + cls + '"><span class="step-icon">' + icon + '</span>' + step.text + '</div>';
+          }
+          stepsEl.innerHTML = html;
+          var pct = Math.round((doneCount / data.steps.length) * 100);
+          barEl.style.width = pct + '%';
+          pctEl.textContent = pct + '%';
+        } else {
+          stepsEl.innerHTML = '<div class="build-step active"><span class="step-icon">\u25CF</span>Building...</div>';
+          barEl.style.width = '0%';
+          pctEl.textContent = '';
+        }
+      }
 
       function poll() {
         fetch('/building.json?t=' + Date.now())
           .then(function(r) { return r.json(); })
           .then(function(data) {
             if (data.building) {
+              if (!isBuilding) {
+                isBuilding = true;
+                blockReloads();
+              }
               overlay.style.display = '';
-              nameEl.textContent = (data.name || 'Someone') + "'s Change";
-              descEl.textContent = data.description || '';
-              wasBuilding = true;
+              sessionStorage.setItem('building', 'true');
+              sessionStorage.setItem('buildData', JSON.stringify(data));
+              updateDisplay(data);
 
               // Hide Vite error overlay if present
               var viteErr = document.querySelector('vite-error-overlay');
               if (viteErr) viteErr.style.display = 'none';
-
-              if (data.steps && data.steps.length) {
-                var html = '';
-                var doneCount = 0;
-                for (var i = 0; i < data.steps.length; i++) {
-                  var step = data.steps[i];
-                  var isDone = step.done;
-                  var isActive = !isDone && (i === 0 || data.steps[i-1].done);
-                  if (isDone) doneCount++;
-                  var cls = isDone ? 'done' : (isActive ? 'active' : 'pending');
-                  var icon = isDone ? '\u2714' : (isActive ? '\u25CF' : '\u25CB');
-                  html += '<div class="build-step ' + cls + '"><span class="step-icon">' + icon + '</span>' + step.text + '</div>';
-                }
-                stepsEl.innerHTML = html;
-                var pct = Math.round((doneCount / data.steps.length) * 100);
-                barEl.style.width = pct + '%';
-                pctEl.textContent = pct + '%';
-              } else {
-                stepsEl.innerHTML = '<div class="build-step active"><span class="step-icon">\u25CF</span>Building...</div>';
-                barEl.style.width = '0%';
-                pctEl.textContent = '';
-              }
-            } else {
+            } else if (isBuilding) {
+              // Build just finished — clean reload to pick up all changes
+              isBuilding = false;
+              sessionStorage.removeItem('building');
+              sessionStorage.removeItem('buildData');
               overlay.style.display = 'none';
-              if (wasBuilding) {
-                wasBuilding = false;
-                // Unhide Vite error overlay if we hid it
-                var viteErr = document.querySelector('vite-error-overlay');
-                if (viteErr) viteErr.style.display = '';
-              }
+              unblockReloads();
+              // One clean reload to apply all the source changes
+              setTimeout(function() { originalReload(); }, 500);
             }
           })
           .catch(function() {
