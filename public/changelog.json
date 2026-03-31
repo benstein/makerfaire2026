@@ -1,4 +1,3 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Ben", "description": "Holes in the floor! Step in one to drop down. Start on Floor 10, reach Floor 0 to WIN!" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" }
 ]

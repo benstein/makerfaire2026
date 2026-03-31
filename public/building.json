@@ -1,1 +1,1 @@
-{ "building": true, "name": "Ben", "description": "Multi-floor dungeon with holes!", "steps": [{ "text": "Reading the current game...", "done": true }, { "text": "Creating the floor and hole system...", "done": true }, { "text": "Adding floor drop animation...", "done": true }, { "text": "Showing floor number on the HUD...", "done": true }, { "text": "Updating the changelog...", "done": true }] }
+{ "building": false }
