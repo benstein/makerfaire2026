@@ -4,6 +4,6 @@ export default defineConfig({
   root: '.',
   publicDir: 'public',
   server: {
-    open: true
+    open: false
   }
 });
