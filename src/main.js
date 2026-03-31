@@ -2,6 +2,7 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, goToTitle, updateTimer } from './game/gameState.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerHealth } from './game/player.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -28,6 +29,7 @@ function gameLoop(now) {
   if (input.start) {
     if (state === STATES.TITLE) {
       startGame();
+      resetPlayer(canvas.width, canvas.height);
     } else {
       goToTitle();
     }
@@ -36,6 +38,7 @@ function gameLoop(now) {
   // Update
   if (state === STATES.PLAYING) {
     updateTimer(dt);
+    updatePlayer(input, canvas.width, canvas.height, performance.now());
   }
 
   // Render
@@ -51,6 +54,8 @@ function gameLoop(now) {
     ctx.font = '18px monospace';
     ctx.fillText('PRESS START', canvas.width / 2, canvas.height / 2 + 20);
   } else if (state === STATES.PLAYING) {
+    drawPlayer(ctx, performance.now());
+    ctx.fillStyle = '#fff';
     ctx.font = '18px monospace';
     ctx.textAlign = 'left';
     ctx.fillText(`TIME: ${getTimeRemaining()}s`, 20, 30);
