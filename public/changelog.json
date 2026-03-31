@@ -3,5 +3,6 @@
   { "version": 2, "name": "Ben", "description": "Cheese vs mice!" },
   { "version": 3, "name": "Gabi", "description": "Fart bullets that blast through everything!" },
   { "version": 4, "name": "Zeke", "description": "Earthquake at 55s! Lava chasms open up -- fall in and you're toast!" },
-  { "version": 5, "name": "Arin", "description": "Rolling grassy knoll background with wildflowers and sunshine!" }
+  { "version": 5, "name": "Arin", "description": "Rolling grassy knoll background with wildflowers and sunshine!" },
+  { "version": 6, "name": "Jude", "description": "360-degree fart blast! Every shot fires 24 projectiles in ALL directions!" }
 ]

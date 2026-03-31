@@ -15,15 +15,19 @@ export function tryFire(playerPos, facing, now) {
   lastFireTime = now;
 
   const fartSize = CONFIG.projectileSize * 2.5;
-  projectiles.push({
-    x: playerPos.x - fartSize / 2,
-    y: playerPos.y - fartSize / 2,
-    w: fartSize,
-    h: fartSize,
-    vx: facing.x * CONFIG.projectileSpeed,
-    vy: facing.y * CONFIG.projectileSpeed,
-    born: performance.now(),
-  });
+  const directions = 24;
+  for (let i = 0; i < directions; i++) {
+    const angle = (i / directions) * Math.PI * 2;
+    projectiles.push({
+      x: playerPos.x - fartSize / 2,
+      y: playerPos.y - fartSize / 2,
+      w: fartSize,
+      h: fartSize,
+      vx: Math.cos(angle) * CONFIG.projectileSpeed,
+      vy: Math.sin(angle) * CONFIG.projectileSpeed,
+      born: performance.now(),
+    });
+  }
 }
 
 export function updateProjectiles(dt, arenaWidth, arenaHeight) {
