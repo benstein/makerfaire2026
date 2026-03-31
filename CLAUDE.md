@@ -34,6 +34,10 @@ If a request conflicts with these, **adapt the idea** to preserve them. Never sa
 
 Only change controls if explicitly told "modify controls."
 
+## First Thing: Understand Current State
+
+Before making any change, read `public/changelog.json` and `git log --oneline -10` to understand what the game currently looks like. Kids have been modifying it -- the player, enemies, weapons, and arena may look very different from the baseline.
+
 ## File Map
 
 ```
@@ -48,6 +52,7 @@ src/
     enemies.js           — Enemy management: types, spawning, AI, rendering
     weapons.js           — Projectile management: types, firing, rendering
     rendering.js         — Canvas: background, camera effects, screen text
+    earthquake.js        — Earthquake event: screen shake + lava chasms
   ui/
     hud.js               — Hearts + timer on canvas
     changelog.js         — Reads changelog.json, renders DOM panel
@@ -55,6 +60,8 @@ public/
   changelog.json         — Version history (append here for each change)
   assets/                — Sprites and images
 ```
+
+**Note:** Kids may have added more files in `src/game/`. Check `ls src/game/` if unsure.
 
 ## How to Make Changes
 
@@ -86,11 +93,14 @@ Edit `src/game/rendering.js` for backgrounds and camera effects (screen shake, e
 For particle effects, create `src/game/particles.js` and wire it into main.js.
 
 ### New game systems (pickups, allies, obstacles)
-Create a new file in `src/game/` (e.g., `src/game/pickups.js`). Give it `reset()`, `update()`, and `draw()` functions. Wire it into `src/main.js` following the same pattern as enemies/weapons:
+Create a new file in `src/game/` (e.g., `src/game/pickups.js`). Give it `reset()`, `update()`, and `draw()` functions. Wire it into `src/main.js` following the same pattern as enemies/weapons/earthquake:
 - Import at top
 - Call `reset()` in the start handler
 - Call `update()` in the PLAYING update block
-- Call `draw()` in the PLAYING render block
+- Call `draw()` in the PLAYING render block (inside the `ctx.save()`/`ctx.restore()` shake wrapper)
+
+### Important: delta-time movement
+All movement is frame-rate independent. Multiply velocity by `dt / 16.67` (normalizing to 60fps). See `player.js`, `enemies.js`, or `weapons.js` for examples. If you add any new moving entity, follow this pattern or it will move at different speeds on different monitors.
 
 ### HUD changes
 Edit `src/ui/hud.js` for on-canvas UI (score, new indicators, etc.).
@@ -116,6 +126,16 @@ After EVERY change, update `public/changelog.json`:
 - **Fun over correctness.** If it's fun, it ships.
 - **Visible impact.** Prefer dramatic visual changes over subtle ones.
 - **Interpret generously.** Kids' ideas are creative and wonderful. Make them come alive.
+
+## Slash Commands
+
+- **`/baseline`** — Reset everything to the original game. All kid changes are preserved in git history.
+- **`/revert`** — Undo the last change. Removes the last changelog entry too.
+- **`/play N`** — Switch to a specific changelog version by number (e.g., `/play 3`). No SHAs needed.
+
+## Pre-commit Hook
+
+A pre-commit hook runs `vite build` before every commit. If there's a syntax error or bad import, the commit is blocked. This prevents broken code from reaching the TV. If a commit fails, fix the error and try again.
 
 ## Reset to Baseline
 
