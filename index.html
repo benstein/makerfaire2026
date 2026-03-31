@@ -86,5 +86,206 @@
     </div>
   </div>
   <script type="module" src="/src/main.js"></script>
+
+  <!-- Build overlay: independent of Vite modules, survives HMR and syntax errors -->
+  <div id="build-overlay" style="display:none">
+    <div class="build-bg"></div>
+    <div class="build-content">
+      <div id="build-name" class="build-title"></div>
+      <div id="build-desc" class="build-desc"></div>
+      <div class="build-gear-wrap"><div class="build-gear"></div></div>
+      <div id="build-steps" class="build-steps"></div>
+      <div class="build-bar-wrap">
+        <div id="build-bar" class="build-bar"></div>
+      </div>
+      <div id="build-pct" class="build-pct"></div>
+    </div>
+  </div>
+  <style>
+    #build-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 999999;
+      font-family: 'Courier New', monospace;
+    }
+    #build-overlay .build-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #ffe0f0, #ffd0e8, #ffe8d0, #ffffd0, #d0ffd8, #d0e8ff, #e8d0ff, #ffd0f0);
+      background-size: 400% 400%;
+      animation: build-bg-shift 8s ease infinite;
+    }
+    @keyframes build-bg-shift {
+      0%,100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    #build-overlay .build-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 40px;
+    }
+    #build-overlay .build-title {
+      font-size: 44px;
+      font-weight: bold;
+      color: #ff69b4;
+      text-shadow: 2px 2px 0 #ffb6c1;
+      margin-bottom: 8px;
+      animation: build-title-bounce 1.5s ease-in-out infinite;
+    }
+    @keyframes build-title-bounce {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    #build-overlay .build-desc {
+      font-size: 20px;
+      color: #c070a0;
+      margin-bottom: 32px;
+    }
+    #build-overlay .build-gear-wrap {
+      margin-bottom: 32px;
+    }
+    #build-overlay .build-gear {
+      width: 80px; height: 80px;
+      border: 8px solid #ff69b4;
+      border-radius: 50%;
+      border-top-color: #ffd700;
+      border-right-color: #69b4ff;
+      border-bottom-color: #69ff69;
+      animation: build-gear-spin 1.5s linear infinite;
+    }
+    @keyframes build-gear-spin {
+      to { transform: rotate(360deg); }
+    }
+    #build-overlay .build-steps {
+      text-align: left;
+      margin-bottom: 32px;
+      min-width: 350px;
+    }
+    #build-overlay .build-step {
+      font-size: 18px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #build-overlay .build-step.done {
+      color: rgba(0,0,0,0.3);
+    }
+    #build-overlay .build-step.done .step-icon {
+      color: #69ff69;
+    }
+    #build-overlay .build-step.active {
+      color: #333;
+      font-weight: bold;
+    }
+    #build-overlay .build-step.active .step-icon {
+      color: #ff69b4;
+      animation: build-step-pulse 0.8s ease-in-out infinite;
+    }
+    @keyframes build-step-pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    #build-overlay .build-step.pending {
+      color: rgba(0,0,0,0.2);
+    }
+    .step-icon { font-size: 20px; width: 24px; text-align: center; }
+    #build-overlay .build-bar-wrap {
+      width: 50%;
+      max-width: 500px;
+      height: 14px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 7px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    #build-overlay .build-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff6b6b, #ffa500, #ffd700, #69ff69, #69b4ff, #b469ff);
+      background-size: 200% 100%;
+      animation: build-bar-shimmer 2s linear infinite;
+      border-radius: 7px;
+      transition: width 0.5s ease;
+    }
+    @keyframes build-bar-shimmer {
+      to { background-position: 200% 0; }
+    }
+    #build-overlay .build-pct {
+      font-size: 16px;
+      font-weight: bold;
+      color: #ff69b4;
+    }
+  </style>
+  <script>
+    // Build overlay polling — runs independently of Vite modules
+    (function() {
+      var overlay = document.getElementById('build-overlay');
+      var nameEl = document.getElementById('build-name');
+      var descEl = document.getElementById('build-desc');
+      var stepsEl = document.getElementById('build-steps');
+      var barEl = document.getElementById('build-bar');
+      var pctEl = document.getElementById('build-pct');
+      var wasBuilding = false;
+
+      function poll() {
+        fetch('/building.json?t=' + Date.now())
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.building) {
+              overlay.style.display = '';
+              nameEl.textContent = (data.name || 'Someone') + "'s Change";
+              descEl.textContent = data.description || '';
+              wasBuilding = true;
+
+              // Hide Vite error overlay if present
+              var viteErr = document.querySelector('vite-error-overlay');
+              if (viteErr) viteErr.style.display = 'none';
+
+              if (data.steps && data.steps.length) {
+                var html = '';
+                var doneCount = 0;
+                for (var i = 0; i < data.steps.length; i++) {
+                  var step = data.steps[i];
+                  var isDone = step.done;
+                  var isActive = !isDone && (i === 0 || data.steps[i-1].done);
+                  if (isDone) doneCount++;
+                  var cls = isDone ? 'done' : (isActive ? 'active' : 'pending');
+                  var icon = isDone ? '\u2714' : (isActive ? '\u25CF' : '\u25CB');
+                  html += '<div class="build-step ' + cls + '"><span class="step-icon">' + icon + '</span>' + step.text + '</div>';
+                }
+                stepsEl.innerHTML = html;
+                var pct = Math.round((doneCount / data.steps.length) * 100);
+                barEl.style.width = pct + '%';
+                pctEl.textContent = pct + '%';
+              } else {
+                stepsEl.innerHTML = '<div class="build-step active"><span class="step-icon">\u25CF</span>Building...</div>';
+                barEl.style.width = '0%';
+                pctEl.textContent = '';
+              }
+            } else {
+              overlay.style.display = 'none';
+              if (wasBuilding) {
+                wasBuilding = false;
+                // Unhide Vite error overlay if we hid it
+                var viteErr = document.querySelector('vite-error-overlay');
+                if (viteErr) viteErr.style.display = '';
+              }
+            }
+          })
+          .catch(function() {
+            // keep current state on error
+          });
+      }
+
+      poll();
+      setInterval(poll, 1000);
+    })();
+  </script>
 </body>
 </html>
