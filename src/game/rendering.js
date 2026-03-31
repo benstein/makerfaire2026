@@ -54,59 +54,9 @@ function generateBackground() {
   bgCanvas.height = h;
   const bctx = bgCanvas.getContext('2d');
 
-  // Pastel rainbow gradient sky
-  const skyGrad = bctx.createLinearGradient(0, 0, w, h);
-  skyGrad.addColorStop(0, '#ffe0f0');
-  skyGrad.addColorStop(0.15, '#ffd0e8');
-  skyGrad.addColorStop(0.3, '#ffe8d0');
-  skyGrad.addColorStop(0.45, '#ffffd0');
-  skyGrad.addColorStop(0.6, '#d0ffd8');
-  skyGrad.addColorStop(0.75, '#d0e8ff');
-  skyGrad.addColorStop(0.9, '#e8d0ff');
-  skyGrad.addColorStop(1, '#ffd0f0');
-  bctx.fillStyle = skyGrad;
+  // Black background
+  bctx.fillStyle = '#000000';
   bctx.fillRect(0, 0, w, h);
-
-  // Big rainbow arc
-  const rcx = w * 0.5;
-  const rcy = h * 0.85;
-  const rainbowColors = ['#ff6b6b', '#ffa64d', '#ffd700', '#6bff6b', '#6bb4ff', '#8b6bff', '#d06bff'];
-  for (let r = 0; r < rainbowColors.length; r++) {
-    bctx.strokeStyle = rainbowColors[r];
-    bctx.lineWidth = 12;
-    bctx.globalAlpha = 0.3;
-    bctx.beginPath();
-    bctx.arc(rcx, rcy, w * 0.38 - r * 14, Math.PI, 0);
-    bctx.stroke();
-  }
-  bctx.globalAlpha = 1;
-
-  // Fluffy clouds
-  const clouds = [
-    { x: w * 0.12, y: h * 0.15, s: 1.2 },
-    { x: w * 0.45, y: h * 0.08, s: 1.5 },
-    { x: w * 0.78, y: h * 0.18, s: 1.0 },
-    { x: w * 0.3,  y: h * 0.82, s: 0.9 },
-    { x: w * 0.85, y: h * 0.75, s: 1.1 },
-    { x: w * 0.6,  y: h * 0.88, s: 0.8 },
-  ];
-  for (const cloud of clouds) {
-    drawCloud(bctx, cloud.x, cloud.y, cloud.s);
-  }
-
-  // Scatter tiny static hearts and stars on the bg
-  for (let i = 0; i < 40; i++) {
-    bctx.globalAlpha = 0.1 + Math.random() * 0.1;
-    bctx.fillStyle = RAINBOW[Math.floor(Math.random() * RAINBOW.length)];
-    const sx = Math.random() * w;
-    const sy = Math.random() * h;
-    if (i % 2 === 0) {
-      drawSmallHeart(bctx, sx, sy, 3 + Math.random() * 5);
-    } else {
-      drawSmallStar(bctx, sx, sy, 3 + Math.random() * 4);
-    }
-  }
-  bctx.globalAlpha = 1;
 }
 
 function drawCloud(ctx, x, y, scale) {
