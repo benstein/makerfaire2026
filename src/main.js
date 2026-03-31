@@ -52,15 +52,13 @@ function gameLoop(now) {
     }
     updateProjectiles(dt, width, height);
 
-    // Projectile-enemy collisions
+    // Projectile-enemy collisions (farts pierce through!)
     const projList = getProjectiles();
     const enemyList = getEnemies();
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
-          removeProjectile(i);
           removeEnemy(j);
-          break;
         }
       }
     }
