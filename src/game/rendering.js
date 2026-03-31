@@ -54,8 +54,8 @@ function generateBackground() {
   bgCanvas.height = h;
   const bctx = bgCanvas.getContext('2d');
 
-  // White background
-  bctx.fillStyle = '#ffffff';
+  // Black background
+  bctx.fillStyle = '#000000';
   bctx.fillRect(0, 0, w, h);
 }
 
