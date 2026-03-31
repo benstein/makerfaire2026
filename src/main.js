@@ -5,7 +5,7 @@ import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, splitEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { resetCoins, spawnCoin, updateCoins, drawCoins, getCoinsCollected, hasFireBoost } from './game/coins.js';
 import { aabb } from './game/collision.js';
@@ -60,10 +60,13 @@ function gameLoop(now) {
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
-          const dead = enemyList[j];
-          spawnCoin(dead.x + dead.w / 2, dead.y + dead.h / 2);
+          const hit = enemyList[j];
+          const died = splitEnemy(j);
+          if (died) {
+            // Only the tiniest enemies drop coins
+            spawnCoin(hit.x + hit.w / 2, hit.y + hit.h / 2);
+          }
           removeProjectile(i);
-          removeEnemy(j);
           break;
         }
       }
