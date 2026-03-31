@@ -25,6 +25,32 @@
       overflow-y: auto;
       font-family: 'Courier New', monospace;
       color: #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+    #changelog-entries { flex: 1; }
+    #controls-help {
+      border-top: 1px solid #333;
+      padding-top: 16px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #888;
+      line-height: 1.8;
+    }
+    #controls-help h3 {
+      color: #f1c40f;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    #controls-help .control-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    #controls-help .control-key {
+      color: #ccc;
+      font-weight: bold;
     }
     #changelog-panel h2 {
       color: #f1c40f;
@@ -51,6 +77,12 @@
     <div id="changelog-panel">
       <h2>Changelog</h2>
       <div id="changelog-entries"></div>
+      <div id="controls-help">
+        <h3>Controls</h3>
+        <div class="control-row"><span>Move</span><span class="control-key">Left Stick</span></div>
+        <div class="control-row"><span>Fire</span><span class="control-key">A Button</span></div>
+        <div class="control-row"><span>Restart</span><span class="control-key">Start</span></div>
+      </div>
     </div>
   </div>
   <script type="module" src="/src/main.js"></script>
