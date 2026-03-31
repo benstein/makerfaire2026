@@ -1,1 +1,1 @@
-{ "building": true, "name": "Benny", "description": "Black background\!", "steps": [{ "text": "Changing the background...", "done": true }] }
+{ "building": false }
