@@ -8,6 +8,7 @@ export const STATES = {
   PLAYING: 'playing',
   VICTORY: 'victory',
   GAMEOVER: 'gameover',
+  BUILDING: 'building',
 };
 
 let currentState = STATES.TITLE;
@@ -44,6 +45,10 @@ export function goToTitle() {
   currentState = STATES.TITLE;
   timeRemaining = CONFIG.gameDuration;
   elapsedMs = 0;
+}
+
+export function goToBuilding() {
+  currentState = STATES.BUILDING;
 }
 
 export function updateTimer(dt) {

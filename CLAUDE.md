@@ -12,17 +12,32 @@ This is a live exhibit game for kids at Maker Faire. Kids suggest changes ("make
 6. Commit the change with a descriptive message (post-commit hook auto-clears build status)
 7. Vite HMR auto-reloads the browser — the kid sees the change in seconds
 
-## Build Status Banner
+## Build Progress Screen
 
-A "Now Building" banner shows on the game screen while you work. This lets the kid (and everyone watching) know their change is coming.
+While you work, the game shows a full-screen build progress view with the kid's name, an animated gear, and a step-by-step checklist. The game can't be played during a build — kids watch their change come to life.
 
-**As your FIRST action** for every kid change, write `public/building.json`:
+**As your FIRST action** for every kid change, write `public/building.json` with your planned steps:
 
 ```bash
-echo '{ "building": true, "name": "KID_NAME", "description": "SHORT_DESCRIPTION" }' > public/building.json
+echo '{ "building": true, "name": "KID_NAME", "description": "SHORT_DESCRIPTION", "steps": [{ "text": "Reading the current game...", "done": false }, { "text": "STEP_2_DESCRIPTION", "done": false }, { "text": "Updating the changelog...", "done": false }] }' > public/building.json
 ```
 
-The game polls this file every 2 seconds. A yellow banner slides down showing the kid's name. After you commit, the git post-commit hook auto-clears it back to `{ "building": false }`. No manual cleanup needed.
+**As you complete each step**, re-write the file with that step marked done:
+
+```bash
+echo '{ "building": true, "name": "KID_NAME", "description": "SHORT_DESCRIPTION", "steps": [{ "text": "Reading the current game...", "done": true }, { "text": "STEP_2_DESCRIPTION", "done": false }, { "text": "Updating the changelog...", "done": false }] }' > public/building.json
+```
+
+The game polls this file every 1 second. Steps should be high-level and kid-friendly (e.g., "Adding rainbow background...", "Making enemies faster...", "Giving player 6 hearts..."). NOT source-code-level details.
+
+After you commit, the git post-commit hook auto-clears the file to `{ "building": false }` and the game returns to the title screen. No manual cleanup needed.
+
+**Step guidelines:**
+- 3-6 steps is ideal — enough to show progress, not so many it's overwhelming
+- First step is usually "Reading the current game..."
+- Last step is usually "Updating the changelog..."
+- Middle steps describe the actual changes in fun, kid-friendly language
+- The steps array is optional — if omitted, a generic "Building..." message shows
 
 ## Sacred Systems — NEVER BREAK THESE
 
@@ -33,7 +48,7 @@ No matter what is requested, these must always work:
 | Game loop | `src/main.js` | requestAnimationFrame loop runs every frame |
 | Input | `src/game/input.js` | Gamepad API polling, stick + buttons |
 | Collision | `src/game/collision.js` | AABB collision between entities |
-| State machine | `src/game/gameState.js` | Title/playing/victory/gameover + timer |
+| State machine | `src/game/gameState.js` | Title/playing/victory/gameover/building + timer |
 | Player movement | `src/game/player.js` | Left stick always moves the player |
 | Restart | — | Start button always restarts the game |
 
@@ -68,7 +83,8 @@ src/
   ui/
     hud.js               — Hearts + timer on canvas
     changelog.js         — Reads changelog.json, renders DOM panel
-    buildStatus.js       — Polls building.json, shows "Now Building" banner
+    buildStatus.js       — Polls building.json, manages BUILDING state transitions
+    buildScreen.js       — Canvas rendering for the build progress screen
 public/
   changelog.json         — Version history (append here for each change)
   building.json          — Build status flag (written by Claude, cleared by post-commit hook)

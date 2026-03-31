@@ -11,11 +11,14 @@ import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
+import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
+import { drawBuildScreen } from './ui/buildScreen.js';
 
 // Boot
 const canvas = document.getElementById('game-canvas');
 const ctx = initRendering(canvas);
 loadChangelog();
+initBuildStatus();
 
 let lastTime = performance.now();
 
@@ -29,7 +32,7 @@ function gameLoop(now) {
   const { width, height } = getCanvasSize();
 
   // --- State transitions ---
-  if (input.start) {
+  if (input.start && state !== STATES.BUILDING) {
     if (state === STATES.TITLE) {
       startGame();
       resetPlayer(width, height);
@@ -94,6 +97,8 @@ function gameLoop(now) {
     drawVictoryScreen();
   } else if (state === STATES.GAMEOVER) {
     drawGameOverScreen();
+  } else if (state === STATES.BUILDING) {
+    drawBuildScreen(ctx, width, height, getBuildData(), now);
   }
 
   requestAnimationFrame(gameLoop);
