@@ -5,10 +5,12 @@ import { getGameProgress } from './gameState.js';
 
 let enemies = [];
 let lastSpawnTime = 0;
+let enemyProjectiles = [];
 
 export function resetEnemies() {
   enemies = [];
   lastSpawnTime = 0;
+  enemyProjectiles = [];
 }
 
 export function spawnEnemy(arenaWidth, arenaHeight) {
@@ -22,7 +24,7 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, lastFireTime: 0 });
 }
 
 function getCurrentSpawnInterval() {
@@ -48,6 +50,33 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
       const scale = dt / 16.67;
       enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
       enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
+
+      // Enemy shooting
+      if (now - enemy.lastFireTime > CONFIG.enemyFireInterval && Math.random() < CONFIG.enemyFireChance) {
+        enemy.lastFireTime = now;
+        const s = CONFIG.enemyProjectileSize;
+        enemyProjectiles.push({
+          x: enemy.x + enemy.w / 2 - s / 2,
+          y: enemy.y - s,
+          w: s,
+          h: s,
+          vx: (dx / dist) * CONFIG.enemyProjectileSpeed,
+          vy: (dy / dist) * CONFIG.enemyProjectileSpeed,
+        });
+      }
+    }
+  }
+}
+
+export function updateEnemyProjectiles(dt, arenaWidth, arenaHeight) {
+  for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
+    const p = enemyProjectiles[i];
+    const scale = dt / 16.67;
+    p.x += p.vx * scale;
+    p.y += p.vy * scale;
+
+    if (p.x < -50 || p.x > arenaWidth + 50 || p.y < -50 || p.y > arenaHeight + 50) {
+      enemyProjectiles.splice(i, 1);
     }
   }
 }
@@ -176,8 +205,61 @@ export function drawEnemies(ctx) {
   }
 }
 
+const STAR_COLORS = ['#ff6b6b', '#ffa500', '#ffd700', '#b469ff', '#ff69b4'];
+
+export function drawEnemyProjectiles(ctx) {
+  const now = performance.now();
+  for (let i = 0; i < enemyProjectiles.length; i++) {
+    const p = enemyProjectiles[i];
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h / 2;
+    const size = p.w * 0.6;
+    const spin = now / 150 + i * 2;
+    const color = STAR_COLORS[i % STAR_COLORS.length];
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(spin);
+
+    // Star shape
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let s = 0; s < 5; s++) {
+      const angle = (s * 4 * Math.PI) / 5 - Math.PI / 2;
+      const method = s === 0 ? 'moveTo' : 'lineTo';
+      ctx[method](Math.cos(angle) * size, Math.sin(angle) * size);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Bright center
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // Trail sparkle
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx - p.vx * 3, cy - p.vy * 3, size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
 export function getEnemies() {
   return enemies;
+}
+
+export function getEnemyProjectiles() {
+  return enemyProjectiles;
+}
+
+export function removeEnemyProjectile(index) {
+  enemyProjectiles.splice(index, 1);
 }
 
 export function removeEnemy(index) {

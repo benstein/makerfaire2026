@@ -23,6 +23,12 @@ export const CONFIG = {
   projectileColor: '#ff69b4',
   fireRateCooldown: 250, // ms between shots
 
+  // Enemy projectiles (stars from unicorn horns!)
+  enemyProjectileSpeed: 3.5,
+  enemyProjectileSize: 7,
+  enemyFireInterval: 3000, // ms between shots per enemy
+  enemyFireChance: 0.3,    // chance each interval an enemy actually fires
+
   // Game
   gameDuration: 30, // seconds
   arenaBackground: '#ffe0f0',

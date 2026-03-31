@@ -5,7 +5,7 @@ import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, updateEnemyProjectiles, drawEnemyProjectiles, getEnemyProjectiles, removeEnemyProjectile } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen } from './game/rendering.js';
@@ -68,6 +68,23 @@ function gameLoop(now) {
       }
     }
 
+    // Enemy projectile update
+    updateEnemyProjectiles(dt, width, height);
+
+    // Enemy projectile-player collisions
+    const eProjList = getEnemyProjectiles();
+    const pBounds = getPlayerBounds();
+    for (let i = eProjList.length - 1; i >= 0; i--) {
+      if (aabb(eProjList[i], pBounds)) {
+        removeEnemyProjectile(i);
+        if (damagePlayer(now)) {
+          if (getPlayerHealth() <= 0) {
+            endGame(false);
+          }
+        }
+      }
+    }
+
     // Enemy-player collisions
     const playerBounds = getPlayerBounds();
     const enemies = getEnemies();
@@ -91,6 +108,7 @@ function gameLoop(now) {
   } else if (state === STATES.PLAYING) {
     drawPlayer(ctx, now);
     drawEnemies(ctx);
+    drawEnemyProjectiles(ctx);
     drawProjectiles(ctx);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {
