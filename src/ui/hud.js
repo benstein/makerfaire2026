@@ -2,7 +2,7 @@
 
 import { CONFIG } from '../game/config.js';
 
-export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
+export function drawHUD(ctx, health, timeRemaining, canvasWidth, currentFloor) {
   const padding = 20;
 
   // Hearts (top-left)
@@ -18,6 +18,14 @@ export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
       ctx.fillStyle = '#333';
     }
     drawHeart(ctx, hx + heartSize / 2, hy + heartSize / 2, heartSize * 0.5);
+  }
+
+  // Floor indicator (below hearts)
+  if (currentFloor !== undefined) {
+    ctx.fillStyle = '#6bc5ff';
+    ctx.font = `bold ${CONFIG.hudFontSize}px monospace`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`Floor ${currentFloor}`, padding, padding + heartSize + 24);
   }
 
   // Timer (top-right)

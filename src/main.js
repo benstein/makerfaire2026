@@ -7,6 +7,7 @@ import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, upda
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
+import { resetFloors, initFloorHoles, checkHoleCollision, startDrop, updateFloors, isDropping, getCurrentFloor, drawHoles, drawDropEffect } from './game/floors.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -38,6 +39,8 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
+      resetFloors();
+      initFloorHoles(width, height);
     } else {
       goToTitle();
     }
@@ -46,7 +49,27 @@ function gameLoop(now) {
   // --- Update ---
   if (state === STATES.PLAYING) {
     updateTimer(dt);
-    updatePlayer(dt, input, width, height, now);
+    // Floor drop animation
+    const dropResult = updateFloors(dt);
+    if (dropResult === 'win') {
+      endGame(true);
+    } else if (dropResult === 'landed') {
+      // New floor — reset enemies and re-center player
+      resetEnemies();
+      resetWeapons();
+      resetPlayer(width, height);
+      initFloorHoles(width, height);
+    }
+
+    if (!isDropping()) {
+      updatePlayer(dt, input, width, height, now);
+
+      // Check if player stepped in a hole
+      if (checkHoleCollision(getPlayerPos())) {
+        startDrop();
+      }
+    }
+
     updateEnemies(dt, getPlayerPos(), now, width, height);
 
     // Firing
@@ -89,10 +112,12 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    drawHoles(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
-    drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+    drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getCurrentFloor());
+    drawDropEffect(ctx, width, height);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
   } else if (state === STATES.GAMEOVER) {
