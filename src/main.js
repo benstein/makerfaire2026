@@ -11,12 +11,14 @@ import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
+import { initBuildStatus } from './ui/buildStatus.js';
 import { resetEarthquake, updateEarthquake, checkChasmCollision, getShakeOffset, drawEarthquake } from './game/earthquake.js';
 
 // Boot
 const canvas = document.getElementById('game-canvas');
 const ctx = initRendering(canvas);
 loadChangelog();
+initBuildStatus();
 
 let lastTime = performance.now();
 

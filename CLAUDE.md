@@ -5,11 +5,24 @@ This is a live exhibit game for kids at Maker Faire. Kids suggest changes ("make
 ## How This Works
 
 1. Someone tells you what a kid wants changed (e.g., "Emma wants rainbow enemies")
-2. Interpret the request creatively — go big, make it dramatic
-3. Edit the relevant source file(s)
-4. Update `public/changelog.json` with the kid's name and a description
-5. Commit the change with a descriptive message
-6. Vite HMR auto-reloads the browser — the kid sees the change in seconds
+2. **Immediately** set the build status so the kid sees their name on screen (see below)
+3. Interpret the request creatively — go big, make it dramatic
+4. Edit the relevant source file(s)
+5. Update `public/changelog.json` with the kid's name and a description
+6. Commit the change with a descriptive message (post-commit hook auto-clears build status)
+7. Vite HMR auto-reloads the browser — the kid sees the change in seconds
+
+## Build Status Banner
+
+A "Now Building" banner shows on the game screen while you work. This lets the kid (and everyone watching) know their change is coming.
+
+**As your FIRST action** for every kid change, write `public/building.json`:
+
+```bash
+echo '{ "building": true, "name": "KID_NAME", "description": "SHORT_DESCRIPTION" }' > public/building.json
+```
+
+The game polls this file every 2 seconds. A yellow banner slides down showing the kid's name. After you commit, the git post-commit hook auto-clears it back to `{ "building": false }`. No manual cleanup needed.
 
 ## Sacred Systems — NEVER BREAK THESE
 
@@ -55,8 +68,10 @@ src/
   ui/
     hud.js               — Hearts + timer on canvas
     changelog.js         — Reads changelog.json, renders DOM panel
+    buildStatus.js       — Polls building.json, shows "Now Building" banner
 public/
   changelog.json         — Version history (append here for each change)
+  building.json          — Build status flag (written by Claude, cleared by post-commit hook)
   assets/                — Sprites and images
 ```
 
