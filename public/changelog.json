@@ -1,17 +1,3 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Arin", "description": "MAXIMUM CUTENESS! Teddy bear hero, unicorn enemies, heart bullets, rainbow everything!" },
-  { "version": 3, "name": "Paul", "description": "Speed round! Timer cut to 30 seconds -- survive if you can!" },
-  { "version": 4, "name": "Pat", "description": "Unicorns shoot rainbow stars at you! Dodge or get zapped!" },
-  { "version": 5, "name": "Arin", "description": "Unicorns throw candy! It doesn't hurt -- it makes your teddy bear GROW!" },
-  { "version": 6, "name": "Ben", "description": "Deadly sparkly lakes! Step in one and it's instant game over!" },
-  { "version": 7, "name": "Arin", "description": "Timer extended to 45 seconds -- more time to survive!" },
-  { "version": 8, "name": "Benny", "description": "Lights out! Pure black background" },
-  { "version": 9, "name": "Benny", "description": "Bright white background!" },
-  { "version": 10, "name": "Benny", "description": "Back to black!" },
-  { "version": 11, "name": "Benny", "description": "White again!" },
-  { "version": 12, "name": "Benny", "description": "Back to black again!" },
-  { "version": 13, "name": "Benny", "description": "And... white!" },
-  { "version": 14, "name": "Benny", "description": "Black is back!" },
-  { "version": 15, "name": "Jude", "description": "Lakes are now LAVA POOLS with bubbling magma!" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" }
 ]
