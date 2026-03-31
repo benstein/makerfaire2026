@@ -1,0 +1,327 @@
+
+🚨 MASTER PROMPT FOR CLAUDE CODE
+
+You are building a browser-based, real-time evolving game designed for a live maker faire exhibit with children.
+
+This is not just a game. It is a continuously evolving artifact that changes throughout the day based on user requests.
+
+Your goals:
+	•	Be fast, robust, and visually satisfying
+	•	Support frequent live edits
+	•	Never break the core loop
+	•	Optimize for 1-minute play sessions
+	•	Make changes modular and safe
+
+⸻
+
+🎮 CORE GAME SPEC
+
+Game Concept
+
+A top-down arena survival game.
+	•	Player controls a character in a fixed-size arena (no scrolling by default)
+	•	Enemies spawn continuously
+	•	Objective: survive and defeat enemies for 60 seconds
+	•	If player dies → immediate game over
+	•	If timer completes → victory
+
+Constraints (DO NOT BREAK THESE)
+
+These are sacred systems:
+	•	Player movement must always work
+	•	Game must always start, run, and end cleanly
+	•	Collision detection must function
+	•	Timer must exist and complete (~60 seconds)
+	•	Game must remain playable with Xbox controller
+
+If a requested change conflicts with these, adapt the idea instead of breaking the system
+
+⸻
+
+🕹 CONTROLS (FIXED)
+
+Use Gamepad API (Xbox controller):
+	•	Left stick → movement
+	•	A button → primary action (attack/shoot)
+	•	Start → restart game
+
+⚠️ NEVER change controls unless explicitly told:
+
+“modify controls”
+
+⸻
+
+🧱 INITIAL BASELINE (START SIMPLE)
+
+Start with:
+	•	Player = white square
+	•	Enemies = red squares
+	•	Projectiles = small white dots
+	•	Background = dark gray
+	•	Arena = fixed rectangular bounds
+
+Minimal but clean.
+
+⸻
+
+🔁 GAME LOOP
+	•	Spawn enemies at edges
+	•	Enemies move toward player
+	•	Player can attack
+	•	Collisions reduce health or destroy entities
+	•	Game ends on:
+	•	Player death
+	•	Timer completion
+
+Keep loop tight and responsive.
+
+⸻
+
+🎨 RENDERING
+
+Use:
+	•	HTML5 Canvas (preferred) OR lightweight WebGL
+	•	Must run smoothly in Chrome on Mac
+
+Design goals:
+	•	Clean
+	•	Responsive
+	•	No heavy dependencies
+
+⸻
+
+🧠 MODIFICATION SYSTEM (CRITICAL)
+
+The game will be modified repeatedly during runtime via prompts.
+
+You must structure the code to support:
+
+1. MODULAR EXTENSIBILITY
+
+Organize code into clear systems:
+	•	player.js
+	•	enemies.js
+	•	weapons.js
+	•	rendering.js
+	•	gameState.js
+	•	config.js
+
+New features should plug into these cleanly.
+
+⸻
+
+2. SAFE CHANGE ZONES
+
+Claude is allowed to modify:
+	•	Enemy types
+	•	Weapon behavior
+	•	Visuals (sprites, colors, effects)
+	•	Spawn logic
+	•	Game objectives (if still playable)
+	•	UI elements
+
+Claude should NOT break:
+	•	Input system
+	•	Main loop
+	•	Core physics/collision
+
+⸻
+
+3. CHANGE INTERPRETATION
+
+Each prompt represents a child’s idea.
+
+You must:
+	•	Interpret creatively
+	•	Implement quickly
+	•	Prefer visible impact over technical purity
+
+Example:
+
+“add unicorn enemies”
+
+→ Replace enemy visuals with unicorns (sprite or stylized rendering)
+→ Optionally add sparkle effects
+
+⸻
+
+📜 CHANGELOG SYSTEM (VISIBLE IN GAME UI)
+
+UI PANEL
+
+Right side of screen:
+	•	Vertical panel
+	•	Shows last ~5–10 changes
+
+Each entry:
+
+[Version #] – [Kid Name]: [One-line description]
+
+Example:
+
+#7 – Henry: Added unicorn enemies
+
+
+⸻
+
+DATA SOURCE
+
+Maintain a local JSON file:
+
+[
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  ...
+]
+
+Each new change:
+	•	Appends to this file
+	•	Increments version number
+
+Game reads and renders this list.
+
+⸻
+
+🔄 VERSIONING (GIT-AWARE BUT ABSTRACTED)
+
+Assume the system is backed by Git, but you do NOT expose Git complexity.
+
+You must:
+	•	Treat each change as a “version”
+	•	Ensure game always reflects latest version
+	•	Keep changelog consistent with versions
+
+⸻
+
+🔁 RESET SYSTEM
+
+Support a hard reset to baseline.
+
+Assume:
+	•	There is a known “baseline version”
+
+You must:
+	•	Allow full overwrite of current state
+	•	Reload cleanly
+	•	Reset changelog display appropriately
+
+⸻
+
+⚡ LIVE RELOAD
+
+The game must support fast iteration.
+
+Preferred:
+	•	Auto-reload on file change (dev server)
+OR
+	•	Simple reload trigger
+
+Goal:
+	•	New changes appear within ~1–2 seconds
+
+⸻
+
+🎨 SPRITE SYSTEM
+
+Hybrid approach:
+
+1. Default Mode
+	•	Use simple shapes OR preloaded sprite set
+
+2. Optional Enhancement
+
+If assets available:
+	•	Load PNG sprites dynamically
+
+3. Fallback
+
+If no sprite:
+	•	Render stylized version (color + shape)
+
+⸻
+
+🎯 DESIGN PHILOSOPHY
+	•	Prioritize fun over correctness
+	•	Prioritize visibility over subtlety
+	•	Prefer big, obvious changes
+
+Kids should instantly say:
+
+“Whoa, that’s different”
+
+⸻
+
+🧪 EXAMPLES OF EXPECTED MODIFICATIONS
+
+You must support requests like:
+	•	“make enemies faster”
+	•	“add explosions”
+	•	“make everything rainbow”
+	•	“turn enemies into ducks”
+	•	“give player a laser”
+	•	“spawn 100 enemies”
+	•	“add boss fight”
+	•	“make background space”
+	•	“reverse controls” (only if explicitly allowed)
+
+⸻
+
+🧼 FAILURE HANDLING
+
+If a request is:
+	•	Too complex
+	•	Conflicting
+	•	Risky
+
+Then:
+	•	Simplify it
+	•	Implement a safe version
+	•	Never break the game
+
+⸻
+
+🧱 FILE STRUCTURE
+
+/game
+  index.html
+  main.js
+  game/
+    player.js
+    enemies.js
+    weapons.js
+    rendering.js
+    gameState.js
+    config.js
+  ui/
+    changelog.js
+/assets
+/changelog.json
+
+
+⸻
+
+🚀 OUTPUT REQUIREMENTS
+
+You must:
+	1.	Generate a fully working browser game
+	2.	Include:
+	•	Controller support
+	•	Game loop
+	•	Changelog UI
+	3.	Be runnable locally with minimal setup:
+	•	Simple dev server (e.g. npx serve or similar)
+
+⸻
+
+🔥 FINAL PRIORITY
+
+This is a live demo for kids.
+
+That means:
+	•	No crashes
+	•	No waiting
+	•	No confusion
+	•	Immediate delight
+
+If forced to choose:
+👉 choose fun and stability over technical perfection
+
