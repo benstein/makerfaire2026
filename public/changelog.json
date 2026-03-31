@@ -7,5 +7,6 @@
   { "version": 6, "name": "Ben", "description": "Deadly sparkly lakes! Step in one and it's instant game over!" },
   { "version": 7, "name": "Arin", "description": "Timer extended to 45 seconds -- more time to survive!" },
   { "version": 8, "name": "Benny", "description": "Lights out! Pure black background" },
-  { "version": 9, "name": "Benny", "description": "Bright white background!" }
+  { "version": 9, "name": "Benny", "description": "Bright white background!" },
+  { "version": 10, "name": "Benny", "description": "Back to black!" }
 ]
