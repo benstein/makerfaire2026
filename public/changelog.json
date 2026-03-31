@@ -1,5 +1,6 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
   { "version": 2, "name": "Ben", "description": "Cheese vs mice!" },
-  { "version": 3, "name": "Gabi", "description": "Fart bullets that blast through everything!" }
+  { "version": 3, "name": "Gabi", "description": "Fart bullets that blast through everything!" },
+  { "version": 4, "name": "Zeke", "description": "Earthquake at 55s! Lava chasms open up -- fall in and you're toast!" }
 ]

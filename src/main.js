@@ -11,6 +11,7 @@ import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
+import { resetEarthquake, updateEarthquake, checkChasmCollision, getShakeOffset, drawEarthquake } from './game/earthquake.js';
 
 // Boot
 const canvas = document.getElementById('game-canvas');
@@ -35,6 +36,7 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
+      resetEarthquake();
     } else {
       goToTitle();
     }
@@ -63,8 +65,16 @@ function gameLoop(now) {
       }
     }
 
-    // Enemy-player collisions
+    // Earthquake
+    updateEarthquake(getTimeRemaining(), now, width, height);
+
+    // Chasm death check — instant kill!
     const playerBounds = getPlayerBounds();
+    if (checkChasmCollision(playerBounds)) {
+      endGame(false);
+    }
+
+    // Enemy-player collisions
     const enemies = getEnemies();
     for (let i = enemies.length - 1; i >= 0; i--) {
       if (aabb(playerBounds, enemies[i])) {
@@ -84,9 +94,14 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    const shake = getShakeOffset();
+    ctx.save();
+    ctx.translate(shake.x, shake.y);
+    drawEarthquake(ctx, width, height);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
+    ctx.restore();
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
