@@ -1,5 +1,6 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
   { "version": 2, "name": "Gabi", "description": "Enemies drop gold coins! Collect 5 for RAPID FIRE mode" },
-  { "version": 3, "name": "Zeke", "description": "Enemies split into smaller pieces when shot! 6 hearts to survive the swarm" }
+  { "version": 3, "name": "Zeke", "description": "Enemies split into smaller pieces when shot! 6 hearts to survive the swarm" },
+  { "version": 4, "name": "Papi", "description": "Deep space nebula galaxy background with twinkling stars" }
 ]
