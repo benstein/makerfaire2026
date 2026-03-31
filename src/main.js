@@ -6,6 +6,7 @@ import { resetPlayer, updatePlayer, drawPlayer, getPlayerHealth, getPlayerPos, g
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { aabb } from './game/collision.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
+import { drawHUD } from './ui/hud.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -98,10 +99,7 @@ function gameLoop(now) {
     drawPlayer(ctx, performance.now());
     drawEnemies(ctx);
     drawProjectiles(ctx);
-    ctx.fillStyle = '#fff';
-    ctx.font = '18px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(`TIME: ${getTimeRemaining()}s`, 20, 30);
+    drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), canvas.width);
   } else if (state === STATES.VICTORY) {
     ctx.fillStyle = '#2ecc71';
     ctx.fillText('YOU SURVIVED!', canvas.width / 2, canvas.height / 2 - 30);
