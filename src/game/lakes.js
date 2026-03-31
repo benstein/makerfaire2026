@@ -1,5 +1,5 @@
 // src/game/lakes.js
-// Deadly lakes scattered across the arena. Touch one and it's game over!
+// Deadly LAVA POOLS scattered across the arena. Touch one and it's game over!
 
 let lakes = [];
 
@@ -43,51 +43,75 @@ export function drawLakes(ctx, now) {
   for (const lake of lakes) {
     const { x, y, r, phase } = lake;
 
-    // Water body — shimmering blue-pink gradient
-    const wobble = Math.sin(now / 800 + phase) * 2;
-    const grad = ctx.createRadialGradient(x, y + wobble, 0, x, y + wobble, r);
-    grad.addColorStop(0, 'rgba(100, 180, 255, 0.7)');
-    grad.addColorStop(0.5, 'rgba(150, 200, 255, 0.55)');
-    grad.addColorStop(0.8, 'rgba(180, 140, 255, 0.4)');
-    grad.addColorStop(1, 'rgba(200, 160, 255, 0.1)');
+    // Lava body — pulsing red-orange-yellow gradient
+    const wobble = Math.sin(now / 600 + phase) * 3;
+    const pulseR = r + Math.sin(now / 400 + phase) * 3;
+    const grad = ctx.createRadialGradient(x, y + wobble, 0, x, y + wobble, pulseR);
+    grad.addColorStop(0, 'rgba(255, 255, 80, 0.9)');
+    grad.addColorStop(0.3, 'rgba(255, 160, 20, 0.8)');
+    grad.addColorStop(0.6, 'rgba(220, 60, 10, 0.7)');
+    grad.addColorStop(0.85, 'rgba(160, 20, 0, 0.5)');
+    grad.addColorStop(1, 'rgba(80, 0, 0, 0.15)');
 
     ctx.fillStyle = grad;
     ctx.beginPath();
-    // Wobbly ellipse for organic lake shape
-    ctx.ellipse(x, y + wobble, r, r * 0.75, Math.sin(now / 2000 + phase) * 0.15, 0, Math.PI * 2);
+    ctx.ellipse(x, y + wobble, pulseR, pulseR * 0.75, Math.sin(now / 1500 + phase) * 0.15, 0, Math.PI * 2);
     ctx.fill();
 
-    // Rim glow
-    ctx.strokeStyle = 'rgba(100, 180, 255, 0.3)';
-    ctx.lineWidth = 3;
+    // Hot rim glow
+    ctx.strokeStyle = 'rgba(255, 100, 0, 0.5)';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#ff4400';
+    ctx.shadowBlur = 15;
     ctx.beginPath();
-    ctx.ellipse(x, y + wobble, r, r * 0.75, Math.sin(now / 2000 + phase) * 0.15, 0, Math.PI * 2);
+    ctx.ellipse(x, y + wobble, pulseR, pulseR * 0.75, Math.sin(now / 1500 + phase) * 0.15, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    // Surface sparkles
-    for (let s = 0; s < 5; s++) {
-      const sparkleAngle = now / 1000 + phase + s * 1.3;
-      const sr = r * (0.2 + (s * 0.15));
-      const sx = x + Math.cos(sparkleAngle) * sr;
-      const sy = y + wobble + Math.sin(sparkleAngle * 0.7) * sr * 0.6;
-      const sparkleAlpha = 0.3 + Math.sin(now / 200 + s * 2 + phase) * 0.3;
+    // Lava bubbles
+    for (let b = 0; b < 6; b++) {
+      const bubblePhase = phase + b * 1.1;
+      const bubbleLife = ((now / 800 + bubblePhase) % 1);
+      const br = r * (0.15 + (b * 0.12));
+      const bx = x + Math.cos(bubblePhase * 3) * br;
+      const by = y + wobble + Math.sin(bubblePhase * 2.3) * br * 0.5;
+      const bubbleSize = (2 + Math.sin(bubblePhase) * 1.5) * (1 - bubbleLife * 0.5);
 
-      ctx.globalAlpha = sparkleAlpha;
-      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = 0.4 + Math.sin(now / 150 + bubblePhase) * 0.3;
+      ctx.fillStyle = bubbleLife > 0.7 ? '#ffee88' : '#ffaa33';
       ctx.beginPath();
-      ctx.arc(sx, sy, 1.5 + Math.sin(now / 300 + s) * 0.5, 0, Math.PI * 2);
+      ctx.arc(bx, by - bubbleLife * 8, bubbleSize, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // Skull warning icon in center
-    ctx.globalAlpha = 0.25 + Math.sin(now / 500 + phase) * 0.1;
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('x_x', x, y + wobble + 5);
-    ctx.textAlign = 'left';
+    // Bright cracks/veins in the lava
+    ctx.strokeStyle = 'rgba(255, 255, 100, 0.3)';
+    ctx.lineWidth = 1.5;
+    for (let v = 0; v < 3; v++) {
+      const va = phase + v * 2.1;
+      const vx1 = x + Math.cos(va) * r * 0.15;
+      const vy1 = y + wobble + Math.sin(va) * r * 0.1;
+      const vx2 = x + Math.cos(va + 1) * r * 0.5;
+      const vy2 = y + wobble + Math.sin(va + 0.8) * r * 0.35;
+      ctx.globalAlpha = 0.2 + Math.sin(now / 250 + va) * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(vx1, vy1);
+      ctx.quadraticCurveTo(
+        x + Math.cos(va + 0.5) * r * 0.35,
+        y + wobble + Math.sin(va + 0.4) * r * 0.25,
+        vx2, vy2
+      );
+      ctx.stroke();
+    }
     ctx.globalAlpha = 1;
+
+    // Heat shimmer glow above lava
+    const shimmerGrad = ctx.createRadialGradient(x, y + wobble - r * 0.3, 0, x, y + wobble - r * 0.3, r * 0.8);
+    shimmerGrad.addColorStop(0, 'rgba(255, 80, 0, 0.08)');
+    shimmerGrad.addColorStop(1, 'rgba(255, 80, 0, 0)');
+    ctx.fillStyle = shimmerGrad;
+    ctx.fillRect(x - r, y + wobble - r * 1.2, r * 2, r * 0.9);
   }
 }
 
