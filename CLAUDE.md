@@ -134,3 +134,12 @@ npm run dev
 ```
 
 Vite dev server with HMR. Changes appear in ~1-2 seconds after saving.
+
+## Keyboard Fallback (Development)
+
+When no Xbox controller is connected, keyboard controls activate automatically:
+- WASD or Arrow keys: movement
+- Space: fire
+- Enter: restart
+
+This is for development and testing only. At the exhibit, the Xbox controller is primary.
