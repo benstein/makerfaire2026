@@ -7,6 +7,7 @@ import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } fro
 import { aabb } from './game/collision.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { drawHUD } from './ui/hud.js';
+import { loadChangelog } from './ui/changelog.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -17,6 +18,8 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
+
+loadChangelog();
 
 let lastTime = performance.now();
 
