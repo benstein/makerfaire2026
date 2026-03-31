@@ -10,5 +10,6 @@
   { "version": 9, "name": "Benny", "description": "Bright white background!" },
   { "version": 10, "name": "Benny", "description": "Back to black!" },
   { "version": 11, "name": "Benny", "description": "White again!" },
-  { "version": 12, "name": "Benny", "description": "Back to black again!" }
+  { "version": 12, "name": "Benny", "description": "Back to black again!" },
+  { "version": 13, "name": "Benny", "description": "And... white!" }
 ]
