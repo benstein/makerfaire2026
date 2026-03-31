@@ -52,7 +52,6 @@ src/
     enemies.js           — Enemy management: types, spawning, AI, rendering
     weapons.js           — Projectile management: types, firing, rendering
     rendering.js         — Canvas: background, camera effects, screen text
-    earthquake.js        — Earthquake event: screen shake + lava chasms
   ui/
     hud.js               — Hearts + timer on canvas
     changelog.js         — Reads changelog.json, renders DOM panel
@@ -93,7 +92,7 @@ Edit `src/game/rendering.js` for backgrounds and camera effects (screen shake, e
 For particle effects, create `src/game/particles.js` and wire it into main.js.
 
 ### New game systems (pickups, allies, obstacles)
-Create a new file in `src/game/` (e.g., `src/game/pickups.js`). Give it `reset()`, `update()`, and `draw()` functions. Wire it into `src/main.js` following the same pattern as enemies/weapons/earthquake:
+Create a new file in `src/game/` (e.g., `src/game/pickups.js`). Give it `reset()`, `update()`, and `draw()` functions. Wire it into `src/main.js` following the same pattern as enemies/weapons:
 - Import at top
 - Call `reset()` in the start handler
 - Call `update()` in the PLAYING update block
