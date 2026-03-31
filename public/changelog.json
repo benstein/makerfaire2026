@@ -1,4 +1,5 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Arin", "description": "MAXIMUM CUTENESS! Teddy bear hero, unicorn enemies, heart bullets, rainbow everything!" }
+  { "version": 2, "name": "Arin", "description": "MAXIMUM CUTENESS! Teddy bear hero, unicorn enemies, heart bullets, rainbow everything!" },
+  { "version": 3, "name": "Paul", "description": "Speed round! Timer cut to 30 seconds -- survive if you can!" }
 ]
