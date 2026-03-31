@@ -223,9 +223,75 @@
     }
   </style>
   <script>
-    // Build overlay — runs independently of Vite modules.
-    // Uses sessionStorage to survive page reloads and blocks Vite's
-    // reload mechanism during builds so the overlay stays stable.
+    // Build overlay — independent of Vite modules.
+    // 1. Intercepts Vite's WebSocket to block page reloads during builds
+    // 2. Uses sessionStorage for instant display across any reloads that slip through
+    // 3. Polls building.json every 500ms
+
+    // STEP 1: Patch WebSocket BEFORE Vite's client connects.
+    // (This inline script runs before deferred module scripts.)
+    (function() {
+      var _WS = window.WebSocket;
+      var buildingActive = sessionStorage.getItem('building') === 'true';
+      var pendingReload = false;
+
+      window.WebSocket = function(url, protocols) {
+        var ws = protocols ? new _WS(url, protocols) : new _WS(url);
+        var origOnMessage;
+
+        Object.defineProperty(ws, 'onmessage', {
+          get: function() { return origOnMessage; },
+          set: function(fn) {
+            origOnMessage = fn;
+            ws._wrappedOnMessage = function(event) {
+              try {
+                var data = JSON.parse(event.data);
+                if ((data.type === 'full-reload' || data.type === 'page-reload') && buildingActive) {
+                  pendingReload = true;
+                  return; // swallow the reload
+                }
+              } catch(e) {}
+              fn.call(ws, event);
+            };
+            ws.addEventListener('message', function(){});
+          }
+        });
+
+        // Also intercept addEventListener-based handlers
+        var origAEL = ws.addEventListener.bind(ws);
+        ws.addEventListener = function(type, handler, opts) {
+          if (type === 'message') {
+            origAEL(type, function(event) {
+              try {
+                var data = JSON.parse(event.data);
+                if ((data.type === 'full-reload' || data.type === 'page-reload') && buildingActive) {
+                  pendingReload = true;
+                  return;
+                }
+              } catch(e) {}
+              handler.call(ws, event);
+            }, opts);
+          } else {
+            origAEL(type, handler, opts);
+          }
+        };
+        return ws;
+      };
+      window.WebSocket.prototype = _WS.prototype;
+      window.WebSocket.CONNECTING = _WS.CONNECTING;
+      window.WebSocket.OPEN = _WS.OPEN;
+      window.WebSocket.CLOSING = _WS.CLOSING;
+      window.WebSocket.CLOSED = _WS.CLOSED;
+
+      // Expose controls for the poller below
+      window.__buildOverlay = {
+        setBuilding: function(v) { buildingActive = v; },
+        isBuilding: function() { return buildingActive; },
+        hasPendingReload: function() { return pendingReload; }
+      };
+    })();
+
+    // STEP 2: Overlay display + polling
     (function() {
       var overlay = document.getElementById('build-overlay');
       var nameEl = document.getElementById('build-name');
@@ -233,38 +299,16 @@
       var stepsEl = document.getElementById('build-steps');
       var barEl = document.getElementById('build-bar');
       var pctEl = document.getElementById('build-pct');
-      var isBuilding = false;
-      var originalReload = location.reload.bind(location);
+      var ctrl = window.__buildOverlay;
+      var wasBuilding = ctrl.isBuilding();
 
-      // On boot: if sessionStorage says we were building, show overlay INSTANTLY
-      // (no fetch delay — covers the gap during Vite page reloads)
-      if (sessionStorage.getItem('building') === 'true') {
+      // Instant display from sessionStorage (no fetch delay)
+      if (wasBuilding) {
         overlay.style.display = '';
-        isBuilding = true;
-        blockReloads();
-        // Restore last known content if available
         try {
           var cached = JSON.parse(sessionStorage.getItem('buildData'));
           if (cached) updateDisplay(cached);
         } catch(e) {}
-      }
-
-      function blockReloads() {
-        // Prevent Vite HMR from reloading the page during builds
-        Object.defineProperty(location, 'reload', {
-          configurable: true,
-          value: function() { /* blocked during build */ }
-        });
-        // Also block via window — some Vite versions use this
-        window.__vite_reload_blocked = true;
-      }
-
-      function unblockReloads() {
-        Object.defineProperty(location, 'reload', {
-          configurable: true,
-          value: originalReload
-        });
-        window.__vite_reload_blocked = false;
       }
 
       function updateDisplay(data) {
@@ -292,6 +336,10 @@
           barEl.style.width = '0%';
           pctEl.textContent = '';
         }
+
+        // Hide Vite error overlay if present
+        var viteErr = document.querySelector('vite-error-overlay');
+        if (viteErr) viteErr.style.display = 'none';
       }
 
       function poll() {
@@ -299,36 +347,30 @@
           .then(function(r) { return r.json(); })
           .then(function(data) {
             if (data.building) {
-              if (!isBuilding) {
-                isBuilding = true;
-                blockReloads();
-              }
+              wasBuilding = true;
+              ctrl.setBuilding(true);
               overlay.style.display = '';
               sessionStorage.setItem('building', 'true');
               sessionStorage.setItem('buildData', JSON.stringify(data));
               updateDisplay(data);
-
-              // Hide Vite error overlay if present
-              var viteErr = document.querySelector('vite-error-overlay');
-              if (viteErr) viteErr.style.display = 'none';
-            } else if (isBuilding) {
-              // Build just finished — clean reload to pick up all changes
-              isBuilding = false;
+            } else if (wasBuilding) {
+              // Build finished
+              wasBuilding = false;
+              ctrl.setBuilding(false);
               sessionStorage.removeItem('building');
               sessionStorage.removeItem('buildData');
               overlay.style.display = 'none';
-              unblockReloads();
-              // One clean reload to apply all the source changes
-              setTimeout(function() { originalReload(); }, 500);
+              // If Vite reloads were blocked, do one clean reload now
+              if (ctrl.hasPendingReload()) {
+                location.reload();
+              }
             }
           })
-          .catch(function() {
-            // keep current state on error
-          });
+          .catch(function() {});
       }
 
       poll();
-      setInterval(poll, 1000);
+      setInterval(poll, 500);
     })();
   </script>
 </body>
