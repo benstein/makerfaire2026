@@ -1,7 +1,6 @@
 // src/game/player.js
 
 import { CONFIG } from './config.js';
-import { resolvePlayerWallCollision } from './walls.js';
 
 let x, y;
 let facingX = 0;
@@ -37,15 +36,9 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
     facingY = input.stickY / mag;
   }
 
-  // Clamp to arena bounds
   const half = CONFIG.playerSize / 2;
   x = Math.max(half, Math.min(arenaWidth - half, x));
   y = Math.max(half, Math.min(arenaHeight - half, y));
-
-  // Wall collision — push player out of any walls
-  const resolved = resolvePlayerWallCollision(x, y, CONFIG.playerSize);
-  x = resolved.x;
-  y = resolved.y;
 }
 
 export function drawPlayer(ctx, now) {
@@ -53,42 +46,9 @@ export function drawPlayer(ctx, now) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
 
-  const s = CONFIG.playerSize;
-  ctx.save();
-  ctx.translate(x, y);
-
-  // Cheese wedge
-  ctx.fillStyle = '#f5c842';
-  ctx.beginPath();
-  ctx.moveTo(0, -s * 0.6);
-  ctx.lineTo(s * 0.55, s * 0.4);
-  ctx.lineTo(-s * 0.55, s * 0.4);
-  ctx.closePath();
-  ctx.fill();
-
-  // Darker edge for depth
-  ctx.fillStyle = '#d4a830';
-  ctx.beginPath();
-  ctx.moveTo(s * 0.55, s * 0.4);
-  ctx.lineTo(-s * 0.55, s * 0.4);
-  ctx.lineTo(-s * 0.45, s * 0.5);
-  ctx.lineTo(s * 0.45, s * 0.5);
-  ctx.closePath();
-  ctx.fill();
-
-  // Cheese holes
-  ctx.fillStyle = '#e0a520';
-  ctx.beginPath();
-  ctx.arc(-s * 0.12, -s * 0.05, s * 0.1, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(s * 0.15, s * 0.2, s * 0.07, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(-s * 0.25, s * 0.25, s * 0.05, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
+  const half = CONFIG.playerSize / 2;
+  ctx.fillStyle = CONFIG.playerColor;
+  ctx.fillRect(x - half, y - half, CONFIG.playerSize, CONFIG.playerSize);
 }
 
 export function getPlayerPos() {

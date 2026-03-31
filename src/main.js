@@ -11,15 +11,11 @@ import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
-import { initBuildStatus } from './ui/buildStatus.js';
-import { resetEarthquake, updateEarthquake, checkChasmCollision, getShakeOffset, drawEarthquake } from './game/earthquake.js';
-import { resetWalls, drawWalls } from './game/walls.js';
 
 // Boot
 const canvas = document.getElementById('game-canvas');
 const ctx = initRendering(canvas);
 loadChangelog();
-initBuildStatus();
 
 let lastTime = performance.now();
 
@@ -39,8 +35,6 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
-      resetEarthquake();
-      resetWalls(width, height);
     } else {
       goToTitle();
     }
@@ -58,27 +52,21 @@ function gameLoop(now) {
     }
     updateProjectiles(dt, width, height);
 
-    // Projectile-enemy collisions (farts pierce through!)
+    // Projectile-enemy collisions
     const projList = getProjectiles();
     const enemyList = getEnemies();
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
+          removeProjectile(i);
           removeEnemy(j);
+          break;
         }
       }
     }
 
-    // Earthquake
-    updateEarthquake(getTimeRemaining(), now, width, height);
-
-    // Chasm death check — instant kill!
-    const playerBounds = getPlayerBounds();
-    if (checkChasmCollision(playerBounds)) {
-      endGame(false);
-    }
-
     // Enemy-player collisions
+    const playerBounds = getPlayerBounds();
     const enemies = getEnemies();
     for (let i = enemies.length - 1; i >= 0; i--) {
       if (aabb(playerBounds, enemies[i])) {
@@ -98,15 +86,9 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
-    const shake = getShakeOffset();
-    ctx.save();
-    ctx.translate(shake.x, shake.y);
-    drawEarthquake(ctx, width, height);
-    drawWalls(ctx);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
-    ctx.restore();
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
