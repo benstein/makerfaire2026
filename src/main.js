@@ -5,9 +5,8 @@ import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, splitEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
-import { resetCoins, spawnCoin, updateCoins, drawCoins, getCoinsCollected, hasFireBoost } from './game/coins.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -36,7 +35,6 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
-      resetCoins();
     } else {
       goToTitle();
     }
@@ -60,20 +58,12 @@ function gameLoop(now) {
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
-          const hit = enemyList[j];
-          const died = splitEnemy(j);
-          if (died) {
-            // Only the tiniest enemies drop coins
-            spawnCoin(hit.x + hit.w / 2, hit.y + hit.h / 2);
-          }
           removeProjectile(i);
+          removeEnemy(j);
           break;
         }
       }
     }
-
-    // Coin collection
-    updateCoins();
 
     // Enemy-player collisions
     const playerBounds = getPlayerBounds();
@@ -98,9 +88,8 @@ function gameLoop(now) {
   } else if (state === STATES.PLAYING) {
     drawPlayer(ctx, now);
     drawEnemies(ctx);
-    drawCoins(ctx, now);
     drawProjectiles(ctx);
-    drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getCoinsCollected(), hasFireBoost());
+    drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
   } else if (state === STATES.GAMEOVER) {
