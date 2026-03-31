@@ -1,6 +1,7 @@
 // src/game/weapons.js
 
 import { CONFIG } from './config.js';
+import { getFireRateCooldown } from './coins.js';
 
 let projectiles = [];
 let lastFireTime = 0;
@@ -11,7 +12,7 @@ export function resetWeapons() {
 }
 
 export function tryFire(playerPos, facing, now) {
-  if (now - lastFireTime < CONFIG.fireRateCooldown) return;
+  if (now - lastFireTime < getFireRateCooldown()) return;
   lastFireTime = now;
 
   projectiles.push({
