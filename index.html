@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maker Faire 2026</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a1a; }
+    #game-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+    #game-canvas {
+      flex: 3;
+      display: block;
+      background: #1a1a2e;
+    }
+    #changelog-panel {
+      flex: 1;
+      background: #0f0f23;
+      padding: 20px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      color: #ccc;
+    }
+    #changelog-panel h2 {
+      color: #f1c40f;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+    .changelog-entry {
+      border-left: 3px solid #555;
+      padding-left: 10px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .changelog-entry .version { color: #f1c40f; font-weight: bold; }
+    .changelog-entry .name { color: #888; }
+    .changelog-entry .desc { color: #ccc; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="changelog-panel">
+      <h2>Changelog</h2>
+      <div id="changelog-entries"></div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
