@@ -22,7 +22,7 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, hp: CONFIG.enemyHP, maxHp: CONFIG.enemyHP, hitFlash: 0 });
 }
 
 function getCurrentSpawnInterval() {
@@ -57,7 +57,39 @@ export function drawEnemies(ctx, now) {
     ctx.save();
     ctx.translate(enemy.x, enemy.y);
     const s = enemy.w;
+
+    // Hit flash — briefly turn white when damaged
+    const flashDuration = 150;
+    const isFlashing = enemy.hitFlash && (now - enemy.hitFlash) < flashDuration;
+
     drawGoomba(ctx, s);
+
+    // White overlay flash
+    if (isFlashing) {
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, s, s);
+      ctx.globalAlpha = 1;
+    }
+
+    // Health bar above the Goomba
+    if (enemy.hp < enemy.maxHp) {
+      const barW = s;
+      const barH = 4;
+      const barY = -8;
+      // Background (dark)
+      ctx.fillStyle = '#333';
+      ctx.fillRect(0, barY, barW, barH);
+      // Health fill (green to red)
+      const hpRatio = enemy.hp / enemy.maxHp;
+      ctx.fillStyle = hpRatio > 0.5 ? '#2ecc71' : '#e74c3c';
+      ctx.fillRect(0, barY, barW * hpRatio, barH);
+      // Border
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(0, barY, barW, barH);
+    }
+
     ctx.restore();
   }
 }
@@ -104,6 +136,18 @@ function drawGoomba(ctx, s) {
 
 export function getEnemies() {
   return enemies;
+}
+
+// Deal 1 damage to enemy. Returns true if enemy died.
+export function damageEnemy(index) {
+  const enemy = enemies[index];
+  enemy.hp -= 1;
+  enemy.hitFlash = performance.now();
+  if (enemy.hp <= 0) {
+    enemies.splice(index, 1);
+    return true;
+  }
+  return false;
 }
 
 export function removeEnemy(index) {

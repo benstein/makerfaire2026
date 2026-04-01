@@ -14,14 +14,16 @@ export const CONFIG = {
   enemySpeed: 2,
   enemySize: 22,
   enemyColor: '#e74c3c',
-  enemySpawnIntervalStart: 2000, // ms at game start
-  enemySpawnIntervalEnd: 400,    // ms at game end (ramps down)
+  enemyHP: 2,              // hits to kill a Goomba
+  enemySpawnIntervalStart: 3000, // ms at game start (slower spawns)
+  enemySpawnIntervalEnd: 700,    // ms at game end (ramps down)
+  heartDropChance: 0.1,          // 10% chance to drop a heart on death
 
   // Weapons
   projectileSpeed: 7,
   projectileSize: 8,
   projectileColor: '#FF6600', // Mario fireball orange
-  fireRateCooldown: 250, // ms between shots
+  fireRateCooldown: 400, // ms between shots (slower fire rate)
 
   // Game
   gameDuration: 60, // seconds

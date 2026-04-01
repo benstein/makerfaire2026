@@ -4,8 +4,9 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, healPlayer } from './game/player.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, damageEnemy } from './game/enemies.js';
+import { resetPickups, spawnHeart, updatePickups, drawPickups } from './game/pickups.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { resetObstacles, drawObstacles, resolveCollision, hitsObstacle, checkPipeWarp, updateWarp, isWarping } from './game/obstacles.js';
@@ -40,6 +41,7 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
+      resetPickups();
       resetObstacles(width, height);
       resetVictoryEffects();
     } else {
@@ -102,17 +104,28 @@ function gameLoop(now) {
       }
     }
 
-    // Projectile-enemy collisions
+    // Projectile-enemy collisions (enemies take damage, may drop hearts)
     const projList = getProjectiles();
     const enemyList = getEnemies();
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
           removeProjectile(i);
-          removeEnemy(j);
+          const enemy = enemyList[j];
+          const ex = enemy.x + enemy.w / 2;
+          const ey = enemy.y + enemy.h / 2;
+          const died = damageEnemy(j);
+          if (died && Math.random() < CONFIG.heartDropChance) {
+            spawnHeart(ex, ey);
+          }
           break;
         }
       }
+    }
+
+    // Update pickups (heart collection)
+    if (!isWarping()) {
+      updatePickups(getPlayerBounds(), healPlayer, now);
     }
 
     // Enemy-player collisions (not during warp — you're inside the pipe!)
@@ -139,6 +152,7 @@ function gameLoop(now) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
     drawObstacles(ctx, now);
+    drawPickups(ctx, now);
     drawPlayer(ctx, now, playerWarpScale);
     drawEnemies(ctx, now);
     drawProjectiles(ctx, now);
