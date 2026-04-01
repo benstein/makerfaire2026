@@ -22,14 +22,15 @@
       flex: 1;
       background: #0f0f23;
       padding: 20px;
-      overflow-y: auto;
       font-family: 'Courier New', monospace;
       color: #ccc;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
-    #changelog-entries { flex: 1; }
+    #changelog-entries { flex: 1; overflow-y: auto; min-height: 0; }
     #controls-help {
+      flex-shrink: 0;
       border-top: 1px solid #333;
       padding-top: 16px;
       margin-top: 16px;
@@ -57,8 +58,8 @@
       font-size: 18px;
       text-transform: uppercase;
       letter-spacing: 2px;
-      margin-bottom: 16px;
     }
+    #fullscreen-btn:hover { color: #f1c40f; border-color: #f1c40f; }
     .changelog-entry {
       border-left: 3px solid #555;
       padding-left: 10px;
@@ -75,7 +76,14 @@
   <div id="game-container">
     <canvas id="game-canvas"></canvas>
     <div id="changelog-panel">
-      <h2>Changelog</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 style="margin-bottom:0">Changelog</h2>
+        <button id="fullscreen-btn" title="Toggle fullscreen" style="background:none;border:1px solid #333;border-radius:4px;padding:4px 6px;cursor:pointer;color:#888;display:flex;align-items:center;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+          </svg>
+        </button>
+      </div>
       <div id="changelog-entries"></div>
       <div id="controls-help">
         <h3>Controls</h3>
@@ -86,6 +94,16 @@
     </div>
   </div>
   <script type="module" src="/src/main.js"></script>
+
+  <script>
+    document.getElementById('fullscreen-btn').addEventListener('click', function() {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        document.documentElement.requestFullscreen();
+      }
+    });
+  </script>
 
   <!-- Build overlay: independent of Vite modules, survives HMR and syntax errors -->
   <div id="build-overlay" style="display:none">
@@ -174,7 +192,7 @@
       gap: 12px;
     }
     #build-overlay .build-step.done {
-      color: rgba(0,0,0,0.3);
+      color: rgba(0,0,0,0.55);
     }
     #build-overlay .build-step.done .step-icon {
       color: #69ff69;
@@ -308,7 +326,7 @@
       }
 
       function updateDisplay(data) {
-        nameEl.textContent = (data.name || 'Someone') + "'s Change";
+        nameEl.textContent = (data.kid || data.name || 'Someone') + "'s Change";
         descEl.textContent = data.description || '';
         if (data.steps && data.steps.length) {
           var html = '';

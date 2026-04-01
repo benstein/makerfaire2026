@@ -6,7 +6,7 @@ const RAINBOW = ['#ff6b6b', '#ffa500', '#ffd700', '#69ff69', '#69b4ff', '#b469ff
 
 export function drawBuildScreen(ctx, width, height, buildData, now) {
   // buildData may be null if poll hasn't returned yet
-  const name = buildData?.name || 'Someone';
+  const name = buildData?.kid || buildData?.name || 'Someone';
   const description = buildData?.description || '';
   const steps = buildData?.steps || [];
 
@@ -89,7 +89,7 @@ export function drawBuildScreen(ctx, width, height, buildData, now) {
       const textX = indicatorX + 28;
       ctx.font = '18px monospace';
       if (step.done) {
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
       } else if (isCurrentStep) {
         // Pulsing brightness
         const pulse = 0.7 + Math.sin(now / 300) * 0.3;

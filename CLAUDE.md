@@ -25,10 +25,9 @@ The game polls this file every 1 second. Steps should be high-level and kid-frie
 After you commit, the git post-commit hook auto-clears the file to `{ "building": false }` and the game returns to the title screen. No manual cleanup needed.
 
 **Step guidelines:**
-- 3-6 steps is ideal — enough to show progress, not so many it's overwhelming
-- First step is usually "Reading the current game..."
-- Last step is usually "Updating the changelog..."
-- Middle steps describe the actual changes in fun, kid-friendly language
+- 3-5 steps is ideal — enough to show progress, not so many it's overwhelming
+- Every step should describe an actual visible change in fun, kid-friendly language
+- Don't include internal steps like "reading code" or "updating changelog" — only things kids care about
 - The steps array is optional — if omitted, a generic "Building..." message shows
 
 ## Sacred Systems — NEVER BREAK THESE
