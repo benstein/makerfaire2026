@@ -1,5 +1,8 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Gabi", "description": "Artichoke world! You're a happy green artichoke fighting off angry purple artichokes in a dark garden!" },
-  { "version": 3, "name": "Mami", "description": "2-second speedrun! Survive just 2 seconds to win, but now the enemies are creepy cockroaches with twitchy legs!" }
+  { "version": 2, "name": "Gabi", "description": "Super Mario Bros makeover! Mario as the player, Goombas and Koopa Troopas as enemies, fireballs, question blocks, pipes, and blue sky!" },
+  { "version": 3, "name": "Gabi", "description": "All Goombas now! Pipes and question blocks are solid - you can hide behind them and fireballs bounce off!" },
+  { "version": 4, "name": "Papi", "description": "Warp pipes! Walk onto a pipe to teleport to the other one - Mario shrinks down and pops out the other side!" },
+  { "version": 5, "name": "Soup", "description": "Tougher Goombas with health bars (2 hits to kill), slower fire rate, fewer spawns, and 10% chance to drop healing hearts!" },
+  { "version": 6, "name": "Papi", "description": "WATER WORLD! Enter a pipe to dive into an underwater side-scroller with Cheep Cheeps and Bloopers. Swim to the exit pipe to return!" }
 ]

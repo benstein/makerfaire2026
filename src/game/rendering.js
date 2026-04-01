@@ -22,21 +22,69 @@ export function getCanvasSize() {
 }
 
 export function clearCanvas() {
+  // Mario sky blue background
   ctx.fillStyle = CONFIG.arenaBackground;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw scattered brick blocks across the arena floor (subtle)
+  const brickSize = 32;
+  ctx.fillStyle = '#C84C09';
+  const brickColor2 = '#A0370A';
+  // Draw a row of ground bricks at bottom
+  for (let bx = 0; bx < canvas.width; bx += brickSize) {
+    // Bottom row
+    ctx.fillStyle = '#C84C09';
+    ctx.fillRect(bx, canvas.height - brickSize, brickSize - 1, brickSize - 1);
+    ctx.fillStyle = brickColor2;
+    ctx.fillRect(bx, canvas.height - brickSize, brickSize - 1, 2);
+    ctx.fillRect(bx, canvas.height - brickSize, 2, brickSize - 1);
+
+    // Second row
+    ctx.fillStyle = '#C84C09';
+    ctx.fillRect(bx + brickSize/2, canvas.height - brickSize*2, brickSize - 1, brickSize - 1);
+    ctx.fillStyle = brickColor2;
+    ctx.fillRect(bx + brickSize/2, canvas.height - brickSize*2, brickSize - 1, 2);
+    ctx.fillRect(bx + brickSize/2, canvas.height - brickSize*2, 2, brickSize - 1);
+  }
+
+  // Top row of bricks
+  for (let bx = 0; bx < canvas.width; bx += brickSize) {
+    ctx.fillStyle = '#C84C09';
+    ctx.fillRect(bx, 0, brickSize - 1, brickSize - 1);
+    ctx.fillStyle = brickColor2;
+    ctx.fillRect(bx, 0, brickSize - 1, 2);
+    ctx.fillRect(bx, 0, 2, brickSize - 1);
+
+    ctx.fillStyle = '#C84C09';
+    ctx.fillRect(bx + brickSize/2, brickSize, brickSize - 1, brickSize - 1);
+    ctx.fillStyle = brickColor2;
+    ctx.fillRect(bx + brickSize/2, brickSize, brickSize - 1, 2);
+    ctx.fillRect(bx + brickSize/2, brickSize, 2, brickSize - 1);
+  }
+
+  // Pipes and ? blocks are drawn by obstacles.js (they have hitboxes now!)
 }
 
 export function drawTitleScreen() {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 48px monospace';
+  // Mario-style red title with white outline
+  ctx.font = 'bold 52px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('ARENA SURVIVAL', cx, cy - 30);
+  // Shadow
+  ctx.fillStyle = '#800000';
+  ctx.fillText('SUPER ARENA BROS', cx + 3, cy - 27);
+  // Main text
+  ctx.fillStyle = '#E52521';
+  ctx.fillText('SUPER ARENA BROS', cx, cy - 30);
+  // Highlight
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 1.5;
+  ctx.strokeText('SUPER ARENA BROS', cx, cy - 30);
 
-  ctx.font = '20px monospace';
-  ctx.fillStyle = '#888';
+  ctx.font = '22px monospace';
+  ctx.fillStyle = '#FFD700';
   ctx.fillText('PRESS START', cx, cy + 30);
 
   ctx.textAlign = 'left';

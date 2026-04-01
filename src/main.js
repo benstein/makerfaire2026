@@ -3,11 +3,14 @@
 
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
-import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, goToWaterWorld, goToPlaying, updateTimer } from './game/gameState.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, healPlayer } from './game/player.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, damageEnemy } from './game/enemies.js';
+import { resetPickups, spawnHeart, updatePickups, drawPickups } from './game/pickups.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
+import { resetObstacles, drawObstacles, resolveCollision, hitsObstacle, checkPipeWarp, updateWarp, isWarping, startRiseFromPipe } from './game/obstacles.js';
+import { resetWaterWorld, updateWaterWorld, drawWaterWorld, getExitPipeId } from './game/waterWorld.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
@@ -21,6 +24,7 @@ loadChangelog();
 initBuildStatus();
 
 let lastTime = performance.now();
+let playerWarpScale = 1;
 
 function gameLoop(now) {
   const dt = now - lastTime;
@@ -38,8 +42,10 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
+      resetPickups();
+      resetObstacles(width, height);
       resetVictoryEffects();
-    } else {
+    } else if (state !== STATES.WATER_WORLD) {
       goToTitle();
     }
   }
@@ -47,40 +53,130 @@ function gameLoop(now) {
   // --- Update ---
   if (state === STATES.PLAYING) {
     updateTimer(dt);
-    updatePlayer(dt, input, width, height, now);
+
+    // Warp animation in progress — override player position
+    const warpState = updateWarp(now);
+    if (warpState) {
+      setPlayerPos(warpState.x, warpState.y);
+      playerWarpScale = warpState.scale;
+      if (warpState.enterWaterWorld) {
+        // Transition to the water world!
+        resetWaterWorld(width, height, warpState.pipeId);
+        goToWaterWorld();
+        playerWarpScale = 1;
+      } else if (warpState.done) {
+        playerWarpScale = 1;
+      }
+    } else {
+      playerWarpScale = 1;
+    }
+
+    if (!isWarping()) {
+      updatePlayer(dt, input, width, height, now);
+
+      // Push player out of obstacles
+      const pBounds = getPlayerBounds();
+      const resolved = resolveCollision({ ...pBounds });
+      if (resolved.x !== pBounds.x || resolved.y !== pBounds.y) {
+        const half = CONFIG.playerSize / 2;
+        setPlayerPos(resolved.x + half, resolved.y + half);
+      }
+
+      // Check if player stepped on a pipe to warp
+      checkPipeWarp(getPlayerBounds(), now);
+    }
+
     updateEnemies(dt, getPlayerPos(), now, width, height);
 
-    // Firing
+    // Push enemies out of obstacles
+    const enemyListForObs = getEnemies();
+    for (const enemy of enemyListForObs) {
+      const res = resolveCollision({ x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h });
+      enemy.x = res.x;
+      enemy.y = res.y;
+    }
+
+    // Firing (can still fire while warping — it's fun!)
     if (input.fire || input.fireHeld) {
       tryFire(getPlayerPos(), getPlayerFacing(), now);
     }
     updateProjectiles(dt, width, height);
 
-    // Projectile-enemy collisions
+    // Projectile-obstacle collisions (fireballs hit blocks/pipes)
+    const projListObs = getProjectiles();
+    for (let i = projListObs.length - 1; i >= 0; i--) {
+      if (hitsObstacle(projListObs[i])) {
+        removeProjectile(i);
+      }
+    }
+
+    // Projectile-enemy collisions (enemies take damage, may drop hearts)
     const projList = getProjectiles();
     const enemyList = getEnemies();
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
           removeProjectile(i);
-          removeEnemy(j);
+          const enemy = enemyList[j];
+          const ex = enemy.x + enemy.w / 2;
+          const ey = enemy.y + enemy.h / 2;
+          const died = damageEnemy(j);
+          if (died && Math.random() < CONFIG.heartDropChance) {
+            spawnHeart(ex, ey);
+          }
           break;
         }
       }
     }
 
-    // Enemy-player collisions
-    const playerBounds = getPlayerBounds();
-    const enemies = getEnemies();
-    for (let i = enemies.length - 1; i >= 0; i--) {
-      if (aabb(playerBounds, enemies[i])) {
+    // Update pickups (heart collection)
+    if (!isWarping()) {
+      updatePickups(getPlayerBounds(), healPlayer, now);
+    }
+
+    // Enemy-player collisions (not during warp — you're inside the pipe!)
+    if (!isWarping()) {
+      const playerBounds = getPlayerBounds();
+      const enemies = getEnemies();
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        if (aabb(playerBounds, enemies[i])) {
+          if (damagePlayer(now)) {
+            removeEnemy(i);
+            if (getPlayerHealth() <= 0) {
+              endGame(false);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // --- Water World Update ---
+  if (state === STATES.WATER_WORLD) {
+    updateTimer(dt);
+    const wwResult = updateWaterWorld(dt, input, width, height, now);
+
+    if (wwResult) {
+      if (wwResult.hit) {
+        // Fish hit Mario — take damage
         if (damagePlayer(now)) {
-          removeEnemy(i);
           if (getPlayerHealth() <= 0) {
             endGame(false);
           }
         }
       }
+      if (wwResult.exitComplete) {
+        // Return to arena — rise from the exit pipe
+        const exitPipeId = getExitPipeId();
+        goToPlaying();
+        // Position player at the exit pipe and start rise animation
+        startRiseFromPipe(exitPipeId, now);
+      }
+    }
+
+    // Time ran out in water world = victory
+    if (getTimeRemaining() <= 0) {
+      // Timer handles this via endGame(true)
     }
   }
 
@@ -90,10 +186,14 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
-    drawPlayer(ctx, now);
+    drawObstacles(ctx, now);
+    drawPickups(ctx, now);
+    drawPlayer(ctx, now, playerWarpScale);
     drawEnemies(ctx, now);
-    drawProjectiles(ctx);
+    drawProjectiles(ctx, now);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+  } else if (state === STATES.WATER_WORLD) {
+    drawWaterWorld(ctx, width, height, now, getPlayerHealth(), getTimeRemaining());
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
   } else if (state === STATES.GAMEOVER) {

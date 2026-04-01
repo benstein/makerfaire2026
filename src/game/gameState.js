@@ -6,6 +6,7 @@ import { CONFIG } from './config.js';
 export const STATES = {
   TITLE: 'title',
   PLAYING: 'playing',
+  WATER_WORLD: 'water_world',
   VICTORY: 'victory',
   GAMEOVER: 'gameover',
   BUILDING: 'building',
@@ -47,12 +48,20 @@ export function goToTitle() {
   elapsedMs = 0;
 }
 
+export function goToWaterWorld() {
+  currentState = STATES.WATER_WORLD;
+}
+
+export function goToPlaying() {
+  currentState = STATES.PLAYING;
+}
+
 export function goToBuilding() {
   currentState = STATES.BUILDING;
 }
 
 export function updateTimer(dt) {
-  if (currentState !== STATES.PLAYING) return;
+  if (currentState !== STATES.PLAYING && currentState !== STATES.WATER_WORLD) return;
   elapsedMs += dt;
   timeRemaining -= dt / 1000;
   if (timeRemaining <= 0) {

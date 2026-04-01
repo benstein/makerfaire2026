@@ -22,7 +22,7 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, hp: CONFIG.enemyHP, maxHp: CONFIG.enemyHP, hitFlash: 0 });
 }
 
 function getCurrentSpawnInterval() {
@@ -46,109 +46,108 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     if (dist > 0) {
       const scale = dt / 16.67;
-      const ndx = dx / dist;
-      const ndy = dy / dist;
-      enemy.x += ndx * CONFIG.enemySpeed * scale;
-      enemy.y += ndy * CONFIG.enemySpeed * scale;
-      enemy._lastDx = ndx;
-      enemy._lastDy = ndy;
+      enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
+      enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
     }
   }
 }
 
 export function drawEnemies(ctx, now) {
   for (const enemy of enemies) {
-    const s = enemy.w;
-    const ex = enemy.x + s / 2;
-    const ey = enemy.y + s / 2;
-
     ctx.save();
-    ctx.translate(ex, ey);
+    ctx.translate(enemy.x, enemy.y);
+    const s = enemy.w;
 
-    // Rotate to face the direction they're moving
-    const playerDx = enemy._lastDx || 0;
-    const playerDy = enemy._lastDy || 0;
-    const angle = Math.atan2(playerDy, playerDx);
-    ctx.rotate(angle + Math.PI / 2); // point "up" of the roach toward movement
+    // Hit flash — briefly turn white when damaged
+    const flashDuration = 150;
+    const isFlashing = enemy.hitFlash && (now - enemy.hitFlash) < flashDuration;
 
-    const hw = s / 2;
-    const hh = s / 2 + 3;
+    drawGoomba(ctx, s);
 
-    // Legs — 3 pairs, twitching
-    const time = now || performance.now();
-    ctx.strokeStyle = '#3D1F0B';
-    ctx.lineWidth = 1.5;
-    for (let side = -1; side <= 1; side += 2) {
-      for (let leg = 0; leg < 3; leg++) {
-        const legY = -hh * 0.4 + leg * (hh * 0.45);
-        const twitch = Math.sin(time / 50 + leg * 2 + side) * 3;
-        ctx.beginPath();
-        ctx.moveTo(side * hw * 0.5, legY);
-        ctx.lineTo(side * (hw + 5 + twitch), legY + twitch * 0.5);
-        ctx.stroke();
-      }
+    // White overlay flash
+    if (isFlashing) {
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, s, s);
+      ctx.globalAlpha = 1;
     }
 
-    // Antennae
-    ctx.strokeStyle = '#3D1F0B';
-    ctx.lineWidth = 1;
-    const antTwitch = Math.sin(time / 80) * 4;
-    ctx.beginPath();
-    ctx.moveTo(-3, -hh);
-    ctx.quadraticCurveTo(-5 + antTwitch, -hh - 10, -8 + antTwitch, -hh - 12);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(3, -hh);
-    ctx.quadraticCurveTo(5 - antTwitch, -hh - 10, 8 - antTwitch, -hh - 12);
-    ctx.stroke();
-
-    // Body — dark brown oval
-    ctx.fillStyle = '#4A2810';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, hw - 1, hh, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Shell/wing casings — lighter brown with line down center
-    ctx.fillStyle = '#6B3A1A';
-    ctx.beginPath();
-    ctx.ellipse(0, 1, hw - 3, hh - 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Wing line down center
-    ctx.strokeStyle = '#3D1F0B';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, -hh + 4);
-    ctx.lineTo(0, hh - 3);
-    ctx.stroke();
-
-    // Head (smaller darker circle at top)
-    ctx.fillStyle = '#2E1508';
-    ctx.beginPath();
-    ctx.ellipse(0, -hh + 3, hw * 0.55, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Beady eyes
-    ctx.fillStyle = '#FF3300';
-    ctx.beginPath();
-    ctx.arc(-3, -hh + 2, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(3, -hh + 2, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Shiny shell highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    ctx.beginPath();
-    ctx.ellipse(-2, -3, hw * 0.35, hh * 0.4, -0.2, 0, Math.PI * 2);
-    ctx.fill();
+    // Health bar above the Goomba
+    if (enemy.hp < enemy.maxHp) {
+      const barW = s;
+      const barH = 4;
+      const barY = -8;
+      // Background (dark)
+      ctx.fillStyle = '#333';
+      ctx.fillRect(0, barY, barW, barH);
+      // Health fill (green to red)
+      const hpRatio = enemy.hp / enemy.maxHp;
+      ctx.fillStyle = hpRatio > 0.5 ? '#2ecc71' : '#e74c3c';
+      ctx.fillRect(0, barY, barW * hpRatio, barH);
+      // Border
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(0, barY, barW, barH);
+    }
 
     ctx.restore();
   }
 }
 
+function drawGoomba(ctx, s) {
+  // Goomba — brown mushroom enemy
+  // Head (dark brown dome)
+  ctx.fillStyle = '#8B4513';
+  ctx.beginPath();
+  ctx.arc(s/2, s*0.35, s*0.42, Math.PI, 0);
+  ctx.fill();
+  ctx.fillRect(s*0.08, s*0.35, s*0.84, s*0.15);
+
+  // Face (tan)
+  ctx.fillStyle = '#FDDCAA';
+  ctx.fillRect(s*0.2, s*0.4, s*0.6, s*0.25);
+
+  // Angry eyes (white with black pupil)
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(s*0.22, s*0.4, s*0.18, s*0.14);
+  ctx.fillRect(s*0.58, s*0.4, s*0.18, s*0.14);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(s*0.34, s*0.42, s*0.06, s*0.1);
+  ctx.fillRect(s*0.58, s*0.42, s*0.06, s*0.1);
+
+  // Frown
+  ctx.fillStyle = '#000';
+  ctx.fillRect(s*0.35, s*0.58, s*0.3, s*0.04);
+
+  // Fangs
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(s*0.38, s*0.55, s*0.06, s*0.06);
+  ctx.fillRect(s*0.55, s*0.55, s*0.06, s*0.06);
+
+  // Body (tan)
+  ctx.fillStyle = '#FDDCAA';
+  ctx.fillRect(s*0.3, s*0.65, s*0.4, s*0.12);
+
+  // Feet (dark brown)
+  ctx.fillStyle = '#5C2D00';
+  ctx.fillRect(s*0.08, s*0.77, s*0.35, s*0.2);
+  ctx.fillRect(s*0.57, s*0.77, s*0.35, s*0.2);
+}
+
 export function getEnemies() {
   return enemies;
+}
+
+// Deal 1 damage to enemy. Returns true if enemy died.
+export function damageEnemy(index) {
+  const enemy = enemies[index];
+  enemy.hp -= 1;
+  enemy.hitFlash = performance.now();
+  if (enemy.hp <= 0) {
+    enemies.splice(index, 1);
+    return true;
+  }
+  return false;
 }
 
 export function removeEnemy(index) {

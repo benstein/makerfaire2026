@@ -37,12 +37,47 @@ export function updateProjectiles(dt, arenaWidth, arenaHeight) {
   }
 }
 
-export function drawProjectiles(ctx) {
-  ctx.fillStyle = CONFIG.projectileColor;
+export function drawProjectiles(ctx, now) {
   for (const p of projectiles) {
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h / 2;
+    const r = p.w * 0.7;
+    const time = now || performance.now();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    // Spin the fireball
+    ctx.rotate((time / 80) % (Math.PI * 2));
+
+    // Outer glow (orange)
+    ctx.fillStyle = '#FF6600';
     ctx.beginPath();
-    ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fill();
+
+    // Inner core (yellow/white)
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#FFF8DC';
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flame trails (4 little flames)
+    ctx.fillStyle = '#FF4500';
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      const fx = Math.cos(angle) * r * 0.8;
+      const fy = Math.sin(angle) * r * 0.8;
+      ctx.beginPath();
+      ctx.arc(fx, fy, r * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 }
 

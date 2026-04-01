@@ -41,104 +41,114 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   y = Math.max(half, Math.min(arenaHeight - half, y));
 }
 
-export function drawPlayer(ctx, now) {
+export function drawPlayer(ctx, now, drawScale) {
   if (now < invincibleUntil) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
 
-  const s = CONFIG.playerSize;
-  const half = s / 2;
+  const size = CONFIG.playerSize;
+  const half = size / 2;
+  const px = size / 14; // pixel unit for 14x16 sprite grid
+  const s = drawScale != null ? drawScale : 1;
 
   ctx.save();
   ctx.translate(x, y);
+  ctx.scale(s, s);
+  ctx.translate(-half, -half);
 
-  // Stem/leaves on top
-  ctx.fillStyle = '#4A7C3F';
-  ctx.beginPath();
-  ctx.moveTo(0, -half - 10);
-  ctx.lineTo(-4, -half - 2);
-  ctx.lineTo(4, -half - 2);
-  ctx.closePath();
-  ctx.fill();
-  // Side leaves
-  ctx.beginPath();
-  ctx.moveTo(-6, -half - 6);
-  ctx.lineTo(-10, -half - 12);
-  ctx.lineTo(-2, -half - 4);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(6, -half - 6);
-  ctx.lineTo(10, -half - 12);
-  ctx.lineTo(2, -half - 4);
-  ctx.closePath();
-  ctx.fill();
+  // Mario pixel art (facing camera)
+  // Hat (red)
+  ctx.fillStyle = '#E52521';
+  ctx.fillRect(3*px, 0, 8*px, px);       // hat brim top
+  ctx.fillRect(2*px, px, 11*px, px);      // hat brim wide
+  ctx.fillRect(2*px, 2*px, 12*px, px);    // hat body
 
-  // Main body — layered artichoke leaves (rounded bottom)
-  // Outer leaves (darker green)
-  ctx.fillStyle = '#5B8C4A';
-  ctx.beginPath();
-  ctx.ellipse(0, 2, half + 2, half + 4, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Hair/skin base
+  ctx.fillStyle = '#FEB982';
+  ctx.fillRect(2*px, 3*px, 3*px, px);     // left face
+  ctx.fillRect(7*px, 3*px, 3*px, px);     // right face
+  ctx.fillStyle = '#6B3A23';
+  ctx.fillRect(5*px, 3*px, 2*px, px);     // hair center
 
-  // Leaf scale pattern — rows of overlapping arcs
-  const leafColors = ['#6B9C55', '#7DAE62', '#6B9C55', '#5B8C4A'];
-  for (let row = 0; row < 4; row++) {
-    ctx.fillStyle = leafColors[row];
-    const rowY = -half + 6 + row * (s / 4.5);
-    const leafCount = row === 0 ? 3 : (row === 3 ? 2 : 4);
-    const leafW = s / leafCount;
-    for (let l = 0; l < leafCount; l++) {
-      const lx = -half + l * leafW + leafW / 2 + (row % 2 ? leafW / 3 : 0);
-      ctx.beginPath();
-      ctx.ellipse(lx, rowY, leafW / 2 + 1, s / 7, 0, Math.PI, 0, true);
-      ctx.fill();
-    }
-  }
+  // Face row 1
+  ctx.fillStyle = '#6B3A23';
+  ctx.fillRect(1*px, 4*px, px, px);       // left hair
+  ctx.fillStyle = '#FEB982';
+  ctx.fillRect(2*px, 4*px, 2*px, px);     // left face
+  ctx.fillStyle = '#6B3A23';
+  ctx.fillRect(4*px, 4*px, px, px);       // left eye
+  ctx.fillStyle = '#FEB982';
+  ctx.fillRect(5*px, 4*px, 2*px, px);     // nose bridge
+  ctx.fillStyle = '#6B3A23';
+  ctx.fillRect(7*px, 4*px, px, px);       // right eye
+  ctx.fillStyle = '#FEB982';
+  ctx.fillRect(8*px, 4*px, 2*px, px);     // right face
+  ctx.fillStyle = '#6B3A23';
+  ctx.fillRect(10*px, 4*px, px, px);      // right hair
 
-  // Highlight on top-left
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.beginPath();
-  ctx.ellipse(-4, -4, half * 0.5, half * 0.6, -0.3, 0, Math.PI * 2);
-  ctx.fill();
+  // Face row 2 — mustache & mouth
+  ctx.fillStyle = '#FEB982';
+  ctx.fillRect(2*px, 5*px, px, px);       // left cheek
+  ctx.fillStyle = '#6B3A23';
+  ctx.fillRect(3*px, 5*px, 3*px, px);     // mustache left
+  ctx.fillStyle = '#FEB982';
+  ctx.fillRect(6*px, 5*px, px, px);       // mouth gap
+  ctx.fillStyle = '#6B3A23';
+  ctx.fillRect(7*px, 5*px, 3*px, px);     // mustache right
+  ctx.fillStyle = '#FEB982';
+  ctx.fillRect(10*px, 5*px, px, px);      // right cheek
 
-  // Happy face
-  // Eyes
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath();
-  ctx.arc(-5, -1, 2.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(5, -1, 2.5, 0, Math.PI * 2);
-  ctx.fill();
-  // Eye shine
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(-4, -2, 1, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(6, -2, 1, 0, Math.PI * 2);
-  ctx.fill();
-  // Smile
-  ctx.strokeStyle = '#1a1a1a';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(0, 2, 5, 0.15, Math.PI - 0.15);
-  ctx.stroke();
-  // Rosy cheeks
-  ctx.fillStyle = 'rgba(220,100,100,0.3)';
-  ctx.beginPath();
-  ctx.arc(-8, 3, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(8, 3, 3, 0, Math.PI * 2);
-  ctx.fill();
+  // Chin
+  ctx.fillStyle = '#FEB982';
+  ctx.fillRect(3*px, 6*px, 7*px, px);
+
+  // Shirt / overalls top
+  ctx.fillStyle = '#049CD8';
+  ctx.fillRect(2*px, 7*px, px, px);       // left strap
+  ctx.fillStyle = '#E52521';
+  ctx.fillRect(3*px, 7*px, 3*px, px);     // shirt left
+  ctx.fillStyle = '#049CD8';
+  ctx.fillRect(6*px, 7*px, px, px);       // middle
+  ctx.fillStyle = '#E52521';
+  ctx.fillRect(7*px, 7*px, 3*px, px);     // shirt right
+  ctx.fillStyle = '#049CD8';
+  ctx.fillRect(10*px, 7*px, px, px);      // right strap
+
+  // Overalls body
+  ctx.fillStyle = '#049CD8';
+  ctx.fillRect(1*px, 8*px, 11*px, px);    // full overalls row
+  ctx.fillRect(1*px, 9*px, 5*px, px);     // left overalls
+  ctx.fillStyle = '#FBD000';
+  ctx.fillRect(6*px, 9*px, px, px);       // belt buckle
+  ctx.fillStyle = '#049CD8';
+  ctx.fillRect(7*px, 9*px, 5*px, px);     // right overalls
+
+  // Overalls lower
+  ctx.fillStyle = '#049CD8';
+  ctx.fillRect(1*px, 10*px, 4*px, px);
+  ctx.fillStyle = '#E52521';
+  ctx.fillRect(5*px, 10*px, 3*px, px);    // shirt peek
+  ctx.fillStyle = '#049CD8';
+  ctx.fillRect(8*px, 10*px, 4*px, px);
+
+  // Legs / boots
+  ctx.fillStyle = '#049CD8';
+  ctx.fillRect(1*px, 11*px, 4*px, px);
+  ctx.fillRect(8*px, 11*px, 4*px, px);
+  ctx.fillStyle = '#6B3A23';
+  ctx.fillRect(0, 12*px, 5*px, 2*px);     // left boot
+  ctx.fillRect(8*px, 12*px, 5*px, 2*px);  // right boot
 
   ctx.restore();
 }
 
 export function getPlayerPos() {
   return { x, y };
+}
+
+export function setPlayerPos(nx, ny) {
+  x = nx;
+  y = ny;
 }
 
 export function getPlayerFacing() {
@@ -163,4 +173,8 @@ export function damagePlayer(now) {
   health -= 1;
   invincibleUntil = now + CONFIG.invincibilityDuration;
   return true;
+}
+
+export function healPlayer(amount) {
+  health = Math.min(health + amount, CONFIG.playerMaxHealth);
 }
