@@ -110,10 +110,11 @@ export function updateWarp(now) {
     const cy = pipe.y + t * 40; // sink into pipe
 
     if (t >= 1) {
-      // Switch to rising from other pipe
-      warpAnim.phase = 'up';
-      warpAnim.startTime = now;
-      warpAnim.duration = WARP_UP_DURATION;
+      // Player sank into pipe — transition to water world!
+      const pipeId = warpAnim.pipe.id;
+      warpAnim = null;
+      warpCooldownUntil = now + WARP_COOLDOWN;
+      return { x: cx, y: cy, scale: 0.3, warping: false, enterWaterWorld: true, pipeId };
     }
 
     return { x: cx, y: cy, scale: 1 - t * 0.7, warping: true };
@@ -138,6 +139,20 @@ export function updateWarp(now) {
   }
 
   return null;
+}
+
+// Start the rise-up animation at a specific pipe (used when returning from water world)
+export function startRiseFromPipe(pipeId, now) {
+  const pipe = pipes.find(p => p.id === pipeId);
+  if (!pipe) return;
+  const targetPipe = pipe; // rising from this pipe
+  warpAnim = {
+    phase: 'up',
+    pipe: targetPipe,
+    targetPipe: targetPipe,
+    startTime: now,
+    duration: WARP_UP_DURATION,
+  };
 }
 
 export function isWarping() {
