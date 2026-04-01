@@ -41,7 +41,7 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   y = Math.max(half, Math.min(arenaHeight - half, y));
 }
 
-export function drawPlayer(ctx, now) {
+export function drawPlayer(ctx, now, drawScale) {
   if (now < invincibleUntil) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
@@ -49,9 +49,12 @@ export function drawPlayer(ctx, now) {
   const size = CONFIG.playerSize;
   const half = size / 2;
   const px = size / 14; // pixel unit for 14x16 sprite grid
+  const s = drawScale != null ? drawScale : 1;
 
   ctx.save();
-  ctx.translate(x - half, y - half);
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  ctx.translate(-half, -half);
 
   // Mario pixel art (facing camera)
   // Hat (red)

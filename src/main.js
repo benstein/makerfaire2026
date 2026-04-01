@@ -8,7 +8,7 @@ import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getP
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
-import { resetObstacles, drawObstacles, resolveCollision, hitsObstacle } from './game/obstacles.js';
+import { resetObstacles, drawObstacles, resolveCollision, hitsObstacle, checkPipeWarp, updateWarp, isWarping } from './game/obstacles.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
@@ -22,6 +22,7 @@ loadChangelog();
 initBuildStatus();
 
 let lastTime = performance.now();
+let playerWarpScale = 1;
 
 function gameLoop(now) {
   const dt = now - lastTime;
@@ -49,14 +50,32 @@ function gameLoop(now) {
   // --- Update ---
   if (state === STATES.PLAYING) {
     updateTimer(dt);
-    updatePlayer(dt, input, width, height, now);
 
-    // Push player out of obstacles
-    const pBounds = getPlayerBounds();
-    const resolved = resolveCollision({ ...pBounds });
-    if (resolved.x !== pBounds.x || resolved.y !== pBounds.y) {
-      const half = CONFIG.playerSize / 2;
-      setPlayerPos(resolved.x + half, resolved.y + half);
+    // Warp animation in progress — override player position
+    const warpState = updateWarp(now);
+    if (warpState) {
+      setPlayerPos(warpState.x, warpState.y);
+      playerWarpScale = warpState.scale;
+      if (warpState.done) {
+        playerWarpScale = 1;
+      }
+    } else {
+      playerWarpScale = 1;
+    }
+
+    if (!isWarping()) {
+      updatePlayer(dt, input, width, height, now);
+
+      // Push player out of obstacles
+      const pBounds = getPlayerBounds();
+      const resolved = resolveCollision({ ...pBounds });
+      if (resolved.x !== pBounds.x || resolved.y !== pBounds.y) {
+        const half = CONFIG.playerSize / 2;
+        setPlayerPos(resolved.x + half, resolved.y + half);
+      }
+
+      // Check if player stepped on a pipe to warp
+      checkPipeWarp(getPlayerBounds(), now);
     }
 
     updateEnemies(dt, getPlayerPos(), now, width, height);
@@ -69,7 +88,7 @@ function gameLoop(now) {
       enemy.y = res.y;
     }
 
-    // Firing
+    // Firing (can still fire while warping — it's fun!)
     if (input.fire || input.fireHeld) {
       tryFire(getPlayerPos(), getPlayerFacing(), now);
     }
@@ -96,15 +115,17 @@ function gameLoop(now) {
       }
     }
 
-    // Enemy-player collisions
-    const playerBounds = getPlayerBounds();
-    const enemies = getEnemies();
-    for (let i = enemies.length - 1; i >= 0; i--) {
-      if (aabb(playerBounds, enemies[i])) {
-        if (damagePlayer(now)) {
-          removeEnemy(i);
-          if (getPlayerHealth() <= 0) {
-            endGame(false);
+    // Enemy-player collisions (not during warp — you're inside the pipe!)
+    if (!isWarping()) {
+      const playerBounds = getPlayerBounds();
+      const enemies = getEnemies();
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        if (aabb(playerBounds, enemies[i])) {
+          if (damagePlayer(now)) {
+            removeEnemy(i);
+            if (getPlayerHealth() <= 0) {
+              endGame(false);
+            }
           }
         }
       }
@@ -117,8 +138,8 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
-    drawObstacles(ctx);
-    drawPlayer(ctx, now);
+    drawObstacles(ctx, now);
+    drawPlayer(ctx, now, playerWarpScale);
     drawEnemies(ctx, now);
     drawProjectiles(ctx, now);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
