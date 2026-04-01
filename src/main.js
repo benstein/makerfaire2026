@@ -4,10 +4,11 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
+import { resetObstacles, drawObstacles, resolveCollision, hitsObstacle } from './game/obstacles.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
@@ -38,6 +39,7 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
+      resetObstacles(width, height);
       resetVictoryEffects();
     } else {
       goToTitle();
@@ -48,13 +50,38 @@ function gameLoop(now) {
   if (state === STATES.PLAYING) {
     updateTimer(dt);
     updatePlayer(dt, input, width, height, now);
+
+    // Push player out of obstacles
+    const pBounds = getPlayerBounds();
+    const resolved = resolveCollision({ ...pBounds });
+    if (resolved.x !== pBounds.x || resolved.y !== pBounds.y) {
+      const half = CONFIG.playerSize / 2;
+      setPlayerPos(resolved.x + half, resolved.y + half);
+    }
+
     updateEnemies(dt, getPlayerPos(), now, width, height);
+
+    // Push enemies out of obstacles
+    const enemyListForObs = getEnemies();
+    for (const enemy of enemyListForObs) {
+      const res = resolveCollision({ x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h });
+      enemy.x = res.x;
+      enemy.y = res.y;
+    }
 
     // Firing
     if (input.fire || input.fireHeld) {
       tryFire(getPlayerPos(), getPlayerFacing(), now);
     }
     updateProjectiles(dt, width, height);
+
+    // Projectile-obstacle collisions (fireballs hit blocks/pipes)
+    const projListObs = getProjectiles();
+    for (let i = projListObs.length - 1; i >= 0; i--) {
+      if (hitsObstacle(projListObs[i])) {
+        removeProjectile(i);
+      }
+    }
 
     // Projectile-enemy collisions
     const projList = getProjectiles();
@@ -90,6 +117,7 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    drawObstacles(ctx);
     drawPlayer(ctx, now);
     drawEnemies(ctx, now);
     drawProjectiles(ctx, now);

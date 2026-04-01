@@ -62,45 +62,7 @@ export function clearCanvas() {
     ctx.fillRect(bx + brickSize/2, brickSize, 2, brickSize - 1);
   }
 
-  // Floating ? blocks scattered around
-  const qBlocks = [
-    [canvas.width * 0.2, canvas.height * 0.3],
-    [canvas.width * 0.5, canvas.height * 0.25],
-    [canvas.width * 0.8, canvas.height * 0.35],
-    [canvas.width * 0.35, canvas.height * 0.6],
-    [canvas.width * 0.65, canvas.height * 0.55],
-  ];
-  for (const [qx, qy] of qBlocks) {
-    // Question block
-    ctx.fillStyle = '#E8A020';
-    ctx.fillRect(qx, qy, brickSize, brickSize);
-    ctx.strokeStyle = '#804000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(qx, qy, brickSize, brickSize);
-    // ? mark
-    ctx.fillStyle = '#804000';
-    ctx.font = 'bold 20px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('?', qx + brickSize/2, qy + brickSize * 0.75);
-    ctx.textAlign = 'left';
-  }
-
-  // A few green pipes
-  const pipes = [
-    [canvas.width * 0.1, canvas.height * 0.7, 40, 60],
-    [canvas.width * 0.88, canvas.height * 0.65, 40, 80],
-  ];
-  for (const [ppx, ppy, pw, ph] of pipes) {
-    // Pipe body
-    ctx.fillStyle = '#00A800';
-    ctx.fillRect(ppx, ppy, pw, ph);
-    // Pipe rim (wider top)
-    ctx.fillStyle = '#00D800';
-    ctx.fillRect(ppx - 4, ppy, pw + 8, 14);
-    // Pipe highlight
-    ctx.fillStyle = '#40FF40';
-    ctx.fillRect(ppx + 4, ppy + 14, 6, ph - 14);
-  }
+  // Pipes and ? blocks are drawn by obstacles.js (they have hitboxes now!)
 }
 
 export function drawTitleScreen() {
