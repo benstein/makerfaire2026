@@ -6,7 +6,7 @@ export const CONFIG = {
   // Player
   playerSpeed: 4,
   playerSize: 28,
-  playerColor: '#ffffff',
+  playerColor: '#E52521', // Mario red
   playerMaxHealth: 3,
   invincibilityDuration: 1000, // ms
 
@@ -19,16 +19,16 @@ export const CONFIG = {
 
   // Weapons
   projectileSpeed: 7,
-  projectileSize: 6,
-  projectileColor: '#ffffff',
+  projectileSize: 8,
+  projectileColor: '#FF6600', // Mario fireball orange
   fireRateCooldown: 250, // ms between shots
 
   // Game
   gameDuration: 60, // seconds
-  arenaBackground: '#1a1a2e',
+  arenaBackground: '#5C94FC', // Mario sky blue
 
   // HUD
-  heartColor: '#e74c3c',
+  heartColor: '#E52521', // Mario red
   timerColor: '#f1c40f',
   hudFontSize: 24,
 };

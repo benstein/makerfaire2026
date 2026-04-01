@@ -1,3 +1,4 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  { "version": 2, "name": "Gabi", "description": "Super Mario Bros makeover! Mario as the player, Goombas and Koopa Troopas as enemies, fireballs, question blocks, pipes, and blue sky!" }
 ]
