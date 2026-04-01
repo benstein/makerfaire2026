@@ -1,3 +1,4 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  { "version": 2, "name": "Gabi", "description": "Artichoke world! You're a happy green artichoke fighting off angry purple artichokes in a dark garden!" }
 ]

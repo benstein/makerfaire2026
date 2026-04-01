@@ -53,9 +53,90 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 }
 
 export function drawEnemies(ctx) {
-  ctx.fillStyle = CONFIG.enemyColor;
   for (const enemy of enemies) {
-    ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+    const s = enemy.w;
+    const cx = enemy.x + s / 2;
+    const cy = enemy.y + s / 2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // Spiky stem on top
+    ctx.fillStyle = '#6B4A3A';
+    ctx.beginPath();
+    ctx.moveTo(0, -s / 2 - 6);
+    ctx.lineTo(-3, -s / 2);
+    ctx.lineTo(3, -s / 2);
+    ctx.closePath();
+    ctx.fill();
+    // Thorny side leaves
+    ctx.beginPath();
+    ctx.moveTo(-5, -s / 2 - 3);
+    ctx.lineTo(-9, -s / 2 - 9);
+    ctx.lineTo(-1, -s / 2 - 1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(5, -s / 2 - 3);
+    ctx.lineTo(9, -s / 2 - 9);
+    ctx.lineTo(1, -s / 2 - 1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Body — purplish-red artichoke
+    ctx.fillStyle = '#8B3A5C';
+    ctx.beginPath();
+    ctx.ellipse(0, 1, s / 2, s / 2 + 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Leaf scale pattern — darker, spikier
+    const leafColors = ['#9C4468', '#7A2E4E', '#9C4468', '#6B2040'];
+    for (let row = 0; row < 4; row++) {
+      ctx.fillStyle = leafColors[row];
+      const rowY = -s / 2 + 4 + row * (s / 5);
+      const leafCount = row === 0 ? 2 : 3;
+      const leafW = s / leafCount;
+      for (let l = 0; l < leafCount; l++) {
+        const lx = -s / 2 + l * leafW + leafW / 2 + (row % 2 ? leafW / 3 : 0);
+        ctx.beginPath();
+        ctx.ellipse(lx, rowY, leafW / 2, s / 8, 0, Math.PI, 0, true);
+        ctx.fill();
+      }
+    }
+
+    // Angry face
+    // Eyes (angry slant)
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(-4, -1, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(4, -1, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.arc(-4, -0.5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(4, -0.5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Angry eyebrows
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-6, -4);
+    ctx.lineTo(-2, -3);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(6, -4);
+    ctx.lineTo(2, -3);
+    ctx.stroke();
+    // Frown
+    ctx.beginPath();
+    ctx.arc(0, 5, 3.5, Math.PI + 0.3, -0.3);
+    ctx.stroke();
+
+    ctx.restore();
   }
 }
 
