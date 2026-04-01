@@ -91,7 +91,7 @@ function gameLoop(now) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
     drawPlayer(ctx, now);
-    drawEnemies(ctx);
+    drawEnemies(ctx, now);
     drawProjectiles(ctx);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {

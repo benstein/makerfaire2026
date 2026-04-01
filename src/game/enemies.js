@@ -46,95 +46,102 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     if (dist > 0) {
       const scale = dt / 16.67;
-      enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
-      enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
+      const ndx = dx / dist;
+      const ndy = dy / dist;
+      enemy.x += ndx * CONFIG.enemySpeed * scale;
+      enemy.y += ndy * CONFIG.enemySpeed * scale;
+      enemy._lastDx = ndx;
+      enemy._lastDy = ndy;
     }
   }
 }
 
-export function drawEnemies(ctx) {
+export function drawEnemies(ctx, now) {
   for (const enemy of enemies) {
     const s = enemy.w;
-    const cx = enemy.x + s / 2;
-    const cy = enemy.y + s / 2;
+    const ex = enemy.x + s / 2;
+    const ey = enemy.y + s / 2;
 
     ctx.save();
-    ctx.translate(cx, cy);
+    ctx.translate(ex, ey);
 
-    // Spiky stem on top
-    ctx.fillStyle = '#6B4A3A';
-    ctx.beginPath();
-    ctx.moveTo(0, -s / 2 - 6);
-    ctx.lineTo(-3, -s / 2);
-    ctx.lineTo(3, -s / 2);
-    ctx.closePath();
-    ctx.fill();
-    // Thorny side leaves
-    ctx.beginPath();
-    ctx.moveTo(-5, -s / 2 - 3);
-    ctx.lineTo(-9, -s / 2 - 9);
-    ctx.lineTo(-1, -s / 2 - 1);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(5, -s / 2 - 3);
-    ctx.lineTo(9, -s / 2 - 9);
-    ctx.lineTo(1, -s / 2 - 1);
-    ctx.closePath();
-    ctx.fill();
+    // Rotate to face the direction they're moving
+    const playerDx = enemy._lastDx || 0;
+    const playerDy = enemy._lastDy || 0;
+    const angle = Math.atan2(playerDy, playerDx);
+    ctx.rotate(angle + Math.PI / 2); // point "up" of the roach toward movement
 
-    // Body — purplish-red artichoke
-    ctx.fillStyle = '#8B3A5C';
-    ctx.beginPath();
-    ctx.ellipse(0, 1, s / 2, s / 2 + 2, 0, 0, Math.PI * 2);
-    ctx.fill();
+    const hw = s / 2;
+    const hh = s / 2 + 3;
 
-    // Leaf scale pattern — darker, spikier
-    const leafColors = ['#9C4468', '#7A2E4E', '#9C4468', '#6B2040'];
-    for (let row = 0; row < 4; row++) {
-      ctx.fillStyle = leafColors[row];
-      const rowY = -s / 2 + 4 + row * (s / 5);
-      const leafCount = row === 0 ? 2 : 3;
-      const leafW = s / leafCount;
-      for (let l = 0; l < leafCount; l++) {
-        const lx = -s / 2 + l * leafW + leafW / 2 + (row % 2 ? leafW / 3 : 0);
+    // Legs — 3 pairs, twitching
+    const time = now || performance.now();
+    ctx.strokeStyle = '#3D1F0B';
+    ctx.lineWidth = 1.5;
+    for (let side = -1; side <= 1; side += 2) {
+      for (let leg = 0; leg < 3; leg++) {
+        const legY = -hh * 0.4 + leg * (hh * 0.45);
+        const twitch = Math.sin(time / 50 + leg * 2 + side) * 3;
         ctx.beginPath();
-        ctx.ellipse(lx, rowY, leafW / 2, s / 8, 0, Math.PI, 0, true);
-        ctx.fill();
+        ctx.moveTo(side * hw * 0.5, legY);
+        ctx.lineTo(side * (hw + 5 + twitch), legY + twitch * 0.5);
+        ctx.stroke();
       }
     }
 
-    // Angry face
-    // Eyes (angry slant)
-    ctx.fillStyle = '#fff';
+    // Antennae
+    ctx.strokeStyle = '#3D1F0B';
+    ctx.lineWidth = 1;
+    const antTwitch = Math.sin(time / 80) * 4;
     ctx.beginPath();
-    ctx.arc(-4, -1, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(4, -1, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.arc(-4, -0.5, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(4, -0.5, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    // Angry eyebrows
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(-6, -4);
-    ctx.lineTo(-2, -3);
+    ctx.moveTo(-3, -hh);
+    ctx.quadraticCurveTo(-5 + antTwitch, -hh - 10, -8 + antTwitch, -hh - 12);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(6, -4);
-    ctx.lineTo(2, -3);
+    ctx.moveTo(3, -hh);
+    ctx.quadraticCurveTo(5 - antTwitch, -hh - 10, 8 - antTwitch, -hh - 12);
     ctx.stroke();
-    // Frown
+
+    // Body — dark brown oval
+    ctx.fillStyle = '#4A2810';
     ctx.beginPath();
-    ctx.arc(0, 5, 3.5, Math.PI + 0.3, -0.3);
+    ctx.ellipse(0, 0, hw - 1, hh, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Shell/wing casings — lighter brown with line down center
+    ctx.fillStyle = '#6B3A1A';
+    ctx.beginPath();
+    ctx.ellipse(0, 1, hw - 3, hh - 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wing line down center
+    ctx.strokeStyle = '#3D1F0B';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, -hh + 4);
+    ctx.lineTo(0, hh - 3);
     ctx.stroke();
+
+    // Head (smaller darker circle at top)
+    ctx.fillStyle = '#2E1508';
+    ctx.beginPath();
+    ctx.ellipse(0, -hh + 3, hw * 0.55, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beady eyes
+    ctx.fillStyle = '#FF3300';
+    ctx.beginPath();
+    ctx.arc(-3, -hh + 2, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(3, -hh + 2, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Shiny shell highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.ellipse(-2, -3, hw * 0.35, hh * 0.4, -0.2, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }

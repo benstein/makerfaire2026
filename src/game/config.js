@@ -24,7 +24,7 @@ export const CONFIG = {
   fireRateCooldown: 250, // ms between shots
 
   // Game
-  gameDuration: 60, // seconds
+  gameDuration: 2, // seconds — Mami's speedrun!
   arenaBackground: '#1a2e1a', // dark garden green
 
   // HUD

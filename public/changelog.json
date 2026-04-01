@@ -1,4 +1,5 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Gabi", "description": "Artichoke world! You're a happy green artichoke fighting off angry purple artichokes in a dark garden!" }
+  { "version": 2, "name": "Gabi", "description": "Artichoke world! You're a happy green artichoke fighting off angry purple artichokes in a dark garden!" },
+  { "version": 3, "name": "Mami", "description": "2-second speedrun! Survive just 2 seconds to win, but now the enemies are creepy cockroaches with twitchy legs!" }
 ]
