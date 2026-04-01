@@ -6,7 +6,7 @@ export const CONFIG = {
   // Player
   playerSpeed: 4,
   playerSize: 28,
-  playerColor: '#E52521', // Mario red
+  playerColor: '#ffffff',
   playerMaxHealth: 3,
   invincibilityDuration: 1000, // ms
 
@@ -14,23 +14,21 @@ export const CONFIG = {
   enemySpeed: 2,
   enemySize: 22,
   enemyColor: '#e74c3c',
-  enemyHP: 2,              // hits to kill a Goomba
-  enemySpawnIntervalStart: 3000, // ms at game start (slower spawns)
-  enemySpawnIntervalEnd: 700,    // ms at game end (ramps down)
-  heartDropChance: 0.1,          // 10% chance to drop a heart on death
+  enemySpawnIntervalStart: 2000, // ms at game start
+  enemySpawnIntervalEnd: 400,    // ms at game end (ramps down)
 
   // Weapons
   projectileSpeed: 7,
-  projectileSize: 8,
-  projectileColor: '#FF6600', // Mario fireball orange
-  fireRateCooldown: 400, // ms between shots (slower fire rate)
+  projectileSize: 6,
+  projectileColor: '#ffffff',
+  fireRateCooldown: 250, // ms between shots
 
   // Game
   gameDuration: 60, // seconds
-  arenaBackground: '#5C94FC', // Mario sky blue
+  arenaBackground: '#1a1a2e',
 
   // HUD
-  heartColor: '#E52521', // Mario red
+  heartColor: '#e74c3c',
   timerColor: '#f1c40f',
   hudFontSize: 24,
 };
