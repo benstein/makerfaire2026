@@ -8,6 +8,7 @@ import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, g
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
+import { resetMeat, tryDropMeat, updateMeat, drawMeat } from './game/meat.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, drawLevelUpScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -40,6 +41,7 @@ function gameLoop(now) {
       resetEnemies();
       resetWeapons();
       resetXPOrbs();
+      resetMeat();
       resetVictoryEffects();
     } else if (state !== STATES.LEVELING_UP) {
       goToTitle();
@@ -56,6 +58,13 @@ function gameLoop(now) {
       tryFire(getPlayerPos(), getPlayerFacing(), now);
     }
     updateProjectiles(dt, width, height);
+
+    // Drop meat with B button
+    if (input.dropMeat) {
+      const pos = getPlayerPos();
+      tryDropMeat(pos.x, pos.y, now);
+    }
+    updateMeat(now);
 
     // Projectile-enemy collisions — enemies drop XP orbs
     const projList = getProjectiles();
@@ -103,6 +112,7 @@ function gameLoop(now) {
       resetEnemies();
       resetWeapons();
       resetXPOrbs();
+      resetMeat();
       resetPlayer(width, height);
     }
   }
@@ -114,9 +124,10 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    drawMeat(ctx, now);
     drawXPOrbs(ctx, now);
     drawPlayer(ctx, now);
-    drawEnemies(ctx);
+    drawEnemies(ctx, now);
     drawProjectiles(ctx);
     drawHUD(ctx, getPlayerHealth(), level, getXP(), getXPNeeded(), getMaxLevel(), width);
   } else if (state === STATES.LEVELING_UP) {

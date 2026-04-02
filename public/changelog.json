@@ -1,4 +1,5 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Zeke", "description": "Level system! Kill enemies for XP orbs, collect 10 to level up. 5 unique arenas that get harder. Reach Level 5 to win!" }
+  { "version": 2, "name": "Zeke", "description": "Level system! Kill enemies for XP orbs, collect 10 to level up. 5 unique arenas that get harder. Reach Level 5 to win!" },
+  { "version": 3, "name": "Papi", "description": "Press B to drop meat! Enemies love it - they chase the meat, eat it for 1 second, then come back for you. Use it to escape!" }
 ]
