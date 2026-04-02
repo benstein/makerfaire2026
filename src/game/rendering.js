@@ -21,8 +21,11 @@ export function getCanvasSize() {
   return { width: canvas.width, height: canvas.height };
 }
 
-export function clearCanvas() {
-  ctx.fillStyle = CONFIG.arenaBackground;
+export function clearCanvas(level) {
+  const bg = (level && CONFIG.levelBackgrounds)
+    ? CONFIG.levelBackgrounds[(level - 1) % CONFIG.levelBackgrounds.length]
+    : CONFIG.arenaBackground;
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -164,6 +167,66 @@ export function drawVictoryScreen() {
 export function resetVictoryEffects() {
   victoryParticles = [];
   victoryStartTime = 0;
+}
+
+export function drawLevelUpScreen(level, progress) {
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const now = performance.now() / 1000;
+
+  // Flash background
+  const flash = Math.max(0, 1 - progress * 3);
+  if (flash > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${flash * 0.6})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Expanding ring
+  const ringSize = progress * 300;
+  const ringAlpha = Math.max(0, 1 - progress);
+  ctx.strokeStyle = `rgba(74, 170, 255, ${ringAlpha})`;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(cx, cy, ringSize, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Level name
+  const levelNames = CONFIG.levelNames || [];
+  const name = levelNames[level - 1] || `Level ${level}`;
+
+  // "LEVEL X" text — scale in
+  const textScale = Math.min(1, progress * 4);
+  ctx.save();
+  ctx.translate(cx, cy - 30);
+  ctx.scale(textScale, textScale);
+  ctx.font = 'bold 56px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#4AF';
+  ctx.fillText(`LEVEL ${level}`, 0, 0);
+  ctx.restore();
+
+  // Arena name
+  ctx.font = 'bold 24px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.globalAlpha = Math.min(1, progress * 3 - 0.5);
+  ctx.fillText(name, cx, cy + 20);
+  ctx.globalAlpha = 1;
+
+  // Sparkle particles around text
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2 + now * 2;
+    const r = 80 + Math.sin(now * 3 + i) * 20;
+    const sx = cx + Math.cos(angle) * r * progress;
+    const sy = cy + Math.sin(angle) * r * progress;
+    const sparkAlpha = Math.max(0, 1 - progress * 1.2) * (0.5 + Math.sin(now * 5 + i) * 0.5);
+    ctx.fillStyle = `rgba(74, 170, 255, ${sparkAlpha})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.textAlign = 'left';
 }
 
 export function drawGameOverScreen() {

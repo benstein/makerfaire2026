@@ -3,12 +3,13 @@
 
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
-import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
+import { STATES, getState, startGame, endGame, goToTitle, addXP, getLevel, getXP, getXPNeeded, getMaxLevel, updateLevelUp, getLevelUpProgress } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
+import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
 import { aabb } from './game/collision.js';
-import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, drawLevelUpScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -38,15 +39,15 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
+      resetXPOrbs();
       resetVictoryEffects();
-    } else {
+    } else if (state !== STATES.LEVELING_UP) {
       goToTitle();
     }
   }
 
   // --- Update ---
   if (state === STATES.PLAYING) {
-    updateTimer(dt);
     updatePlayer(dt, input, width, height, now);
     updateEnemies(dt, getPlayerPos(), now, width, height);
 
@@ -56,17 +57,27 @@ function gameLoop(now) {
     }
     updateProjectiles(dt, width, height);
 
-    // Projectile-enemy collisions
+    // Projectile-enemy collisions — enemies drop XP orbs
     const projList = getProjectiles();
     const enemyList = getEnemies();
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
+          const enemy = enemyList[j];
+          const ex = enemy.x + enemy.w / 2;
+          const ey = enemy.y + enemy.h / 2;
           removeProjectile(i);
           removeEnemy(j);
+          spawnXPOrb(ex, ey);
           break;
         }
       }
+    }
+
+    // XP orb collection
+    const collected = updateXPOrbs(getPlayerBounds(), now);
+    if (collected > 0) {
+      addXP(collected);
     }
 
     // Enemy-player collisions
@@ -84,16 +95,32 @@ function gameLoop(now) {
     }
   }
 
+  // --- Level-up transition ---
+  if (state === STATES.LEVELING_UP) {
+    updateLevelUp(now);
+    // When transition ends, reset arena for new level
+    if (getState() === STATES.PLAYING) {
+      resetEnemies();
+      resetWeapons();
+      resetXPOrbs();
+      resetPlayer(width, height);
+    }
+  }
+
   // --- Render ---
-  clearCanvas();
+  const level = getLevel();
+  clearCanvas(level);
 
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    drawXPOrbs(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
-    drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+    drawHUD(ctx, getPlayerHealth(), level, getXP(), getXPNeeded(), getMaxLevel(), width);
+  } else if (state === STATES.LEVELING_UP) {
+    drawLevelUpScreen(level, getLevelUpProgress(now));
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
   } else if (state === STATES.GAMEOVER) {

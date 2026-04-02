@@ -1,7 +1,7 @@
 // src/game/enemies.js
 
 import { CONFIG } from './config.js';
-import { getGameProgress } from './gameState.js';
+import { getGameProgress, getLevel } from './gameState.js';
 
 let enemies = [];
 let lastSpawnTime = 0;
@@ -46,16 +46,39 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     if (dist > 0) {
       const scale = dt / 16.67;
-      enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
-      enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
+      // Enemies get faster each level
+      const levelSpeedBonus = 1 + (getLevel() - 1) * 0.25;
+      const speed = CONFIG.enemySpeed * levelSpeedBonus;
+      enemy.x += (dx / dist) * speed * scale;
+      enemy.y += (dy / dist) * speed * scale;
     }
   }
 }
 
+// Enemy colors per level — gets scarier
+const LEVEL_COLORS = ['#e74c3c', '#e67e22', '#9b59b6', '#1abc9c', '#ff1744'];
+
 export function drawEnemies(ctx) {
-  ctx.fillStyle = CONFIG.enemyColor;
+  const level = getLevel();
+  const color = LEVEL_COLORS[(level - 1) % LEVEL_COLORS.length];
+  ctx.fillStyle = color;
   for (const enemy of enemies) {
-    ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+    // Bigger enemies at higher levels
+    const sizeBonus = (level - 1) * 2;
+    const s = enemy.w + sizeBonus;
+    const offset = sizeBonus / 2;
+    ctx.fillRect(enemy.x - offset, enemy.y - offset, s, s);
+
+    // Angry eyes on higher-level enemies
+    if (level >= 2) {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(enemy.x + 4 - offset, enemy.y + 4 - offset, 5, 4);
+      ctx.fillRect(enemy.x + s - 9 - offset, enemy.y + 4 - offset, 5, 4);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(enemy.x + 6 - offset, enemy.y + 5 - offset, 2, 2);
+      ctx.fillRect(enemy.x + s - 7 - offset, enemy.y + 5 - offset, 2, 2);
+      ctx.fillStyle = color;
+    }
   }
 }
 
