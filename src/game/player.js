@@ -1,6 +1,7 @@
 // src/game/player.js
 
 import { CONFIG } from './config.js';
+import { isSpeedBoosted, isInvisible } from './powers.js';
 
 let x, y;
 let facingX = 0;
@@ -24,8 +25,9 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   // Normalize diagonal movement
   const mag = Math.sqrt(mx * mx + my * my);
   if (mag > 1) { mx /= mag; my /= mag; }
-  const dx = mx * CONFIG.playerSpeed * scale;
-  const dy = my * CONFIG.playerSpeed * scale;
+  const speedMult = isSpeedBoosted() ? 2 : 1;
+  const dx = mx * CONFIG.playerSpeed * speedMult * scale;
+  const dy = my * CONFIG.playerSpeed * speedMult * scale;
 
   x += dx;
   y += dy;
@@ -47,8 +49,26 @@ export function drawPlayer(ctx, now) {
   }
 
   const half = CONFIG.playerSize / 2;
-  ctx.fillStyle = CONFIG.playerColor;
+
+  // Invisibility: ghost effect
+  if (isInvisible()) {
+    ctx.globalAlpha = 0.15 + Math.sin(now / 200) * 0.1;
+  }
+
+  // Speed boost: trail + tint
+  if (isSpeedBoosted()) {
+    ctx.fillStyle = '#ffd700';
+    // Speed lines behind player
+    ctx.globalAlpha = 0.3;
+    ctx.fillRect(x - half - 8, y - half + 4, 6, 3);
+    ctx.fillRect(x - half - 12, y - half + 12, 8, 2);
+    ctx.fillRect(x - half - 6, y - half + 20, 5, 3);
+    ctx.globalAlpha = isInvisible() ? 0.15 : 1;
+  }
+
+  ctx.fillStyle = isSpeedBoosted() ? '#ffd700' : CONFIG.playerColor;
   ctx.fillRect(x - half, y - half, CONFIG.playerSize, CONFIG.playerSize);
+  ctx.globalAlpha = 1;
 }
 
 export function getPlayerPos() {

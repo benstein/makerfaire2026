@@ -9,6 +9,7 @@ import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } fro
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
 import { resetMeat, tryDropMeat, updateMeat, drawMeat } from './game/meat.js';
+import { resetPowers, updatePowers, activatePower, isInvisible, isPiercing, drawPowerHUD } from './game/powers.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, drawLevelUpScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -42,6 +43,7 @@ function gameLoop(now) {
       resetWeapons();
       resetXPOrbs();
       resetMeat();
+      resetPowers(now);
       resetVictoryEffects();
     } else if (state !== STATES.LEVELING_UP) {
       goToTitle();
@@ -50,8 +52,14 @@ function gameLoop(now) {
 
   // --- Update ---
   if (state === STATES.PLAYING) {
+    updatePowers(now);
     updatePlayer(dt, input, width, height, now);
     updateEnemies(dt, getPlayerPos(), now, width, height);
+
+    // Activate power with X button
+    if (input.usePower) {
+      activatePower(now);
+    }
 
     // Firing
     if (input.fire || input.fireHeld) {
@@ -66,20 +74,25 @@ function gameLoop(now) {
     }
     updateMeat(now);
 
-    // Projectile-enemy collisions — enemies drop XP orbs
+    // Projectile-enemy collisions — piercing bullets go through!
     const projList = getProjectiles();
     const enemyList = getEnemies();
+    const piercing = isPiercing();
     for (let i = projList.length - 1; i >= 0; i--) {
+      let hitSomething = false;
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
           const enemy = enemyList[j];
           const ex = enemy.x + enemy.w / 2;
           const ey = enemy.y + enemy.h / 2;
-          removeProjectile(i);
           removeEnemy(j);
           spawnXPOrb(ex, ey);
-          break;
+          hitSomething = true;
+          if (!piercing) break; // normal bullets stop; piercing continues
         }
+      }
+      if (hitSomething && !piercing) {
+        removeProjectile(i);
       }
     }
 
@@ -89,15 +102,17 @@ function gameLoop(now) {
       addXP(collected);
     }
 
-    // Enemy-player collisions
-    const playerBounds = getPlayerBounds();
-    const enemies = getEnemies();
-    for (let i = enemies.length - 1; i >= 0; i--) {
-      if (aabb(playerBounds, enemies[i])) {
-        if (damagePlayer(now)) {
-          removeEnemy(i);
-          if (getPlayerHealth() <= 0) {
-            endGame(false);
+    // Enemy-player collisions (skip during invisibility)
+    if (!isInvisible()) {
+      const playerBounds = getPlayerBounds();
+      const enemies = getEnemies();
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        if (aabb(playerBounds, enemies[i])) {
+          if (damagePlayer(now)) {
+            removeEnemy(i);
+            if (getPlayerHealth() <= 0) {
+              endGame(false);
+            }
           }
         }
       }
@@ -113,6 +128,7 @@ function gameLoop(now) {
       resetWeapons();
       resetXPOrbs();
       resetMeat();
+      resetPowers(now);
       resetPlayer(width, height);
     }
   }
@@ -130,6 +146,7 @@ function gameLoop(now) {
     drawEnemies(ctx, now);
     drawProjectiles(ctx);
     drawHUD(ctx, getPlayerHealth(), level, getXP(), getXPNeeded(), getMaxLevel(), width);
+    drawPowerHUD(ctx, now, width, height);
   } else if (state === STATES.LEVELING_UP) {
     drawLevelUpScreen(level, getLevelUpProgress(now));
   } else if (state === STATES.VICTORY) {

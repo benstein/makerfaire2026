@@ -25,6 +25,7 @@ export function tryDropMeat(x, y, now) {
     spawnTime: now,
     beingEaten: false,
     eatStartTime: 0,
+    eaters: 0, // how many enemies are eating this
   });
   return true;
 }
@@ -37,10 +38,14 @@ export function updateMeat(now) {
   for (let i = meats.length - 1; i >= 0; i--) {
     const meat = meats[i];
 
-    // Remove if eaten
-    if (meat.beingEaten && now - meat.eatStartTime > EAT_DURATION) {
-      meats.splice(i, 1);
-      continue;
+    // Remove if eaten — goes faster with more eaters (2x per eater)
+    if (meat.beingEaten) {
+      const speedMultiplier = Math.max(1, meat.eaters);
+      const effectiveDuration = EAT_DURATION / speedMultiplier;
+      if (now - meat.eatStartTime > effectiveDuration) {
+        meats.splice(i, 1);
+        continue;
+      }
     }
 
     // Remove if expired
@@ -50,12 +55,11 @@ export function updateMeat(now) {
   }
 }
 
-// Find the nearest meat that isn't already being eaten, for an enemy to target
+// Find the nearest meat for an enemy to target (including meat being eaten — they can join!)
 export function findNearestMeat(ex, ey) {
   let closest = null;
   let closestDist = Infinity;
   for (const meat of meats) {
-    if (meat.beingEaten) continue;
     const dx = (meat.x + meat.w / 2) - ex;
     const dy = (meat.y + meat.h / 2) - ey;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -67,11 +71,15 @@ export function findNearestMeat(ex, ey) {
   return closest;
 }
 
-// Try to start eating a meat (called when enemy reaches it)
+// Start or join eating a meat (multiple enemies can eat the same one)
 export function startEating(meat, now) {
-  if (meat.beingEaten) return false;
-  meat.beingEaten = true;
-  meat.eatStartTime = now;
+  if (!meat.beingEaten) {
+    meat.beingEaten = true;
+    meat.eatStartTime = now;
+    meat.eaters = 1;
+  } else {
+    meat.eaters += 1;
+  }
   return true;
 }
 
@@ -90,12 +98,14 @@ export function drawMeat(ctx, now) {
     ctx.translate(cx, cy);
 
     if (meat.beingEaten) {
-      // Shrink as it's eaten
-      const eatProgress = Math.min(1, (now - meat.eatStartTime) / EAT_DURATION);
+      // Shrink as it's eaten — faster with more eaters
+      const speedMult = Math.max(1, meat.eaters);
+      const effectiveDur = EAT_DURATION / speedMult;
+      const eatProgress = Math.min(1, (now - meat.eatStartTime) / effectiveDur);
       const s = 1 - eatProgress * 0.8;
       ctx.scale(s, s);
-      // Wobble
-      ctx.rotate(Math.sin(now / 50) * 0.2);
+      // Wobble faster with more eaters
+      ctx.rotate(Math.sin(now / (50 / speedMult)) * 0.2);
     }
 
     // Meat body — brown steak shape

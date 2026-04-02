@@ -3,6 +3,7 @@
 import { CONFIG } from './config.js';
 import { getGameProgress, getLevel } from './gameState.js';
 import { findNearestMeat, startEating } from './meat.js';
+import { isInvisible } from './powers.js';
 import { aabb } from './collision.js';
 
 let enemies = [];
@@ -24,7 +25,13 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
+  // Random scatter direction (used during invisibility)
+  const scatterAngle = Math.random() * Math.PI * 2;
+  enemies.push({
+    x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize,
+    scatterDx: Math.cos(scatterAngle),
+    scatterDy: Math.sin(scatterAngle),
+  });
 }
 
 function getCurrentSpawnInterval() {
@@ -52,6 +59,19 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     const ecx = enemy.x + enemy.w / 2;
     const ecy = enemy.y + enemy.h / 2;
+    const scale = dt / 16.67;
+    const levelSpeedBonus = 1 + (getLevel() - 1) * 0.25;
+    const speed = CONFIG.enemySpeed * levelSpeedBonus;
+
+    // During invisibility: scatter in random directions
+    if (isInvisible()) {
+      enemy.x += enemy.scatterDx * speed * 1.5 * scale;
+      enemy.y += enemy.scatterDy * speed * 1.5 * scale;
+      // Bounce off arena edges
+      if (enemy.x < 0 || enemy.x > arenaWidth - enemy.w) enemy.scatterDx *= -1;
+      if (enemy.y < 0 || enemy.y > arenaHeight - enemy.h) enemy.scatterDy *= -1;
+      continue;
+    }
 
     // Check for nearby meat to chase
     const meat = findNearestMeat(ecx, ecy);
@@ -70,21 +90,17 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist > 0) {
-      const scale = dt / 16.67;
-      const levelSpeedBonus = 1 + (getLevel() - 1) * 0.25;
-      const speed = CONFIG.enemySpeed * levelSpeedBonus;
       enemy.x += (dx / dist) * speed * scale;
       enemy.y += (dy / dist) * speed * scale;
     }
 
-    // If chasing meat, check if reached it
-    if (meat && !meat.beingEaten) {
+    // If chasing meat, check if reached it (can join others already eating)
+    if (meat) {
       const meatBounds = { x: meat.x, y: meat.y, w: meat.w, h: meat.h };
       if (aabb(enemy, meatBounds)) {
-        if (startEating(meat, now)) {
-          enemy.eating = true;
-          enemy.eatStart = now;
-        }
+        startEating(meat, now);
+        enemy.eating = true;
+        enemy.eatStart = now;
       }
     }
   }

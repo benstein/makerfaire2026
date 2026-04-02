@@ -9,11 +9,13 @@ const state = {
   fireHeld: false,
   startHeld: false,
   dropMeat: false,
+  usePower: false,
 };
 
 let prevFire = false;
 let prevStart = false;
 let prevMeat = false;
+let prevPower = false;
 
 const DEADZONE = 0.2;
 
@@ -39,6 +41,10 @@ function pollKeyboard() {
   const meatNow = keys['b'] || keys['B'] || false;
   state.dropMeat = meatNow && !prevMeat;
   prevMeat = meatNow;
+
+  const powerNow = keys['x'] || keys['X'] || false;
+  state.usePower = powerNow && !prevPower;
+  prevPower = powerNow;
 }
 
 export function pollInput() {
@@ -69,6 +75,11 @@ export function pollInput() {
   const meatNow = gp.buttons[1]?.pressed ?? false;
   state.dropMeat = meatNow && !prevMeat;
   prevMeat = meatNow;
+
+  // X button = buttons[2] on standard gamepad
+  const powerNow = gp.buttons[2]?.pressed ?? false;
+  state.usePower = powerNow && !prevPower;
+  prevPower = powerNow;
 
   return state;
 }
