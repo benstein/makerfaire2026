@@ -1,5 +1,6 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
   { "version": 2, "name": "Zeke", "description": "XP system! Kill enemies for orbs, earn powers at 5 XP then 10, 15, 20... Three random powers: Speed Boost, Shield Wall, Triple Shot. Stopwatch + stats screen!" },
-  { "version": 3, "name": "Zeke", "description": "Fire posts! Shoot the flaming torches for loot: 50% chance of 1 XP, 20% chance of 3 XP, 10% chance of 5 XP, or 20% chance of a healing heart!" }
+  { "version": 3, "name": "Zeke", "description": "Fire posts! Shoot the flaming torches for loot: 50% chance of 1 XP, 20% chance of 3 XP, 10% chance of 5 XP, or 20% chance of a healing heart!" },
+  { "version": 4, "name": "Zeke", "description": "Jump! Press Y or J to leap into the air and fly over enemies. You cast a shadow on the ground while airborne!" }
 ]

@@ -4,7 +4,7 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, healPlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, healPlayer, isPlayerJumping } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
@@ -128,23 +128,24 @@ function gameLoop(now) {
     // Heart drop collection
     updateHeartDrops(getPlayerBounds(), healPlayer, now);
 
-    // Enemy-player collisions (shield blocks damage)
-    const playerBounds = getPlayerBounds();
-    const enemies = getEnemies();
-    for (let i = enemies.length - 1; i >= 0; i--) {
-      if (aabb(playerBounds, enemies[i])) {
-        if (isShielded()) {
-          // Shield destroys enemy on contact!
-          const enemy = enemies[i];
-          spawnXPOrb(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2);
-          addXP(1);
-          addKill();
-          removeEnemy(i);
-        } else if (damagePlayer(now)) {
-          removeEnemy(i);
-          if (getPlayerHealth() <= 0) {
-            gameEndedWon = false;
-            endGame(false);
+    // Enemy-player collisions (skip while jumping)
+    if (!isPlayerJumping()) {
+      const playerBounds = getPlayerBounds();
+      const enemies = getEnemies();
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        if (aabb(playerBounds, enemies[i])) {
+          if (isShielded()) {
+            const enemy = enemies[i];
+            spawnXPOrb(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2);
+            addXP(1);
+            addKill();
+            removeEnemy(i);
+          } else if (damagePlayer(now)) {
+            removeEnemy(i);
+            if (getPlayerHealth() <= 0) {
+              gameEndedWon = false;
+              endGame(false);
+            }
           }
         }
       }

@@ -9,11 +9,13 @@ const state = {
   fireHeld: false,
   startHeld: false,
   usePower: false,
+  jump: false,
 };
 
 let prevFire = false;
 let prevStart = false;
 let prevPower = false;
+let prevJump = false;
 
 const DEADZONE = 0.2;
 
@@ -39,6 +41,10 @@ function pollKeyboard() {
   const powerNow = keys['x'] || keys['X'] || false;
   state.usePower = powerNow && !prevPower;
   prevPower = powerNow;
+
+  const jumpNow = keys['j'] || keys['J'] || false;
+  state.jump = jumpNow && !prevJump;
+  prevJump = jumpNow;
 }
 
 export function pollInput() {
@@ -68,6 +74,11 @@ export function pollInput() {
   const powerNow = gp.buttons[2]?.pressed ?? false;
   state.usePower = powerNow && !prevPower;
   prevPower = powerNow;
+
+  // Y button = buttons[3] on standard gamepad
+  const jumpNow = gp.buttons[3]?.pressed ?? false;
+  state.jump = jumpNow && !prevJump;
+  prevJump = jumpNow;
 
   return state;
 }
