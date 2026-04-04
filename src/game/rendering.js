@@ -21,8 +21,8 @@ export function getCanvasSize() {
   return { width: canvas.width, height: canvas.height };
 }
 
-export function clearCanvas() {
-  ctx.fillStyle = CONFIG.arenaBackground;
+export function clearCanvas(bgOverride) {
+  ctx.fillStyle = bgOverride || CONFIG.arenaBackground;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 

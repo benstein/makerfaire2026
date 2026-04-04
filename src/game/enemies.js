@@ -1,7 +1,7 @@
 // src/game/enemies.js
 
 import { CONFIG } from './config.js';
-import { getGameProgress } from './gameState.js';
+import { getCurrentMap } from './mapGen.js';
 
 let enemies = [];
 let lastSpawnTime = 0;
@@ -12,29 +12,31 @@ export function resetEnemies() {
 }
 
 export function spawnEnemy(arenaWidth, arenaHeight) {
+  const map = getCurrentMap();
+  const et = map.enemy;
   const edge = Math.floor(Math.random() * 4);
   let ex, ey;
 
   switch (edge) {
-    case 0: ex = Math.random() * arenaWidth; ey = -CONFIG.enemySize; break;
-    case 1: ex = arenaWidth + CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
-    case 2: ex = Math.random() * arenaWidth; ey = arenaHeight + CONFIG.enemySize; break;
-    case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
+    case 0: ex = Math.random() * arenaWidth; ey = -et.size; break;
+    case 1: ex = arenaWidth + et.size; ey = Math.random() * arenaHeight; break;
+    case 2: ex = Math.random() * arenaWidth; ey = arenaHeight + et.size; break;
+    case 3: ex = -et.size; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
-}
-
-function getCurrentSpawnInterval() {
-  const progress = getGameProgress();
-  const start = CONFIG.enemySpawnIntervalStart;
-  const end = CONFIG.enemySpawnIntervalEnd;
-  return start + (end - start) * progress;
+  enemies.push({
+    x: ex, y: ey, w: et.size, h: et.size,
+    hp: et.hp, maxHp: et.hp,
+    speed: et.speed,
+    color: et.color,
+    hitFlash: 0,
+  });
 }
 
 export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
-  const interval = getCurrentSpawnInterval();
-  if (now - lastSpawnTime > interval) {
+  const map = getCurrentMap();
+  const baseInterval = 2000 * map.enemy.spawnRate;
+  if (now - lastSpawnTime > baseInterval) {
     spawnEnemy(arenaWidth, arenaHeight);
     lastSpawnTime = now;
   }
@@ -46,17 +48,57 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     if (dist > 0) {
       const scale = dt / 16.67;
-      enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
-      enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
+      enemy.x += (dx / dist) * enemy.speed * scale;
+      enemy.y += (dy / dist) * enemy.speed * scale;
     }
   }
 }
 
-export function drawEnemies(ctx) {
-  ctx.fillStyle = CONFIG.enemyColor;
+export function drawEnemies(ctx, now) {
   for (const enemy of enemies) {
-    ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+    const flashing = enemy.hitFlash && (now - enemy.hitFlash) < 120;
+
+    ctx.save();
+    ctx.translate(enemy.x, enemy.y);
+
+    // Body
+    ctx.fillStyle = flashing ? '#fff' : enemy.color;
+    ctx.fillRect(0, 0, enemy.w, enemy.h);
+
+    // Eyes
+    const ew = enemy.w;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(ew * 0.2, ew * 0.2, ew * 0.2, ew * 0.15);
+    ctx.fillRect(ew * 0.6, ew * 0.2, ew * 0.2, ew * 0.15);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(ew * 0.28, ew * 0.23, ew * 0.08, ew * 0.1);
+    ctx.fillRect(ew * 0.68, ew * 0.23, ew * 0.08, ew * 0.1);
+
+    // HP bar (only if damaged)
+    if (enemy.hp < enemy.maxHp) {
+      const barW = enemy.w;
+      const barH = 3;
+      ctx.fillStyle = '#333';
+      ctx.fillRect(0, -6, barW, barH);
+      const ratio = enemy.hp / enemy.maxHp;
+      ctx.fillStyle = ratio > 0.5 ? '#2ecc71' : '#e74c3c';
+      ctx.fillRect(0, -6, barW * ratio, barH);
+    }
+
+    ctx.restore();
   }
+}
+
+// Damage enemy, return true if killed
+export function damageEnemy(index, now) {
+  const enemy = enemies[index];
+  enemy.hp -= 1;
+  enemy.hitFlash = now;
+  if (enemy.hp <= 0) {
+    enemies.splice(index, 1);
+    return true;
+  }
+  return false;
 }
 
 export function getEnemies() {
