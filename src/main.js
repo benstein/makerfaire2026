@@ -4,12 +4,13 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, startGame, endGame, goToTitle, addXP, getLevel, getXP, getXPNeeded, getMaxLevel, updateLevelUp, getLevelUpProgress } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, repositionPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, healPlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
 import { resetMeat, tryDropMeat, updateMeat, drawMeat } from './game/meat.js';
 import { resetPowers, updatePowers, activatePower, isInvisible, isPiercing, drawPowerHUD } from './game/powers.js';
+import { resetHeartDrops, spawnHeartDrop, updateHeartDrops, drawHeartDrops } from './game/heartDrops.js';
 import { resetSoup, updateSoup, drawSoup } from './game/soup.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, drawLevelUpScreen, resetVictoryEffects } from './game/rendering.js';
@@ -46,6 +47,7 @@ function gameLoop(now) {
       resetMeat();
       resetPowers(now);
       resetSoup(width / 2, height / 2);
+      resetHeartDrops();
       resetVictoryEffects();
     } else if (state !== STATES.LEVELING_UP) {
       goToTitle();
@@ -90,6 +92,7 @@ function gameLoop(now) {
           const ey = enemy.y + enemy.h / 2;
           removeEnemy(j);
           spawnXPOrb(ex, ey);
+          if (Math.random() < 0.1) spawnHeartDrop(ex, ey);
           hitSomething = true;
           if (!piercing) break; // normal bullets stop; piercing continues
         }
@@ -104,6 +107,9 @@ function gameLoop(now) {
     if (collected > 0) {
       addXP(collected);
     }
+
+    // Heart drop collection
+    updateHeartDrops(getPlayerBounds(), healPlayer, now);
 
     // Enemy-player collisions (skip during invisibility)
     if (!isInvisible()) {
@@ -132,7 +138,8 @@ function gameLoop(now) {
       resetXPOrbs();
       resetMeat();
       resetPowers(now);
-      resetPlayer(width, height);
+      repositionPlayer(width, height); // keep health — no free heals between levels!
+      resetHeartDrops();
       resetSoup(width / 2, height / 2);
     }
   }
@@ -145,6 +152,7 @@ function gameLoop(now) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
     drawMeat(ctx, now);
+    drawHeartDrops(ctx, now);
     drawXPOrbs(ctx, now);
     drawPlayer(ctx, now);
     drawSoup(ctx, now);

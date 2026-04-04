@@ -3,5 +3,6 @@
   { "version": 2, "name": "Zeke", "description": "Level system! Kill enemies for XP orbs, collect 10 to level up. 5 unique arenas that get harder. Reach Level 5 to win!" },
   { "version": 3, "name": "Papi", "description": "Press B to drop meat! Enemies love it - they chase the meat, eat it for 1 second, then come back for you. Use it to escape!" },
   { "version": 4, "name": "Zeke", "description": "Random powers every 10 seconds! Press X to activate: Speed Boost (2x fast), Invisibility (enemies scatter), or Piercing Shots (bullets go through enemies). Multiple enemies eat meat faster!" },
-  { "version": 5, "name": "Papi", "description": "Soup the dog is your sidekick! He guards you by chasing and eating nearby enemies. When he's chilling, he does tricks - spins, jumps, rolls, zoomies, and more!" }
+  { "version": 5, "name": "Papi", "description": "Soup the dog is your sidekick! He guards you by chasing and eating nearby enemies. When he's chilling, he does tricks - spins, jumps, rolls, zoomies, and more!" },
+  { "version": 6, "name": "Gabi", "description": "No more free health between levels! Enemies have a 10% chance to drop a heart pickup when they die. Survive smarter!" }
 ]

@@ -71,6 +71,16 @@ export function drawPlayer(ctx, now) {
   ctx.globalAlpha = 1;
 }
 
+// Reposition without resetting health (for level transitions)
+export function repositionPlayer(arenaWidth, arenaHeight) {
+  x = arenaWidth / 2;
+  y = arenaHeight / 2;
+}
+
+export function healPlayer(amount) {
+  health = Math.min(health + amount, CONFIG.playerMaxHealth);
+}
+
 export function getPlayerPos() {
   return { x, y };
 }
