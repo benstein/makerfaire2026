@@ -4,11 +4,13 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, healPlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
 import { resetPowers, addXP, addKill, updatePowers, activatePower, isShielded, isTripleShot, drawPowerHUD, drawStatsScreen } from './game/powers.js';
+import { resetFirePosts, updateFirePosts, checkProjectileHits, drawFirePosts } from './game/firePosts.js';
+import { resetHeartDrops, spawnHeartDrop, updateHeartDrops, drawHeartDrops } from './game/heartDrops.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -43,6 +45,8 @@ function gameLoop(now) {
       resetWeapons();
       resetXPOrbs();
       resetPowers();
+      resetFirePosts(width, height, now);
+      resetHeartDrops();
       resetVictoryEffects();
       gameEndedWon = false;
     } else {
@@ -101,11 +105,28 @@ function gameLoop(now) {
       }
     }
 
+    // Fire post updates + projectile hits
+    updateFirePosts(now, width, height);
+    const postDrops = checkProjectileHits(getProjectiles(), removeProjectile);
+    for (const drop of postDrops) {
+      if (drop.type === 'heart') {
+        spawnHeartDrop(drop.x, drop.y);
+      } else {
+        for (let k = 0; k < drop.amount; k++) {
+          spawnXPOrb(drop.x + (Math.random() - 0.5) * 12, drop.y + (Math.random() - 0.5) * 12);
+        }
+        addXP(drop.amount);
+      }
+    }
+
     // XP orb collection
     const collected = updateXPOrbs(getPlayerBounds(), now);
     if (collected > 0) {
       addXP(collected);
     }
+
+    // Heart drop collection
+    updateHeartDrops(getPlayerBounds(), healPlayer, now);
 
     // Enemy-player collisions (shield blocks damage)
     const playerBounds = getPlayerBounds();
@@ -138,6 +159,8 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    drawFirePosts(ctx, now);
+    drawHeartDrops(ctx, now);
     drawXPOrbs(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx);

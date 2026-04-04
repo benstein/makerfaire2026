@@ -99,3 +99,7 @@ export function damagePlayer(now) {
   invincibleUntil = now + CONFIG.invincibilityDuration;
   return true;
 }
+
+export function healPlayer(amount) {
+  health = Math.min(health + amount, CONFIG.playerMaxHealth);
+}

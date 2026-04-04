@@ -1,5 +1,5 @@
 // src/game/heartDrops.js
-// Hearts dropped by enemies (10% chance) that heal the player
+// Heart pickups from fire posts
 
 import { aabb } from './collision.js';
 
@@ -11,10 +11,7 @@ export function resetHeartDrops() {
 
 export function spawnHeartDrop(x, y) {
   hearts.push({
-    x: x - 8,
-    y: y - 8,
-    w: 16,
-    h: 16,
+    x: x - 8, y: y - 8, w: 16, h: 16,
     spawnTime: performance.now(),
     lifetime: 10000,
   });
@@ -23,36 +20,20 @@ export function spawnHeartDrop(x, y) {
 export function updateHeartDrops(playerBounds, healFn, now) {
   for (let i = hearts.length - 1; i >= 0; i--) {
     const h = hearts[i];
-
-    if (now - h.spawnTime > h.lifetime) {
-      hearts.splice(i, 1);
-      continue;
-    }
-
-    if (aabb(playerBounds, h)) {
-      healFn(1);
-      hearts.splice(i, 1);
-    }
+    if (now - h.spawnTime > h.lifetime) { hearts.splice(i, 1); continue; }
+    if (aabb(playerBounds, h)) { healFn(1); hearts.splice(i, 1); }
   }
 }
 
 export function drawHeartDrops(ctx, now) {
   for (const h of hearts) {
-    const cx = h.x + h.w / 2;
-    const cy = h.y + h.h / 2;
+    const cx = h.x + h.w / 2, cy = h.y + h.h / 2;
     const age = now - h.spawnTime;
-
-    // Blink when expiring
-    if (h.lifetime - age < 2500) {
-      if (Math.floor(age / 150) % 2 === 0) continue;
-    }
+    if (h.lifetime - age < 2500 && Math.floor(age / 150) % 2 === 0) continue;
 
     const bob = Math.sin(age / 300) * 3;
-
     ctx.save();
     ctx.translate(cx, cy + bob);
-
-    // Heart shape
     const s = 7;
     ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
@@ -60,13 +41,10 @@ export function drawHeartDrops(ctx, now) {
     ctx.bezierCurveTo(-s, -s * 0.3, -s * 0.6, -s, 0, -s * 0.4);
     ctx.bezierCurveTo(s * 0.6, -s, s, -s * 0.3, 0, s * 0.4);
     ctx.fill();
-
-    // Shine
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.beginPath();
     ctx.arc(-s * 0.3, -s * 0.3, s * 0.2, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.restore();
   }
 }
