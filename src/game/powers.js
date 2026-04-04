@@ -1,17 +1,20 @@
 // src/game/powers.js
-// XP-based power-up system. First power at 5 XP, then +5 more each time.
+// XP-based power-up system with upgradeable powers.
+// Each time you get a power, that power type levels up permanently.
 
 const POWER_NAMES = ['SPEED BOOST', 'SHIELD WALL', 'TRIPLE SHOT'];
 const POWER_COLORS = ['#ffd700', '#3498db', '#e74c3c'];
-const POWER_DURATIONS = [5000, 4000, 5000]; // ms
+const BASE_DURATIONS = [5000, 4000, 5000]; // ms
+const DURATION_PER_LEVEL = 1500; // +1.5s per level
 
 let xp = 0;
 let totalXP = 0;
-let xpThreshold = 5;       // first power at 5 XP
+let xpThreshold = 5;
 let powersEarned = 0;
 let pendingPower = null;    // { type }
-let activePower = null;     // { type, startTime, duration }
+let activePower = null;     // { type, startTime, duration, level }
 let powerFlashTime = 0;
+let powerLevels = [0, 0, 0]; // level for each power type
 
 // Stats
 let totalKills = 0;
@@ -26,6 +29,7 @@ export function resetPowers() {
   pendingPower = null;
   activePower = null;
   powerFlashTime = 0;
+  powerLevels = [0, 0, 0];
   totalKills = 0;
   powersUsed = 0;
   stopwatchMs = 0;
@@ -43,16 +47,15 @@ export function addKill() {
 export function updatePowers(dt, now) {
   stopwatchMs += dt;
 
-  // Check if earned a new power
   if (!pendingPower && !activePower && xp >= xpThreshold) {
     xp -= xpThreshold;
-    xpThreshold += 5; // next one costs 5 more
+    xpThreshold += 5;
     powersEarned++;
-    pendingPower = { type: Math.floor(Math.random() * 3) };
+    const type = Math.floor(Math.random() * 3);
+    pendingPower = { type };
     powerFlashTime = now;
   }
 
-  // Expire active power
   if (activePower && now - activePower.startTime >= activePower.duration) {
     activePower = null;
   }
@@ -60,11 +63,11 @@ export function updatePowers(dt, now) {
 
 export function activatePower(now) {
   if (!pendingPower) return false;
-  activePower = {
-    type: pendingPower.type,
-    startTime: now,
-    duration: POWER_DURATIONS[pendingPower.type],
-  };
+  const type = pendingPower.type;
+  powerLevels[type]++;
+  const level = powerLevels[type];
+  const duration = BASE_DURATIONS[type] + (level - 1) * DURATION_PER_LEVEL;
+  activePower = { type, startTime: now, duration, level };
   pendingPower = null;
   powersUsed++;
   return true;
@@ -74,10 +77,23 @@ export function getPendingPower() { return pendingPower; }
 export function getActivePower() { return activePower; }
 export function getXP() { return xp; }
 export function getXPThreshold() { return xpThreshold; }
+export function getPowerLevels() { return powerLevels; }
 
 export function isSpeedBoosted() { return activePower?.type === 0; }
 export function isShielded() { return activePower?.type === 1; }
 export function isTripleShot() { return activePower?.type === 2; }
+
+// Speed scales with level: 2x at lv1, 2.5x at lv2, 3x at lv3, etc.
+export function getSpeedMultiplier() {
+  if (!isSpeedBoosted()) return 1;
+  return 2 + (activePower.level - 1) * 0.5;
+}
+
+// Triple shot count scales: 3 at lv1, 5 at lv2, 7 at lv3, etc.
+export function getTripleShotCount() {
+  if (!isTripleShot()) return 1;
+  return 3 + (activePower.level - 1) * 2;
+}
 
 export function getActivePowerTimeLeft(now) {
   if (!activePower) return 0;
@@ -93,6 +109,7 @@ export function getStats() {
     powersUsed,
     timeMs: stopwatchMs,
     powersEarned,
+    powerLevels: [...powerLevels],
   };
 }
 
@@ -141,12 +158,26 @@ export function drawPowerHUD(ctx, now, canvasWidth, canvasHeight) {
   ctx.textAlign = 'right';
   ctx.fillText(`Kills: ${totalKills}`, canvasWidth - padding, barY + barHeight + 18);
 
+  // Power levels (bottom-right, small)
+  const lvX = canvasWidth - padding;
+  const lvY = canvasHeight - 55;
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'right';
+  for (let i = 0; i < 3; i++) {
+    const lv = powerLevels[i];
+    if (lv > 0) {
+      ctx.fillStyle = POWER_COLORS[i];
+      ctx.fillText(`${POWER_NAMES[i]} Lv.${lv}`, lvX, lvY + i * 14);
+    }
+  }
+
   // Power indicator (bottom-left)
   const py = canvasHeight - 50;
   const px = padding;
 
   if (pendingPower) {
     const p = pendingPower;
+    const nextLv = powerLevels[p.type] + 1;
     const age = now - powerFlashTime;
     const flash = age < 2000 ? (0.7 + Math.sin(age / 100) * 0.3) : 1;
 
@@ -157,12 +188,12 @@ export function drawPowerHUD(ctx, now, canvasWidth, canvasHeight) {
 
     ctx.font = 'bold 16px monospace';
     ctx.fillStyle = POWER_COLORS[p.type];
-    ctx.fillText(POWER_NAMES[p.type], px, py + 20);
+    ctx.fillText(`${POWER_NAMES[p.type]} Lv.${nextLv}`, px, py + 20);
 
     const pulseAlpha = 0.3 + Math.sin(now / 150) * 0.3;
     ctx.strokeStyle = `rgba(255, 215, 0, ${pulseAlpha})`;
     ctx.lineWidth = 2;
-    ctx.strokeRect(px - 4, py - 14, 170, 42);
+    ctx.strokeRect(px - 4, py - 14, 190, 42);
   } else if (activePower) {
     const p = activePower;
     const timeLeft = getActivePowerTimeLeft(now);
@@ -176,7 +207,7 @@ export function drawPowerHUD(ctx, now, canvasWidth, canvasHeight) {
     ctx.font = 'bold 13px monospace';
     ctx.textAlign = 'left';
     ctx.fillStyle = POWER_COLORS[p.type];
-    ctx.fillText(`${POWER_NAMES[p.type]} ${(timeLeft / 1000).toFixed(1)}s`, px, py);
+    ctx.fillText(`${POWER_NAMES[p.type]} Lv.${p.level} ${(timeLeft / 1000).toFixed(1)}s`, px, py);
   }
 
   ctx.textAlign = 'left';
@@ -188,13 +219,11 @@ export function drawStatsScreen(ctx, width, height, won) {
   const stats = getStats();
   const now = performance.now() / 1000;
 
-  // Title
   ctx.font = 'bold 48px monospace';
   ctx.textAlign = 'center';
   ctx.fillStyle = won ? '#2ecc71' : '#e74c3c';
-  ctx.fillText(won ? 'CHAMPION!' : 'GAME OVER', cx, cy - 100);
+  ctx.fillText(won ? 'CHAMPION!' : 'GAME OVER', cx, cy - 120);
 
-  // Stats box
   const statLines = [
     { label: 'Time', value: formatTime(stats.timeMs), color: '#f1c40f' },
     { label: 'Kills', value: String(stats.kills), color: '#e74c3c' },
@@ -202,15 +231,20 @@ export function drawStatsScreen(ctx, width, height, won) {
     { label: 'Powers Used', value: String(stats.powersUsed), color: '#ffd700' },
   ];
 
+  // Add power levels to stats
+  for (let i = 0; i < 3; i++) {
+    if (stats.powerLevels[i] > 0) {
+      statLines.push({ label: POWER_NAMES[i], value: `Lv.${stats.powerLevels[i]}`, color: POWER_COLORS[i] });
+    }
+  }
+
   ctx.font = '22px monospace';
-  const lineH = 36;
-  const startY = cy - 30;
+  const lineH = 32;
+  const startY = cy - 50;
 
   for (let i = 0; i < statLines.length; i++) {
     const s = statLines[i];
     const y = startY + i * lineH;
-
-    // Stagger animation
     const delay = i * 0.15;
     const alpha = Math.min(1, Math.max(0, (now - delay) * 2 % 100));
 
@@ -226,7 +260,6 @@ export function drawStatsScreen(ctx, width, height, won) {
   }
   ctx.globalAlpha = 1;
 
-  // Restart prompt
   ctx.font = '18px monospace';
   ctx.fillStyle = '#888';
   ctx.textAlign = 'center';

@@ -1,7 +1,7 @@
 // src/game/player.js
 
 import { CONFIG } from './config.js';
-import { isSpeedBoosted, isShielded } from './powers.js';
+import { isSpeedBoosted, isShielded, getSpeedMultiplier } from './powers.js';
 
 let x, y;
 let facingX = 0;
@@ -30,7 +30,7 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   // Normalize diagonal movement
   const mag = Math.sqrt(mx * mx + my * my);
   if (mag > 1) { mx /= mag; my /= mag; }
-  const speedMult = isSpeedBoosted() ? 2 : 1;
+  const speedMult = getSpeedMultiplier();
   const dx = mx * CONFIG.playerSpeed * speedMult * scale;
   const dy = my * CONFIG.playerSpeed * speedMult * scale;
 

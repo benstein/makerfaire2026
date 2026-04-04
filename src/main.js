@@ -8,7 +8,7 @@ import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, g
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
-import { resetPowers, addXP, addKill, updatePowers, activatePower, isShielded, isTripleShot, drawPowerHUD, drawStatsScreen } from './game/powers.js';
+import { resetPowers, addXP, addKill, updatePowers, activatePower, isShielded, isTripleShot, getTripleShotCount, drawPowerHUD, drawStatsScreen } from './game/powers.js';
 import { resetFirePosts, updateFirePosts, checkProjectileHits, drawFirePosts } from './game/firePosts.js';
 import { resetHeartDrops, spawnHeartDrop, updateHeartDrops, drawHeartDrops } from './game/heartDrops.js';
 import { aabb } from './game/collision.js';
@@ -66,20 +66,19 @@ function gameLoop(now) {
       activatePower(now);
     }
 
-    // Firing — triple shot fires 3 spread projectiles
+    // Firing — triple shot fires multiple spread projectiles that scale with level
     if (input.fire || input.fireHeld) {
       if (isTripleShot()) {
         const facing = getPlayerFacing();
         const pos = getPlayerPos();
-        const spread = 0.25;
-        // Center shot
-        tryFire(pos, facing, now);
-        // Left spread
-        const cosL = Math.cos(spread), sinL = Math.sin(spread);
-        tryFire(pos, { x: facing.x * cosL - facing.y * sinL, y: facing.x * sinL + facing.y * cosL }, now - 1);
-        // Right spread
-        const cosR = Math.cos(-spread), sinR = Math.sin(-spread);
-        tryFire(pos, { x: facing.x * cosR - facing.y * sinR, y: facing.x * sinR + facing.y * cosR }, now - 2);
+        const count = getTripleShotCount();
+        const totalSpread = 0.5 + (count - 3) * 0.05; // widens slightly with more shots
+        for (let s = 0; s < count; s++) {
+          const angle = count === 1 ? 0 : -totalSpread / 2 + (s / (count - 1)) * totalSpread;
+          const cos = Math.cos(angle), sin = Math.sin(angle);
+          const dir = { x: facing.x * cos - facing.y * sin, y: facing.x * sin + facing.y * cos };
+          tryFire(pos, dir, now - s); // offset time to bypass cooldown
+        }
       } else {
         tryFire(getPlayerPos(), getPlayerFacing(), now);
       }
