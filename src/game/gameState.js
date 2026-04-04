@@ -54,5 +54,9 @@ export function goToBuilding() {
 export function updateTimer(dt) {
   if (currentState !== STATES.PLAYING) return;
   elapsedMs += dt;
-  // No win condition from timer — game runs until you die
+  timeRemaining -= dt / 1000;
+  if (timeRemaining <= 0) {
+    timeRemaining = 0;
+    endGame(true);
+  }
 }
