@@ -129,15 +129,8 @@ function gameLoop(now) {
       }
     }
 
-    // Check win condition (survived the timer)
-    if (getTimeRemaining() <= 0 && state === STATES.PLAYING) {
-      // Timer already called endGame(true) via updateTimer
-      gameEndedWon = true;
-    }
+    // No timer-based win — game goes until you die
   }
-
-  // Track if won
-  if (state === STATES.VICTORY) gameEndedWon = true;
 
   // --- Render ---
   clearCanvas();

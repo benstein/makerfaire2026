@@ -99,15 +99,16 @@ export function getStats() {
 export function drawPowerHUD(ctx, now, canvasWidth, canvasHeight) {
   const padding = 20;
 
-  // Stopwatch (far left, below hearts)
+  // Stopwatch (top-center)
   const elapsed = stopwatchMs / 1000;
   const mins = Math.floor(elapsed / 60);
   const secs = Math.floor(elapsed % 60);
   const ms = Math.floor((elapsed % 1) * 10);
-  ctx.fillStyle = '#888';
-  ctx.font = '16px monospace';
+  ctx.fillStyle = '#ccc';
+  ctx.font = 'bold 20px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${mins}:${String(secs).padStart(2, '0')}.${ms}`, canvasWidth / 2, padding + 22);
   ctx.textAlign = 'left';
-  ctx.fillText(`${mins}:${String(secs).padStart(2, '0')}.${ms}`, padding, 68);
 
   // XP bar (top-right)
   const barWidth = 120;
