@@ -10,6 +10,7 @@ import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectil
 import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
 import { resetMeat, tryDropMeat, updateMeat, drawMeat } from './game/meat.js';
 import { resetPowers, updatePowers, activatePower, isInvisible, isPiercing, drawPowerHUD } from './game/powers.js';
+import { resetSoup, updateSoup, drawSoup } from './game/soup.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, drawLevelUpScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -44,6 +45,7 @@ function gameLoop(now) {
       resetXPOrbs();
       resetMeat();
       resetPowers(now);
+      resetSoup(width / 2, height / 2);
       resetVictoryEffects();
     } else if (state !== STATES.LEVELING_UP) {
       goToTitle();
@@ -55,6 +57,7 @@ function gameLoop(now) {
     updatePowers(now);
     updatePlayer(dt, input, width, height, now);
     updateEnemies(dt, getPlayerPos(), now, width, height);
+    updateSoup(dt, getPlayerPos(), now);
 
     // Activate power with X button
     if (input.usePower) {
@@ -130,6 +133,7 @@ function gameLoop(now) {
       resetMeat();
       resetPowers(now);
       resetPlayer(width, height);
+      resetSoup(width / 2, height / 2);
     }
   }
 
@@ -143,6 +147,7 @@ function gameLoop(now) {
     drawMeat(ctx, now);
     drawXPOrbs(ctx, now);
     drawPlayer(ctx, now);
+    drawSoup(ctx, now);
     drawEnemies(ctx, now);
     drawProjectiles(ctx);
     drawHUD(ctx, getPlayerHealth(), level, getXP(), getXPNeeded(), getMaxLevel(), width);
