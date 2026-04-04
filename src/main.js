@@ -3,17 +3,12 @@
 
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
-import { STATES, getState, startGame, endGame, goToTitle, addXP, getLevel, getXP, getXPNeeded, getMaxLevel, updateLevelUp, getLevelUpProgress } from './game/gameState.js';
-import { resetPlayer, repositionPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, healPlayer } from './game/player.js';
+import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
-import { resetXPOrbs, spawnXPOrb, updateXPOrbs, drawXPOrbs } from './game/xpOrbs.js';
-import { resetMeat, tryDropMeat, updateMeat, drawMeat } from './game/meat.js';
-import { resetPowers, updatePowers, activatePower, isInvisible, isPiercing, drawPowerHUD } from './game/powers.js';
-import { resetHeartDrops, spawnHeartDrop, updateHeartDrops, drawHeartDrops } from './game/heartDrops.js';
-import { resetSoup, updateSoup, drawSoup } from './game/soup.js';
 import { aabb } from './game/collision.js';
-import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, drawLevelUpScreen, resetVictoryEffects } from './game/rendering.js';
+import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -43,28 +38,17 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
-      resetXPOrbs();
-      resetMeat();
-      resetPowers(now);
-      resetSoup(width / 2, height / 2);
-      resetHeartDrops();
       resetVictoryEffects();
-    } else if (state !== STATES.LEVELING_UP) {
+    } else {
       goToTitle();
     }
   }
 
   // --- Update ---
   if (state === STATES.PLAYING) {
-    updatePowers(now);
+    updateTimer(dt);
     updatePlayer(dt, input, width, height, now);
     updateEnemies(dt, getPlayerPos(), now, width, height);
-    updateSoup(dt, getPlayerPos(), now);
-
-    // Activate power with X button
-    if (input.usePower) {
-      activatePower(now);
-    }
 
     // Firing
     if (input.fire || input.fireHeld) {
@@ -72,96 +56,44 @@ function gameLoop(now) {
     }
     updateProjectiles(dt, width, height);
 
-    // Drop meat with B button
-    if (input.dropMeat) {
-      const pos = getPlayerPos();
-      tryDropMeat(pos.x, pos.y, now);
-    }
-    updateMeat(now);
-
-    // Projectile-enemy collisions — piercing bullets go through!
+    // Projectile-enemy collisions
     const projList = getProjectiles();
     const enemyList = getEnemies();
-    const piercing = isPiercing();
     for (let i = projList.length - 1; i >= 0; i--) {
-      let hitSomething = false;
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
-          const enemy = enemyList[j];
-          const ex = enemy.x + enemy.w / 2;
-          const ey = enemy.y + enemy.h / 2;
+          removeProjectile(i);
           removeEnemy(j);
-          spawnXPOrb(ex, ey);
-          if (Math.random() < 0.1) spawnHeartDrop(ex, ey);
-          hitSomething = true;
-          if (!piercing) break; // normal bullets stop; piercing continues
+          break;
         }
       }
-      if (hitSomething && !piercing) {
-        removeProjectile(i);
-      }
     }
 
-    // XP orb collection
-    const collected = updateXPOrbs(getPlayerBounds(), now);
-    if (collected > 0) {
-      addXP(collected);
-    }
-
-    // Heart drop collection
-    updateHeartDrops(getPlayerBounds(), healPlayer, now);
-
-    // Enemy-player collisions (skip during invisibility)
-    if (!isInvisible()) {
-      const playerBounds = getPlayerBounds();
-      const enemies = getEnemies();
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        if (aabb(playerBounds, enemies[i])) {
-          if (damagePlayer(now)) {
-            removeEnemy(i);
-            if (getPlayerHealth() <= 0) {
-              endGame(false);
-            }
+    // Enemy-player collisions
+    const playerBounds = getPlayerBounds();
+    const enemies = getEnemies();
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      if (aabb(playerBounds, enemies[i])) {
+        if (damagePlayer(now)) {
+          removeEnemy(i);
+          if (getPlayerHealth() <= 0) {
+            endGame(false);
           }
         }
       }
     }
   }
 
-  // --- Level-up transition ---
-  if (state === STATES.LEVELING_UP) {
-    updateLevelUp(now);
-    // When transition ends, reset arena for new level
-    if (getState() === STATES.PLAYING) {
-      resetEnemies();
-      resetWeapons();
-      resetXPOrbs();
-      resetMeat();
-      resetPowers(now);
-      repositionPlayer(width, height); // keep health — no free heals between levels!
-      resetHeartDrops();
-      resetSoup(width / 2, height / 2);
-    }
-  }
-
   // --- Render ---
-  const level = getLevel();
-  clearCanvas(level);
+  clearCanvas();
 
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
-    drawMeat(ctx, now);
-    drawHeartDrops(ctx, now);
-    drawXPOrbs(ctx, now);
     drawPlayer(ctx, now);
-    drawSoup(ctx, now);
-    drawEnemies(ctx, now);
+    drawEnemies(ctx);
     drawProjectiles(ctx);
-    drawHUD(ctx, getPlayerHealth(), level, getXP(), getXPNeeded(), getMaxLevel(), width);
-    drawPowerHUD(ctx, now, width, height);
-  } else if (state === STATES.LEVELING_UP) {
-    drawLevelUpScreen(level, getLevelUpProgress(now));
+    drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
   } else if (state === STATES.GAMEOVER) {

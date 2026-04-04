@@ -23,11 +23,9 @@ export const CONFIG = {
   projectileColor: '#ffffff',
   fireRateCooldown: 250, // ms between shots
 
-  // Game — level-based progression
+  // Game
+  gameDuration: 60, // seconds
   arenaBackground: '#1a1a2e',
-  // Arena colors per level (5 levels)
-  levelBackgrounds: ['#1a1a2e', '#1a2e1a', '#2e1a1a', '#1a1a3e', '#2e0a0a'],
-  levelNames: ['The Depths', 'Poison Swamp', 'Crimson Halls', 'Void Realm', 'Final Arena'],
 
   // HUD
   heartColor: '#e74c3c',
