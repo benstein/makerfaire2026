@@ -1,6 +1,7 @@
 // src/game/player.js
 
 import { CONFIG } from './config.js';
+import { isSpeedBoosted, isShielded } from './powers.js';
 
 let x, y;
 let facingX = 0;
@@ -24,8 +25,9 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   // Normalize diagonal movement
   const mag = Math.sqrt(mx * mx + my * my);
   if (mag > 1) { mx /= mag; my /= mag; }
-  const dx = mx * CONFIG.playerSpeed * scale;
-  const dy = my * CONFIG.playerSpeed * scale;
+  const speedMult = isSpeedBoosted() ? 2 : 1;
+  const dx = mx * CONFIG.playerSpeed * speedMult * scale;
+  const dy = my * CONFIG.playerSpeed * speedMult * scale;
 
   x += dx;
   y += dy;
@@ -47,7 +49,26 @@ export function drawPlayer(ctx, now) {
   }
 
   const half = CONFIG.playerSize / 2;
-  ctx.fillStyle = CONFIG.playerColor;
+
+  // Speed boost glow
+  if (isSpeedBoosted()) {
+    ctx.fillStyle = 'rgba(255,215,0,0.3)';
+    ctx.fillRect(x - half - 8, y - half + 4, 6, 3);
+    ctx.fillRect(x - half - 12, y - half + 12, 8, 2);
+    ctx.fillRect(x - half - 6, y - half + 20, 5, 3);
+  }
+
+  // Shield glow
+  if (isShielded()) {
+    const pulse = 0.2 + Math.sin(now / 150) * 0.1;
+    ctx.strokeStyle = `rgba(52, 152, 219, ${pulse + 0.3})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x, y, half + 8, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = isSpeedBoosted() ? '#ffd700' : (isShielded() ? '#3498db' : CONFIG.playerColor);
   ctx.fillRect(x - half, y - half, CONFIG.playerSize, CONFIG.playerSize);
 }
 

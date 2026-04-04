@@ -1,3 +1,4 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  { "version": 2, "name": "Zeke", "description": "XP system! Kill enemies for orbs, earn powers at 5 XP then 10, 15, 20... Three random powers: Speed Boost, Shield Wall, Triple Shot. Stopwatch + stats screen!" }
 ]

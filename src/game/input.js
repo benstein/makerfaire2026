@@ -8,10 +8,12 @@ const state = {
   start: false,
   fireHeld: false,
   startHeld: false,
+  usePower: false,
 };
 
 let prevFire = false;
 let prevStart = false;
+let prevPower = false;
 
 const DEADZONE = 0.2;
 
@@ -33,6 +35,10 @@ function pollKeyboard() {
   state.start = startNow && !prevStart;
   state.startHeld = startNow;
   prevStart = startNow;
+
+  const powerNow = keys['x'] || keys['X'] || false;
+  state.usePower = powerNow && !prevPower;
+  prevPower = powerNow;
 }
 
 export function pollInput() {
@@ -58,6 +64,10 @@ export function pollInput() {
   state.start = startNow && !prevStart;
   state.startHeld = startNow;
   prevStart = startNow;
+
+  const powerNow = gp.buttons[2]?.pressed ?? false;
+  state.usePower = powerNow && !prevPower;
+  prevPower = powerNow;
 
   return state;
 }
