@@ -9,6 +9,7 @@ import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, dama
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { generateAllMaps, resetMapState, getCurrentMap, warpToRandomMap } from './game/mapGen.js';
+import { resetPortal, checkPortalCollision, drawPortal } from './game/portal.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD, drawStatsScreen, resetHUDStats, addHUDTime, addHUDKill } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
@@ -45,6 +46,7 @@ function gameLoop(now) {
       resetEnemies();
       resetWeapons();
       resetHUDStats();
+      resetPortal(width, height);
       resetVictoryEffects();
     } else {
       goToTitle();
@@ -58,24 +60,25 @@ function gameLoop(now) {
     updatePlayer(dt, input, width, height, now);
     updateEnemies(dt, getPlayerPos(), now, width, height);
 
-    // Edge detection — warp to new map
+    // Portal collision — warp to new map
+    if (checkPortalCollision(getPlayerBounds())) {
+      warpToRandomMap();
+      resetEnemies();
+      resetWeapons();
+      resetPlayer(width, height);
+      resetPortal(width, height);
+      warpFlash = now;
+    }
+
+    // Edge detection — also warp to new map
     const pos = getPlayerPos();
     const margin = 5;
     if (pos.x <= margin || pos.x >= width - margin || pos.y <= margin || pos.y >= height - margin) {
       warpToRandomMap();
       resetEnemies();
       resetWeapons();
-      // Place player on opposite side
-      let nx = width / 2, ny = height / 2;
-      if (pos.x <= margin) nx = width - 40;
-      else if (pos.x >= width - margin) nx = 40;
-      else if (pos.y <= margin) ny = height - 40;
-      else if (pos.y >= height - margin) ny = 40;
-      // Use resetPlayer to reposition (keeps health via direct set after)
-      const hp = getPlayerHealth();
       resetPlayer(width, height);
-      // Restore position to opposite edge
-      // We need to set position — hack: update with zero input at target
+      resetPortal(width, height);
       warpFlash = now;
     }
 
@@ -121,6 +124,7 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    drawPortal(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx, now);
     drawProjectiles(ctx);
