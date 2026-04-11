@@ -1,5 +1,6 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
   { "version": 2, "name": "Zeke", "description": "100 random maps! Walk to the edge to warp. Each map has unique colors, enemy types (Slimes, Dragons, Ghosts...), and difficulty. No timer - survive as long as you can!" },
-  { "version": 3, "name": "Zeke", "description": "Purple swirling portals! Each map has one in a random spot. Walk into it to warp to a new map. Monsters ignore it - only you can use it!" }
+  { "version": 3, "name": "Zeke", "description": "Purple swirling portals! Each map has one in a random spot. Walk into it to warp to a new map. Monsters ignore it - only you can use it!" },
+  { "version": 4, "name": "Ben", "description": "Outer space! The arena is now deep space with 200 twinkling stars, bright cross-shaped stars, and colorful nebula clouds that change with each map!" }
 ]

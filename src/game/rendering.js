@@ -21,9 +21,95 @@ export function getCanvasSize() {
   return { width: canvas.width, height: canvas.height };
 }
 
+// --- Space background ---
+let stars = [];
+let starsGenerated = false;
+
+function ensureStars() {
+  if (starsGenerated && stars.length > 0) return;
+  stars = [];
+  const w = canvas.width, h = canvas.height;
+  // Distant tiny stars
+  for (let i = 0; i < 200; i++) {
+    stars.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      size: 0.5 + Math.random() * 1.5,
+      brightness: 0.3 + Math.random() * 0.7,
+      twinkleSpeed: 1 + Math.random() * 4,
+      twinkleOffset: Math.random() * Math.PI * 2,
+    });
+  }
+  // A few brighter stars
+  for (let i = 0; i < 15; i++) {
+    stars.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      size: 2 + Math.random() * 2,
+      brightness: 0.8 + Math.random() * 0.2,
+      twinkleSpeed: 2 + Math.random() * 3,
+      twinkleOffset: Math.random() * Math.PI * 2,
+      bright: true,
+    });
+  }
+  starsGenerated = true;
+}
+
 export function clearCanvas(bgOverride) {
-  ctx.fillStyle = bgOverride || CONFIG.arenaBackground;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ensureStars();
+  const now = performance.now() / 1000;
+  const w = canvas.width, h = canvas.height;
+
+  // Deep space black
+  ctx.fillStyle = '#050510';
+  ctx.fillRect(0, 0, w, h);
+
+  // Nebula clouds tinted by the map color
+  const nebulaColor = bgOverride || CONFIG.arenaBackground;
+  // Parse the color for the nebula glow
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = nebulaColor;
+  // Large soft blobs
+  ctx.beginPath();
+  ctx.arc(w * 0.3, h * 0.4, w * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(w * 0.7, h * 0.6, w * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(w * 0.5, h * 0.2, w * 0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Second layer, slightly shifted
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#4444aa';
+  ctx.beginPath();
+  ctx.arc(w * 0.6, h * 0.3, w * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#663366';
+  ctx.beginPath();
+  ctx.arc(w * 0.2, h * 0.7, w * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Stars
+  for (const star of stars) {
+    const twinkle = 0.5 + Math.sin(now * star.twinkleSpeed + star.twinkleOffset) * 0.5;
+    const alpha = star.brightness * twinkle;
+
+    if (star.bright) {
+      // Cross-shaped bright star
+      ctx.fillStyle = `rgba(200, 220, 255, ${alpha * 0.3})`;
+      ctx.fillRect(star.x - star.size * 2, star.y - 0.5, star.size * 4, 1);
+      ctx.fillRect(star.x - 0.5, star.y - star.size * 2, 1, star.size * 4);
+    }
+
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 export function drawTitleScreen() {
