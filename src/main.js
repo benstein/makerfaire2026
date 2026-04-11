@@ -5,7 +5,7 @@ import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, damageEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, drawDanceBanner, getEnemies, removeEnemy, damageEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { generateAllMaps, resetMapState, getCurrentMap, warpToRandomMap } from './game/mapGen.js';
@@ -127,6 +127,7 @@ function gameLoop(now) {
     drawPortal(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx, now);
+    drawDanceBanner(ctx, now, width);
     drawProjectiles(ctx);
     drawHUD(ctx, getPlayerHealth(), width, height);
 
