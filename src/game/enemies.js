@@ -30,6 +30,7 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     speed: et.speed,
     color: et.color,
     hitFlash: 0,
+    bobPhase: Math.random() * Math.PI * 2,
   });
 }
 
@@ -55,34 +56,113 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 }
 
 export function drawEnemies(ctx, now) {
+  const time = now / 1000;
+
   for (const enemy of enemies) {
     const flashing = enemy.hitFlash && (now - enemy.hitFlash) < 120;
+    const ew = enemy.w;
+    const cx = enemy.x + ew / 2;
+    const cy = enemy.y + ew / 2;
+
+    // Ocean bobbing
+    const bob = Math.sin(time * 2.5 + enemy.bobPhase) * 4;
+    const tilt = Math.sin(time * 2 + enemy.bobPhase + 0.5) * 0.08;
 
     ctx.save();
-    ctx.translate(enemy.x, enemy.y);
+    ctx.translate(cx, cy + bob);
+    ctx.rotate(tilt);
 
-    // Body
+    const boatW = ew + 12;
+    const boatH = ew * 0.4;
+
+    // Water ripples under the boat
+    ctx.strokeStyle = 'rgba(100, 180, 255, 0.2)';
+    ctx.lineWidth = 1;
+    for (let r = 0; r < 3; r++) {
+      const rippleW = boatW * 0.6 + r * 8;
+      const rippleY = boatH * 0.5 + 4 + r * 3;
+      const rippleWave = Math.sin(time * 3 + enemy.bobPhase + r) * 2;
+      ctx.beginPath();
+      ctx.moveTo(-rippleW / 2 + rippleWave, rippleY);
+      ctx.quadraticCurveTo(0, rippleY + 2, rippleW / 2 + rippleWave, rippleY);
+      ctx.stroke();
+    }
+
+    // Boat hull
+    ctx.fillStyle = '#8B5E3C';
+    ctx.beginPath();
+    ctx.moveTo(-boatW / 2, 0);
+    ctx.lineTo(-boatW / 2 + 5, boatH);
+    ctx.lineTo(boatW / 2 - 5, boatH);
+    ctx.lineTo(boatW / 2, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hull stripe
+    ctx.fillStyle = '#6B3A1A';
+    ctx.fillRect(-boatW / 2 + 4, boatH * 0.4, boatW - 8, 3);
+
+    // Hull planks (horizontal lines)
+    ctx.strokeStyle = '#5C2D00';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-boatW / 2 + 6, boatH * 0.65);
+    ctx.lineTo(boatW / 2 - 6, boatH * 0.65);
+    ctx.stroke();
+
+    // Sail mast
+    ctx.fillStyle = '#4A2810';
+    ctx.fillRect(-1, -ew * 0.9, 2, ew * 0.9);
+
+    // Sail (triangle, colored like the enemy)
     ctx.fillStyle = flashing ? '#fff' : enemy.color;
-    ctx.fillRect(0, 0, enemy.w, enemy.h);
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath();
+    ctx.moveTo(1, -ew * 0.85);
+    ctx.lineTo(ew * 0.5 + 3, -ew * 0.3);
+    ctx.lineTo(1, -ew * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
 
-    // Eyes
-    const ew = enemy.w;
+    // Sail billow line
+    ctx.strokeStyle = flashing ? '#ccc' : enemy.color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(1, -ew * 0.85);
+    ctx.quadraticCurveTo(ew * 0.35, -ew * 0.55, 1, -ew * 0.1);
+    ctx.stroke();
+
+    // Little flag on top
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.moveTo(0, -ew * 0.9);
+    ctx.lineTo(8, -ew * 0.9 - 3);
+    ctx.lineTo(0, -ew * 0.9 - 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Enemy riding the boat (upper body visible)
+    const bodyY = -ew * 0.15;
+    ctx.fillStyle = flashing ? '#fff' : enemy.color;
+    ctx.fillRect(-ew * 0.35, bodyY - ew * 0.5, ew * 0.7, ew * 0.5);
+
+    // Eyes on the enemy
     ctx.fillStyle = '#fff';
-    ctx.fillRect(ew * 0.2, ew * 0.2, ew * 0.2, ew * 0.15);
-    ctx.fillRect(ew * 0.6, ew * 0.2, ew * 0.2, ew * 0.15);
+    ctx.fillRect(-ew * 0.2, bodyY - ew * 0.4, ew * 0.15, ew * 0.12);
+    ctx.fillRect(ew * 0.05, bodyY - ew * 0.4, ew * 0.15, ew * 0.12);
     ctx.fillStyle = '#000';
-    ctx.fillRect(ew * 0.28, ew * 0.23, ew * 0.08, ew * 0.1);
-    ctx.fillRect(ew * 0.68, ew * 0.23, ew * 0.08, ew * 0.1);
+    ctx.fillRect(-ew * 0.15, bodyY - ew * 0.38, ew * 0.06, ew * 0.08);
+    ctx.fillRect(ew * 0.1, bodyY - ew * 0.38, ew * 0.06, ew * 0.08);
 
     // HP bar (only if damaged)
     if (enemy.hp < enemy.maxHp) {
-      const barW = enemy.w;
-      const barH = 3;
+      const barW = ew + 4;
       ctx.fillStyle = '#333';
-      ctx.fillRect(0, -6, barW, barH);
+      ctx.fillRect(-barW / 2, bodyY - ew * 0.6, barW, 3);
       const ratio = enemy.hp / enemy.maxHp;
       ctx.fillStyle = ratio > 0.5 ? '#2ecc71' : '#e74c3c';
-      ctx.fillRect(0, -6, barW * ratio, barH);
+      ctx.fillRect(-barW / 2, bodyY - ew * 0.6, barW * ratio, 3);
     }
 
     ctx.restore();
