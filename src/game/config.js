@@ -12,7 +12,7 @@ export const CONFIG = {
 
   // Enemies
   enemySpeed: 1.5,
-  enemySize: 22,
+  enemySize: 36,
   enemyColor: '#e74c3c',
   enemySpawnIntervalStart: 2000, // ms at game start
   enemySpawnIntervalEnd: 400,    // ms at game end (ramps down)

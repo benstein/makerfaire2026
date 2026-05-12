@@ -1,11 +1,11 @@
 {
   "building": true,
-  "name": "Ben",
-  "description": "Antarctica! Everything slips on the ice and the bananas are frozen!",
+  "name": "KitKat",
+  "description": "Turning the bad guys into super cute rainbow puffballs with googly eyes!",
   "steps": [
-    { "label": "Freezing the arena into Antarctica...", "done": true },
-    { "label": "Making the gorilla slip on ice...", "done": true },
-    { "label": "Making enemies slip too...", "done": true },
-    { "label": "Freezing the bananas solid...", "done": true }
+    { "label": "Fluffing them up into puffballs...", "done": true },
+    { "label": "Painting them rainbow colors...", "done": true },
+    { "label": "Sticking googly eyes everywhere...", "done": true },
+    { "label": "Making some of them go CRAZY!", "done": true }
   ]
 }
