@@ -52,7 +52,8 @@ function gameLoop(now) {
 
     // Firing
     if (input.fire || input.fireHeld) {
-      tryFire(getPlayerPos(), getPlayerFacing(), now);
+      const f = getPlayerFacing();
+      tryFire(getPlayerPos(), { x: -f.x, y: -f.y }, now);
     }
     updateProjectiles(dt, width, height);
 

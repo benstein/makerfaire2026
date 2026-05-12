@@ -1,4 +1,5 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Jackson", "description": "Player is now a gorilla with big arms, shooting flying banana bullets!" }
+  { "version": 2, "name": "Jackson", "description": "Player is now a gorilla with big arms, shooting flying banana bullets!" },
+  { "version": 3, "name": "Ryder", "description": "Bananas shoot out the back — opposite the direction you're running!" }
 ]
