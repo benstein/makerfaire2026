@@ -13,6 +13,22 @@ import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
 import { drawBuildScreen } from './ui/buildScreen.js';
+import { drawErrorBadge } from './ui/errorBadge.js';
+
+// --- Smoke check: catch any runtime errors and surface them on screen ---
+let errorCount = 0;
+let lastError = null;
+
+window.addEventListener('error', (e) => {
+  errorCount++;
+  lastError = e.message || (e.error && e.error.message) || 'Unknown error';
+  console.warn('[smoke] error caught:', e.error || e.message);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  errorCount++;
+  lastError = (e.reason && e.reason.message) || String(e.reason);
+  console.warn('[smoke] unhandled rejection:', e.reason);
+});
 
 // Boot
 const canvas = document.getElementById('game-canvas');
@@ -23,8 +39,9 @@ initBuildStatus();
 let lastTime = performance.now();
 
 function gameLoop(now) {
-  const dt = now - lastTime;
-  lastTime = now;
+  try {
+    const dt = now - lastTime;
+    lastTime = now;
 
   pollInput();
   const input = getInput();
@@ -100,6 +117,16 @@ function gameLoop(now) {
     drawGameOverScreen();
   } else if (state === STATES.BUILDING) {
     drawBuildScreen(ctx, width, height, getBuildData(), now);
+  }
+  } catch (err) {
+    errorCount++;
+    lastError = err.message || String(err);
+    console.warn('[smoke] gameLoop error:', err);
+  }
+
+  // Badge sits on top of everything, even if the main render threw
+  if (errorCount > 0) {
+    drawErrorBadge(ctx, errorCount, lastError, now);
   }
 
   requestAnimationFrame(gameLoop);
