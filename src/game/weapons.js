@@ -38,34 +38,11 @@ export function updateProjectiles(dt, arenaWidth, arenaHeight) {
 }
 
 export function drawProjectiles(ctx) {
+  ctx.fillStyle = CONFIG.projectileColor;
   for (const p of projectiles) {
-    const cx = p.x + p.w / 2;
-    const cy = p.y + p.h / 2;
-    const angle = Math.atan2(p.vy, p.vx);
-    const r = p.w * 1.4;
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle + Math.PI / 2);
-
-    // Banana body (curved crescent)
-    ctx.fillStyle = '#ffe135';
     ctx.beginPath();
-    ctx.arc(0, 0, r, Math.PI * 0.1, Math.PI * 0.9);
-    ctx.arc(0, r * 0.3, r * 0.65, Math.PI * 0.85, Math.PI * 0.15, true);
-    ctx.closePath();
+    ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
     ctx.fill();
-
-    // Banana tip highlights
-    ctx.fillStyle = '#c8a800';
-    ctx.beginPath();
-    ctx.arc(-r * Math.sin(0.1), -r * Math.cos(0.1) + r * 0.05, r * 0.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(r * Math.sin(0.1), -r * Math.cos(0.1) + r * 0.05, r * 0.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
   }
 }
 
