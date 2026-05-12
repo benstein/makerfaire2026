@@ -21,10 +21,118 @@ export function getCanvasSize() {
   return { width: canvas.width, height: canvas.height };
 }
 
-export function clearCanvas() {
-  ctx.fillStyle = CONFIG.arenaBackground;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+// --- Antarctica scene state ---
+let snowflakes = [];
+let iceCracks = [];
+let antarcticaInitialized = false;
+
+function initAntarctica() {
+  snowflakes = [];
+  const count = 140;
+  for (let i = 0; i < count; i++) {
+    snowflakes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 1 + Math.random() * 3,
+      vx: -1.5 - Math.random() * 1.5, // blown to the left
+      vy: 0.4 + Math.random() * 1.2,
+      sway: Math.random() * Math.PI * 2,
+    });
+  }
+  // Static ice cracks for ground texture
+  iceCracks = [];
+  const crackCount = 18;
+  for (let i = 0; i < crackCount; i++) {
+    const segments = [];
+    let cx = Math.random() * canvas.width;
+    let cy = Math.random() * canvas.height;
+    const segCount = 3 + Math.floor(Math.random() * 4);
+    for (let s = 0; s < segCount; s++) {
+      const angle = Math.random() * Math.PI * 2;
+      const len = 20 + Math.random() * 80;
+      const nx = cx + Math.cos(angle) * len;
+      const ny = cy + Math.sin(angle) * len;
+      segments.push({ x1: cx, y1: cy, x2: nx, y2: ny });
+      cx = nx; cy = ny;
+    }
+    iceCracks.push(segments);
+  }
+  antarcticaInitialized = true;
 }
+
+export function clearCanvas() {
+  if (!antarcticaInitialized) initAntarctica();
+
+  // Icy gradient background — pale blue at top fading to white at bottom
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0, '#b8d8e8');
+  grad.addColorStop(0.55, '#dceef5');
+  grad.addColorStop(1, '#f4faff');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Distant mountains silhouette
+  ctx.fillStyle = '#9bb8c8';
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height * 0.45);
+  const peaks = 7;
+  for (let i = 0; i <= peaks; i++) {
+    const px = (canvas.width / peaks) * i;
+    const py = canvas.height * (0.30 + (i % 2 === 0 ? 0 : 0.10) + Math.sin(i * 1.3) * 0.04);
+    ctx.lineTo(px, py);
+  }
+  ctx.lineTo(canvas.width, canvas.height * 0.45);
+  ctx.closePath();
+  ctx.fill();
+
+  // Snowcap highlights on mountains
+  ctx.fillStyle = '#ffffff';
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height * 0.45);
+  for (let i = 0; i <= peaks; i++) {
+    const px = (canvas.width / peaks) * i;
+    const py = canvas.height * (0.30 + (i % 2 === 0 ? 0 : 0.10) + Math.sin(i * 1.3) * 0.04);
+    ctx.lineTo(px, py - 4);
+    ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Ice cracks on the ground
+  ctx.strokeStyle = 'rgba(120, 160, 190, 0.35)';
+  ctx.lineWidth = 1.2;
+  for (const crack of iceCracks) {
+    for (const seg of crack) {
+      ctx.beginPath();
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.lineTo(seg.x2, seg.y2);
+      ctx.stroke();
+    }
+  }
+
+  // Drifting snowflakes
+  ctx.fillStyle = '#ffffff';
+  for (const flake of snowflakes) {
+    flake.sway += 0.05;
+    flake.x += flake.vx + Math.sin(flake.sway) * 0.6;
+    flake.y += flake.vy;
+    if (flake.x < -10) flake.x = canvas.width + 10;
+    if (flake.y > canvas.height + 10) {
+      flake.y = -10;
+      flake.x = Math.random() * canvas.width;
+    }
+    ctx.globalAlpha = 0.7 + (flake.r / 4) * 0.3;
+    ctx.beginPath();
+    ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Re-init on resize so flakes/cracks fill the new canvas.
+window.addEventListener('resize', () => { antarcticaInitialized = false; });
 
 export function drawTitleScreen() {
   const cx = canvas.width / 2;

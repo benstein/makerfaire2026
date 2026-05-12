@@ -3,14 +3,20 @@
 import { CONFIG } from './config.js';
 
 let x, y;
+let vx = 0, vy = 0; // ice-physics velocity
 let facingX = 0;
 let facingY = -1; // default facing up
 let health;
 let invincibleUntil = 0;
 
+// Ice physics: low value = slippery, slow to change velocity.
+const ICE_ACCEL = 0.045;
+
 export function resetPlayer(arenaWidth, arenaHeight) {
   x = arenaWidth / 2;
   y = arenaHeight / 2;
+  vx = 0;
+  vy = 0;
   facingX = 0;
   facingY = -1;
   health = CONFIG.playerMaxHealth;
@@ -24,21 +30,28 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   // Normalize diagonal movement
   const mag = Math.sqrt(mx * mx + my * my);
   if (mag > 1) { mx /= mag; my /= mag; }
-  const dx = mx * CONFIG.playerSpeed * scale;
-  const dy = my * CONFIG.playerSpeed * scale;
 
-  x += dx;
-  y += dy;
+  // Slide on ice — accelerate toward target velocity, current velocity persists.
+  const targetVx = mx * CONFIG.playerSpeed;
+  const targetVy = my * CONFIG.playerSpeed;
+  vx += (targetVx - vx) * ICE_ACCEL * scale;
+  vy += (targetVy - vy) * ICE_ACCEL * scale;
+
+  x += vx * scale;
+  y += vy * scale;
 
   if (Math.abs(input.stickX) > 0 || Math.abs(input.stickY) > 0) {
-    const mag = Math.sqrt(input.stickX * input.stickX + input.stickY * input.stickY);
-    facingX = input.stickX / mag;
-    facingY = input.stickY / mag;
+    const fmag = Math.sqrt(input.stickX * input.stickX + input.stickY * input.stickY);
+    facingX = input.stickX / fmag;
+    facingY = input.stickY / fmag;
   }
 
+  // Bounce off walls — feels icy
   const half = CONFIG.playerSize / 2;
-  x = Math.max(half, Math.min(arenaWidth - half, x));
-  y = Math.max(half, Math.min(arenaHeight - half, y));
+  if (x < half) { x = half; vx = Math.abs(vx) * 0.4; }
+  if (x > arenaWidth - half) { x = arenaWidth - half; vx = -Math.abs(vx) * 0.4; }
+  if (y < half) { y = half; vy = Math.abs(vy) * 0.4; }
+  if (y > arenaHeight - half) { y = arenaHeight - half; vy = -Math.abs(vy) * 0.4; }
 }
 
 export function drawPlayer(ctx, now) {

@@ -11,6 +11,9 @@ export function resetEnemies() {
   lastSpawnTime = 0;
 }
 
+// Ice physics: low value = slippery enemies.
+const ENEMY_ICE_ACCEL = 0.035;
+
 export function spawnEnemy(arenaWidth, arenaHeight) {
   const edge = Math.floor(Math.random() * 4);
   let ex, ey;
@@ -22,7 +25,7 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, vx: 0, vy: 0 });
 }
 
 function getCurrentSpawnInterval() {
@@ -46,8 +49,15 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     if (dist > 0) {
       const scale = dt / 16.67;
-      enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
-      enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
+      // Target velocity: toward the player
+      const targetVx = (dx / dist) * CONFIG.enemySpeed;
+      const targetVy = (dy / dist) * CONFIG.enemySpeed;
+      // Slide on ice — velocity changes slowly
+      if (enemy.vx === undefined) { enemy.vx = 0; enemy.vy = 0; }
+      enemy.vx += (targetVx - enemy.vx) * ENEMY_ICE_ACCEL * scale;
+      enemy.vy += (targetVy - enemy.vy) * ENEMY_ICE_ACCEL * scale;
+      enemy.x += enemy.vx * scale;
+      enemy.y += enemy.vy * scale;
     }
   }
 }
