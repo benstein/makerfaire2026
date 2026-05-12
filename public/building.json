@@ -1,1 +1,10 @@
-{ "building": false }
+{
+  "building": true,
+  "name": "Jackson",
+  "description": "Turning your guy into a gorilla and bullets into bananas!",
+  "steps": [
+    { "label": "Drawing a mighty gorilla...", "done": true },
+    { "label": "Making bullets into flying bananas...", "done": true },
+    { "label": "Saving your awesome change...", "done": false }
+  ]
+}

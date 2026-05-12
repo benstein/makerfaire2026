@@ -38,11 +38,38 @@ export function updateProjectiles(dt, arenaWidth, arenaHeight) {
 }
 
 export function drawProjectiles(ctx) {
-  ctx.fillStyle = CONFIG.projectileColor;
   for (const p of projectiles) {
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h / 2;
+    // Banana spins as it flies, oriented to flight direction
+    const angle = Math.atan2(p.vy, p.vx) + (Date.now() / 80) % (Math.PI * 2);
+    const len = p.w * 1.6;
+    const thick = p.w * 0.55;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+
+    // Banana body: yellow crescent
+    ctx.fillStyle = '#ffe14a';
     ctx.beginPath();
-    ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, len * 0.55, thick * 0.9, 0, 0, Math.PI * 2);
     ctx.fill();
+    // Curve highlight (lighter top)
+    ctx.fillStyle = '#fff39e';
+    ctx.beginPath();
+    ctx.ellipse(0, -thick * 0.25, len * 0.45, thick * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Brown tip (right end)
+    ctx.fillStyle = '#6b3a1a';
+    ctx.beginPath();
+    ctx.arc(len * 0.55, 0, thick * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    // Brown stem (left end)
+    ctx.fillStyle = '#4a2a14';
+    ctx.fillRect(-len * 0.65, -thick * 0.15, thick * 0.35, thick * 0.3);
+
+    ctx.restore();
   }
 }
 
