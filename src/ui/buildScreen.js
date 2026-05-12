@@ -97,7 +97,7 @@ export function drawBuildScreen(ctx, width, height, buildData, now) {
       } else {
         ctx.fillStyle = 'rgba(255,255,255,0.25)';
       }
-      ctx.fillText(step.text, textX, y + 1);
+      ctx.fillText(step.label, textX, y + 1);
     }
 
     // --- Progress bar ---
