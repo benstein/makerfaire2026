@@ -3,21 +3,16 @@
 
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
-import { STATES, getState, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
+import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, drawDanceBanner, getEnemies, removeEnemy, damageEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
-import { generateAllMaps, resetMapState, getCurrentMap, warpToRandomMap } from './game/mapGen.js';
-import { resetPortal, checkPortalCollision, drawPortal } from './game/portal.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
-import { drawHUD, drawStatsScreen, resetHUDStats, addHUDTime, addHUDKill } from './ui/hud.js';
+import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
 import { drawBuildScreen } from './ui/buildScreen.js';
-
-// Generate all 100 maps once at boot
-generateAllMaps();
 
 // Boot
 const canvas = document.getElementById('game-canvas');
@@ -26,7 +21,6 @@ loadChangelog();
 initBuildStatus();
 
 let lastTime = performance.now();
-let warpFlash = 0; // timestamp for map warp flash effect
 
 function gameLoop(now) {
   const dt = now - lastTime;
@@ -41,12 +35,9 @@ function gameLoop(now) {
   if (input.start && state !== STATES.BUILDING) {
     if (state === STATES.TITLE) {
       startGame();
-      resetMapState();
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
-      resetHUDStats();
-      resetPortal(width, height);
       resetVictoryEffects();
     } else {
       goToTitle();
@@ -56,31 +47,8 @@ function gameLoop(now) {
   // --- Update ---
   if (state === STATES.PLAYING) {
     updateTimer(dt);
-    addHUDTime(dt);
     updatePlayer(dt, input, width, height, now);
     updateEnemies(dt, getPlayerPos(), now, width, height);
-
-    // Portal collision — warp to new map
-    if (checkPortalCollision(getPlayerBounds())) {
-      warpToRandomMap();
-      resetEnemies();
-      resetWeapons();
-      resetPlayer(width, height);
-      resetPortal(width, height);
-      warpFlash = now;
-    }
-
-    // Edge detection — also warp to new map
-    const pos = getPlayerPos();
-    const margin = 5;
-    if (pos.x <= margin || pos.x >= width - margin || pos.y <= margin || pos.y >= height - margin) {
-      warpToRandomMap();
-      resetEnemies();
-      resetWeapons();
-      resetPlayer(width, height);
-      resetPortal(width, height);
-      warpFlash = now;
-    }
 
     // Firing
     if (input.fire || input.fireHeld) {
@@ -88,15 +56,14 @@ function gameLoop(now) {
     }
     updateProjectiles(dt, width, height);
 
-    // Projectile-enemy collisions (enemies have HP)
+    // Projectile-enemy collisions
     const projList = getProjectiles();
     const enemyList = getEnemies();
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
           removeProjectile(i);
-          const killed = damageEnemy(j, now);
-          if (killed) addHUDKill();
+          removeEnemy(j);
           break;
         }
       }
@@ -118,37 +85,19 @@ function gameLoop(now) {
   }
 
   // --- Render ---
-  const map = getCurrentMap();
-  clearCanvas(state === STATES.PLAYING ? map.bg : undefined);
+  clearCanvas();
 
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
-    drawPortal(ctx, now);
     drawPlayer(ctx, now);
-    drawEnemies(ctx, now);
-    drawDanceBanner(ctx, now, width);
+    drawEnemies(ctx);
     drawProjectiles(ctx);
-    drawHUD(ctx, getPlayerHealth(), width, height);
-
-    // Map warp flash
-    if (warpFlash && now - warpFlash < 300) {
-      const flashAlpha = 1 - (now - warpFlash) / 300;
-      ctx.fillStyle = `rgba(255,255,255,${flashAlpha * 0.5})`;
-      ctx.fillRect(0, 0, width, height);
-
-      // Show map name briefly
-      ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
-      ctx.font = 'bold 28px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(map.name, width / 2, height / 2 - 10);
-      ctx.font = '16px monospace';
-      ctx.fillStyle = `rgba(200,200,200,${flashAlpha})`;
-      ctx.fillText(`Map #${map.id} — ${map.enemy.name}`, width / 2, height / 2 + 20);
-      ctx.textAlign = 'left';
-    }
-  } else if (state === STATES.VICTORY || state === STATES.GAMEOVER) {
-    drawStatsScreen(ctx, width, height);
+    drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+  } else if (state === STATES.VICTORY) {
+    drawVictoryScreen();
+  } else if (state === STATES.GAMEOVER) {
+    drawGameOverScreen();
   } else if (state === STATES.BUILDING) {
     drawBuildScreen(ctx, width, height, getBuildData(), now);
   }
