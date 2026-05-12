@@ -4,48 +4,6 @@ import { CONFIG } from './config.js';
 
 let canvas, ctx;
 
-// Pre-generated ice scenery (proportional so it scales to any resolution)
-const icePatches = [
-  { x: 0.12, y: 0.15, rx: 0.13, ry: 0.055, angle: 0.3 },
-  { x: 0.72, y: 0.08, rx: 0.16, ry: 0.045, angle: -0.2 },
-  { x: 0.88, y: 0.62, rx: 0.09, ry: 0.07, angle: 0.55 },
-  { x: 0.28, y: 0.88, rx: 0.18, ry: 0.05, angle: 0.1 },
-  { x: 0.5,  y: 0.48, rx: 0.07, ry: 0.035, angle: -0.4 },
-  { x: 0.08, y: 0.72, rx: 0.09, ry: 0.04, angle: 0.65 },
-  { x: 0.6,  y: 0.78, rx: 0.12, ry: 0.05, angle: -0.1 },
-];
-
-const iceCracks = [
-  [{x:0.20,y:0.00},{x:0.25,y:0.18},{x:0.21,y:0.33},{x:0.27,y:0.52}],
-  [{x:0.27,y:0.18},{x:0.35,y:0.28},{x:0.30,y:0.40}],
-  [{x:0.60,y:0.05},{x:0.55,y:0.22},{x:0.61,y:0.38}],
-  [{x:0.61,y:0.22},{x:0.70,y:0.30}],
-  [{x:0.80,y:0.28},{x:0.74,y:0.48},{x:0.79,y:0.66},{x:0.71,y:0.82}],
-  [{x:0.74,y:0.48},{x:0.83,y:0.55}],
-  [{x:0.08,y:0.48},{x:0.18,y:0.60},{x:0.13,y:0.76}],
-  [{x:0.18,y:0.60},{x:0.10,y:0.68}],
-  [{x:0.38,y:0.68},{x:0.48,y:0.80},{x:0.43,y:0.96}],
-  [{x:0.48,y:0.80},{x:0.55,y:0.75}],
-];
-
-const snowflakes = Array.from({ length: 50 }, () => ({
-  x: Math.random(),
-  y: Math.random(),
-  size: 1.5 + Math.random() * 3.5,
-  speed: 0.018 + Math.random() * 0.032,
-  drift: 0.008 + Math.random() * 0.012,
-  phase: Math.random() * Math.PI * 2,
-}));
-
-function drawSnowflake(c, fx, fy, size) {
-  c.beginPath();
-  c.arc(fx, fy, size, 0, Math.PI * 2);
-  c.fill();
-  // Simple cross arms
-  c.fillRect(fx - size * 2.2, fy - size * 0.35, size * 4.4, size * 0.7);
-  c.fillRect(fx - size * 0.35, fy - size * 2.2, size * 0.7, size * 4.4);
-}
-
 export function initRendering(canvasEl) {
   canvas = canvasEl;
   ctx = canvas.getContext('2d');
@@ -64,58 +22,8 @@ export function getCanvasSize() {
 }
 
 export function clearCanvas() {
-  const w = canvas.width;
-  const h = canvas.height;
-  const t = performance.now() / 1000;
-
-  // Icy base
   ctx.fillStyle = CONFIG.arenaBackground;
-  ctx.fillRect(0, 0, w, h);
-
-  // Subtle gradient from top (bright) to bottom (deeper ice)
-  const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, 'rgba(220,240,255,0.35)');
-  grad.addColorStop(1, 'rgba(80,140,180,0.25)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
-
-  // Glassy ice patches
-  for (const p of icePatches) {
-    ctx.save();
-    ctx.globalAlpha = 0.22;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(p.x * w, p.y * h, p.rx * w, p.ry * h, p.angle, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.restore();
-  }
-
-  // Ice cracks
-  ctx.save();
-  ctx.strokeStyle = '#7aaec8';
-  ctx.lineWidth = 1.2;
-  ctx.globalAlpha = 0.55;
-  for (const crack of iceCracks) {
-    ctx.beginPath();
-    ctx.moveTo(crack[0].x * w, crack[0].y * h);
-    for (let i = 1; i < crack.length; i++) {
-      ctx.lineTo(crack[i].x * w, crack[i].y * h);
-    }
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  ctx.restore();
-
-  // Falling snowflakes
-  ctx.save();
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  for (const flake of snowflakes) {
-    const fx = ((flake.x + Math.sin(t * flake.drift * 6 + flake.phase) * 0.03) % 1) * w;
-    const fy = ((flake.y + t * flake.speed) % 1) * h;
-    drawSnowflake(ctx, fx, fy, flake.size);
-  }
-  ctx.restore();
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 export function drawTitleScreen() {
