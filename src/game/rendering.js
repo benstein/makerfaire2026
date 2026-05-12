@@ -135,6 +135,7 @@ export function clearCanvas() {
 window.addEventListener('resize', () => { antarcticaInitialized = false; });
 
 export function drawTitleScreen() {
+  const unicornColor = CONFIG.unicorn.color; // INTENTIONAL TEST BUG — verify badge appears
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 
