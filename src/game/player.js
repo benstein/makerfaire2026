@@ -3,6 +3,7 @@
 import { CONFIG } from './config.js';
 
 let x, y;
+let vx = 0, vy = 0;
 let facingX = 0;
 let facingY = -1; // default facing up
 let health;
@@ -11,6 +12,8 @@ let invincibleUntil = 0;
 export function resetPlayer(arenaWidth, arenaHeight) {
   x = arenaWidth / 2;
   y = arenaHeight / 2;
+  vx = 0;
+  vy = 0;
   facingX = 0;
   facingY = -1;
   health = CONFIG.playerMaxHealth;
@@ -21,19 +24,22 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   const scale = dt / 16.67;
   let mx = input.stickX;
   let my = input.stickY;
-  // Normalize diagonal movement
   const mag = Math.sqrt(mx * mx + my * my);
   if (mag > 1) { mx /= mag; my /= mag; }
-  const dx = mx * CONFIG.playerSpeed * scale;
-  const dy = my * CONFIG.playerSpeed * scale;
 
-  x += dx;
-  y += dy;
+  // Ice: velocity slides toward target, slow to change direction
+  const targetVx = mx * CONFIG.playerSpeed;
+  const targetVy = my * CONFIG.playerSpeed;
+  vx += (targetVx - vx) * CONFIG.iceAccel;
+  vy += (targetVy - vy) * CONFIG.iceAccel;
+
+  x += vx * scale;
+  y += vy * scale;
 
   if (Math.abs(input.stickX) > 0 || Math.abs(input.stickY) > 0) {
-    const mag = Math.sqrt(input.stickX * input.stickX + input.stickY * input.stickY);
-    facingX = input.stickX / mag;
-    facingY = input.stickY / mag;
+    const m = Math.sqrt(input.stickX * input.stickX + input.stickY * input.stickY);
+    facingX = input.stickX / m;
+    facingY = input.stickY / m;
   }
 
   const half = CONFIG.playerSize / 2;

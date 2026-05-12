@@ -23,9 +23,13 @@ export const CONFIG = {
   projectileColor: '#ffffff',
   fireRateCooldown: 250, // ms between shots
 
+  // Ice physics
+  iceAccel: 0.08,       // how quickly you build up speed (lower = more slippery)
+  enemyIceAccel: 0.06,  // enemies are even slidier
+
   // Game
   gameDuration: 60, // seconds
-  arenaBackground: '#1a1a2e',
+  arenaBackground: '#b8d4e2',
 
   // HUD
   heartColor: '#e74c3c',

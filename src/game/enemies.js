@@ -22,7 +22,7 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, vx: 0, vy: 0 });
 }
 
 function getCurrentSpawnInterval() {
@@ -46,8 +46,13 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     if (dist > 0) {
       const scale = dt / 16.67;
-      enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
-      enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
+      // Ice: enemies slide toward player, can't stop or turn instantly
+      const targetVx = (dx / dist) * CONFIG.enemySpeed;
+      const targetVy = (dy / dist) * CONFIG.enemySpeed;
+      enemy.vx += (targetVx - enemy.vx) * CONFIG.enemyIceAccel;
+      enemy.vy += (targetVy - enemy.vy) * CONFIG.enemyIceAccel;
+      enemy.x += enemy.vx * scale;
+      enemy.y += enemy.vy * scale;
     }
   }
 }

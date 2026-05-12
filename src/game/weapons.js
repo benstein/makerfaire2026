@@ -48,22 +48,38 @@ export function drawProjectiles(ctx) {
     ctx.translate(cx, cy);
     ctx.rotate(angle + Math.PI / 2);
 
-    // Banana body (curved crescent)
-    ctx.fillStyle = '#ffe135';
+    // Frozen banana body (icy blue crescent)
+    ctx.fillStyle = '#a8dcf0';
     ctx.beginPath();
     ctx.arc(0, 0, r, Math.PI * 0.1, Math.PI * 0.9);
     ctx.arc(0, r * 0.3, r * 0.65, Math.PI * 0.85, Math.PI * 0.15, true);
     ctx.closePath();
     ctx.fill();
 
-    // Banana tip highlights
-    ctx.fillStyle = '#c8a800';
+    // Frosty sheen on top
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.6, Math.PI * 0.2, Math.PI * 0.8);
+    ctx.arc(0, r * 0.2, r * 0.35, Math.PI * 0.75, Math.PI * 0.25, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Icy tips (dark blue)
+    ctx.fillStyle = '#5ab4d4';
     ctx.beginPath();
     ctx.arc(-r * Math.sin(0.1), -r * Math.cos(0.1) + r * 0.05, r * 0.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
     ctx.arc(r * Math.sin(0.1), -r * Math.cos(0.1) + r * 0.05, r * 0.2, 0, Math.PI * 2);
     ctx.fill();
+
+    // Ice crystal sparkle
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.3, 0); ctx.lineTo(r * 0.3, 0);
+    ctx.moveTo(0, -r * 0.3); ctx.lineTo(0, r * 0.3);
+    ctx.stroke();
 
     ctx.restore();
   }
