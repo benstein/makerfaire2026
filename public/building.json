@@ -1,1 +1,10 @@
-{ "building": false }
+{
+  "building": true,
+  "name": "Ben",
+  "request": "Cat in the Hat shoots a ring of fire instead of bullets!",
+  "steps": [
+    { "label": "Replacing bullets with a ring of fire...", "done": true },
+    { "label": "Making the fire burn enemies on contact...", "done": true },
+    { "label": "Adding singe marks to burned enemies...", "done": true }
+  ]
+}

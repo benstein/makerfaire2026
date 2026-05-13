@@ -2,6 +2,14 @@
 # Pre-commit hook: verify the game builds without errors.
 # Catches syntax errors, bad imports, and missing modules.
 
+# Load nvm and use the version pinned in .nvmrc — git hooks run in a
+# non-interactive shell that doesn't pick up nvm from .zshrc.
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then . "/opt/homebrew/opt/nvm/nvm.sh"
+elif [ -s "$NVM_DIR/nvm.sh" ]; then . "$NVM_DIR/nvm.sh"
+fi
+command -v nvm >/dev/null 2>&1 && nvm use --silent >/dev/null 2>&1
+
 npx vite build --logLevel error > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   echo "BUILD FAILED -- fix errors before committing"

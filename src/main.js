@@ -6,7 +6,7 @@ import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
-import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
+import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, processRingHits } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -71,20 +71,10 @@ function gameLoop(now) {
     if (input.fire || input.fireHeld) {
       tryFire(getPlayerPos(), getPlayerFacing(), now);
     }
-    updateProjectiles(dt, width, height);
+    updateProjectiles(dt, width, height, getPlayerPos());
 
-    // Projectile-enemy collisions
-    const projList = getProjectiles();
-    const enemyList = getEnemies();
-    for (let i = projList.length - 1; i >= 0; i--) {
-      for (let j = enemyList.length - 1; j >= 0; j--) {
-        if (aabb(projList[i], enemyList[j])) {
-          removeProjectile(i);
-          removeEnemy(j);
-          break;
-        }
-      }
-    }
+    // Ring of fire burns any enemy it touches (each ring only burns each enemy once)
+    processRingHits(getEnemies(), removeEnemy, now);
 
     // Enemy-player collisions
     const playerBounds = getPlayerBounds();
