@@ -10,12 +10,12 @@ export const CONFIG = {
   playerMaxHealth: 3,
   invincibilityDuration: 1000, // ms
 
-  // Enemies
-  enemySpeed: 1.5,
-  enemySize: 36,
+  // Enemies — HUGE (Arin's change)
+  enemySpeed: 0.9,
+  enemySize: 140,
   enemyColor: '#e74c3c',
-  enemySpawnIntervalStart: 2000, // ms at game start
-  enemySpawnIntervalEnd: 400,    // ms at game end (ramps down)
+  enemySpawnIntervalStart: 3500, // ms at game start (giants need more space)
+  enemySpawnIntervalEnd: 1200,   // ms at game end
 
   // Weapons
   projectileSpeed: 7,
