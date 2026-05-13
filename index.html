@@ -378,10 +378,29 @@
         if (viteErr) viteErr.style.display = 'none';
       }
 
+      // Consecutive failed polls (missing/malformed building.json). After
+      // FAIL_THRESHOLD failures we treat it as "not building" so a stuck
+      // sessionStorage flag can't pin the overlay up forever — e.g. after
+      // pulling from the other laptop without re-running the post-commit hook.
+      var failCount = 0;
+      var FAIL_THRESHOLD = 5; // 5 * 500ms = 2.5s of consecutive failures
+
+      function clearBuildingState() {
+        wasBuilding = false;
+        ctrl.setBuilding(false);
+        sessionStorage.removeItem('building');
+        sessionStorage.removeItem('buildData');
+        overlay.style.display = 'none';
+        if (ctrl.hasPendingReload()) {
+          location.reload();
+        }
+      }
+
       function poll() {
         fetch('/building.json?t=' + Date.now())
           .then(function(r) { return r.json(); })
           .then(function(data) {
+            failCount = 0;
             if (data.building) {
               wasBuilding = true;
               ctrl.setBuilding(true);
@@ -390,17 +409,15 @@
               sessionStorage.setItem('buildData', JSON.stringify(data));
               updateDisplay(data);
             } else if (wasBuilding) {
-              wasBuilding = false;
-              ctrl.setBuilding(false);
-              sessionStorage.removeItem('building');
-              sessionStorage.removeItem('buildData');
-              overlay.style.display = 'none';
-              if (ctrl.hasPendingReload()) {
-                location.reload();
-              }
+              clearBuildingState();
             }
           })
-          .catch(function() {});
+          .catch(function() {
+            failCount++;
+            if (failCount >= FAIL_THRESHOLD && wasBuilding) {
+              clearBuildingState();
+            }
+          });
       }
 
       poll();
