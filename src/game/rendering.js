@@ -21,10 +21,11 @@ export function getCanvasSize() {
   return { width: canvas.width, height: canvas.height };
 }
 
-// --- Frostbite Falls scene (Rocky & Bullwinkle) ---
+// --- Frostbite Falls scene at NIGHT (Rocky & Bullwinkle) ---
 let fbReady = false;
 let pineTrees = [];
 let snowflakes = [];
+let stars = [];
 
 function initFrostbite() {
   const w = canvas.width;
@@ -53,6 +54,20 @@ function initFrostbite() {
     });
   }
 
+  stars = [];
+  // Lots of little twinkling stars across the upper sky
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.65),
+      r: 0.5 + Math.random() * 1.6,
+      twinkleSpeed: 0.001 + Math.random() * 0.004,
+      phase: Math.random() * Math.PI * 2,
+      // Occasional bigger sparkle-star
+      bright: Math.random() < 0.08,
+    });
+  }
+
   fbReady = true;
 }
 
@@ -60,13 +75,57 @@ export function clearCanvas() {
   if (!fbReady) initFrostbite();
   const w = canvas.width;
   const h = canvas.height;
+  const now = performance.now();
 
-  // Flat blue sky — classic R&B limited-animation palette
-  ctx.fillStyle = '#4d88cc';
+  // Deep night sky — dark navy at top fading to a slightly warmer purple-blue near the horizon
+  const sky = ctx.createLinearGradient(0, 0, 0, h * 0.80);
+  sky.addColorStop(0, '#070a1a');
+  sky.addColorStop(0.6, '#10183a');
+  sky.addColorStop(1, '#1d2350');
+  ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, h);
 
-  // Back hill — dark blue-green
-  ctx.fillStyle = '#2e6644';
+  // --- Twinkling stars ---
+  for (const s of stars) {
+    const tw = 0.5 + 0.5 * Math.sin(now * s.twinkleSpeed + s.phase);
+    ctx.fillStyle = `rgba(255,255,255,${0.35 + 0.55 * tw})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+    // Cross-glint on the bright ones
+    if (s.bright && tw > 0.6) {
+      ctx.strokeStyle = `rgba(255,255,220,${0.8 * tw})`;
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(s.x - s.r * 3, s.y); ctx.lineTo(s.x + s.r * 3, s.y);
+      ctx.moveTo(s.x, s.y - s.r * 3); ctx.lineTo(s.x, s.y + s.r * 3);
+      ctx.stroke();
+    }
+  }
+
+  // --- Glowing moon (upper right) ---
+  const moonX = w * 0.82;
+  const moonY = h * 0.18;
+  const moonR = 38;
+  // Soft outer halo
+  const halo = ctx.createRadialGradient(moonX, moonY, moonR * 0.9, moonX, moonY, moonR * 3);
+  halo.addColorStop(0, 'rgba(255,250,220,0.30)');
+  halo.addColorStop(0.5, 'rgba(220,230,255,0.10)');
+  halo.addColorStop(1, 'rgba(220,230,255,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(moonX, moonY, moonR * 3, 0, Math.PI * 2); ctx.fill();
+  // Moon disc — pale cream
+  ctx.fillStyle = '#fdf6d4';
+  ctx.beginPath(); ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2); ctx.fill();
+  // Craters
+  ctx.fillStyle = 'rgba(190,180,140,0.55)';
+  ctx.beginPath(); ctx.arc(moonX - 10, moonY - 6, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(moonX + 8, moonY + 9, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(moonX + 14, moonY - 12, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(moonX - 6, moonY + 14, 4, 0, Math.PI * 2); ctx.fill();
+
+  // Back hill — dark silhouette against the night sky
+  ctx.fillStyle = '#0a1626';
   ctx.beginPath();
   ctx.moveTo(0, h * 0.62);
   ctx.bezierCurveTo(w * 0.20, h * 0.50, w * 0.55, h * 0.57, w * 0.80, h * 0.52);
@@ -74,31 +133,48 @@ export function clearCanvas() {
   ctx.lineTo(w, h); ctx.lineTo(0, h);
   ctx.closePath(); ctx.fill();
 
-  // Ground — flat green
-  ctx.fillStyle = '#4aaa33';
+  // Moonlit snowy ground — cool blue-white
+  ctx.fillStyle = '#3a4470';
   ctx.fillRect(0, h * 0.80, w, h * 0.20);
-  ctx.fillStyle = '#60cc44';
+  ctx.fillStyle = '#7a8ebf';
   ctx.fillRect(0, h * 0.80, w, h * 0.022);
 
-  // Log cabin silhouette
+  // Log cabin silhouette — darker at night, with warm glowing windows
   const cx = w * 0.43, cy = h * 0.56, cw = w * 0.14, ch = h * 0.13;
-  ctx.fillStyle = '#7a5030'; ctx.fillRect(cx, cy, cw, ch);
-  ctx.fillStyle = '#bb2222';
+  ctx.fillStyle = '#3a2818'; ctx.fillRect(cx, cy, cw, ch);
+  ctx.fillStyle = '#5a1818';
   ctx.beginPath();
   ctx.moveTo(cx - cw * 0.08, cy);
   ctx.lineTo(cx + cw / 2, cy - ch * 0.75);
   ctx.lineTo(cx + cw * 1.08, cy);
   ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#994422'; ctx.fillRect(cx + cw * 0.62, cy - ch * 0.82, cw * 0.14, ch * 0.48);
-  ctx.fillStyle = '#ffee88';
+  ctx.fillStyle = '#3a2010'; ctx.fillRect(cx + cw * 0.62, cy - ch * 0.82, cw * 0.14, ch * 0.48);
+  // Smoke from the chimney
+  ctx.fillStyle = 'rgba(200,200,210,0.18)';
+  ctx.beginPath();
+  ctx.ellipse(cx + cw * 0.70, cy - ch * 1.0, cw * 0.14, ch * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Glowing windows
+  const winGlow = ctx.createRadialGradient(cx + cw * 0.26, cy + ch * 0.46, 1, cx + cw * 0.26, cy + ch * 0.46, cw * 0.30);
+  winGlow.addColorStop(0, 'rgba(255,220,120,0.85)');
+  winGlow.addColorStop(1, 'rgba(255,180,80,0)');
+  ctx.fillStyle = winGlow;
+  ctx.fillRect(cx - cw * 0.10, cy + ch * 0.10, cw * 0.70, ch * 0.70);
+  const winGlow2 = ctx.createRadialGradient(cx + cw * 0.74, cy + ch * 0.46, 1, cx + cw * 0.74, cy + ch * 0.46, cw * 0.30);
+  winGlow2.addColorStop(0, 'rgba(255,220,120,0.85)');
+  winGlow2.addColorStop(1, 'rgba(255,180,80,0)');
+  ctx.fillStyle = winGlow2;
+  ctx.fillRect(cx + cw * 0.38, cy + ch * 0.10, cw * 0.70, ch * 0.70);
+  // Bright window panes
+  ctx.fillStyle = '#ffe9a0';
   ctx.fillRect(cx + cw * 0.12, cy + ch * 0.30, cw * 0.28, ch * 0.32);
   ctx.fillRect(cx + cw * 0.60, cy + ch * 0.30, cw * 0.28, ch * 0.32);
 
-  // Pine trees — flat triangles on sticks, thick outlines
+  // Pine trees — near-black silhouettes by moonlight
   const groundY = h * 0.80;
   for (const tree of pineTrees) {
     // Trunk
-    ctx.fillStyle = '#5c3010';
+    ctx.fillStyle = '#1a0e06';
     ctx.fillRect(tree.x - 4, groundY - tree.h * 0.24, 8, tree.h * 0.24);
 
     for (let layer = 0; layer <= tree.layers; layer++) {
@@ -106,8 +182,8 @@ export function clearCanvas() {
       const ly = tree.h * 0.08 + (tree.h * 0.70) * frac;
       const lw = tree.w * (0.25 + 0.75 * frac);
       const lh = tree.h * (0.38 - 0.04 * frac);
-      ctx.fillStyle = layer % 2 === 0 ? '#1a6628' : '#228833';
-      ctx.strokeStyle = '#0a2e10';
+      ctx.fillStyle = layer % 2 === 0 ? '#06180c' : '#0a2010';
+      ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(tree.x, groundY - tree.h + ly);
@@ -118,8 +194,8 @@ export function clearCanvas() {
     }
   }
 
-  // Drifting snowflakes
-  ctx.fillStyle = '#ffffff';
+  // Drifting snowflakes — softer at night
+  ctx.fillStyle = 'rgba(240,245,255,0.85)';
   for (const f of snowflakes) {
     f.x += f.drift; f.y += f.speed;
     if (f.y > h + 5) { f.y = -5; f.x = Math.random() * w; }
