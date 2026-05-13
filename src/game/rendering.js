@@ -21,131 +21,152 @@ export function getCanvasSize() {
   return { width: canvas.width, height: canvas.height };
 }
 
-// --- Antarctica scene state ---
-let snowflakes = [];
-let iceCracks = [];
-let antarcticaInitialized = false;
+// --- Seussian scene state ---
+const SEUSS_COLORS = ['#ff4499', '#ff8800', '#ffdd00', '#33cc55', '#3388ff', '#cc44ff'];
+let seussReady = false;
+let seussTrees = [];
+let seussStars = [];
 
-function initAntarctica() {
-  snowflakes = [];
-  const count = 140;
-  for (let i = 0; i < count; i++) {
-    snowflakes.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: 1 + Math.random() * 3,
-      vx: -1.5 - Math.random() * 1.5, // blown to the left
-      vy: 0.4 + Math.random() * 1.2,
-      sway: Math.random() * Math.PI * 2,
+function initSeuss() {
+  const w = canvas.width;
+  const h = canvas.height;
+  seussTrees = [];
+  for (let i = 0; i < 20; i++) {
+    const side = i % 2 === 0;
+    const tx = side ? 15 + Math.random() * 110 : w - 125 + Math.random() * 110;
+    seussTrees.push({
+      x: tx,
+      trunkH: 50 + Math.random() * 80,
+      puffColor: SEUSS_COLORS[i % SEUSS_COLORS.length],
+      puffR: 14 + Math.random() * 18,
+      wobbleOff: Math.random() * Math.PI * 2,
     });
   }
-  // Static ice cracks for ground texture
-  iceCracks = [];
-  const crackCount = 18;
-  for (let i = 0; i < crackCount; i++) {
-    const segments = [];
-    let cx = Math.random() * canvas.width;
-    let cy = Math.random() * canvas.height;
-    const segCount = 3 + Math.floor(Math.random() * 4);
-    for (let s = 0; s < segCount; s++) {
-      const angle = Math.random() * Math.PI * 2;
-      const len = 20 + Math.random() * 80;
-      const nx = cx + Math.cos(angle) * len;
-      const ny = cy + Math.sin(angle) * len;
-      segments.push({ x1: cx, y1: cy, x2: nx, y2: ny });
-      cx = nx; cy = ny;
-    }
-    iceCracks.push(segments);
+  seussStars = [];
+  for (let i = 0; i < 22; i++) {
+    seussStars.push({
+      x: Math.random() * w,
+      y: 20 + Math.random() * h * 0.44,
+      r: 5 + Math.random() * 8,
+      color: SEUSS_COLORS[i % SEUSS_COLORS.length],
+      phase: Math.random() * Math.PI * 2,
+    });
   }
-  antarcticaInitialized = true;
+  seussReady = true;
 }
 
 export function clearCanvas() {
-  if (!antarcticaInitialized) initAntarctica();
+  if (!seussReady) initSeuss();
+  const now = performance.now();
+  const w = canvas.width;
+  const h = canvas.height;
 
-  // Icy gradient background — pale blue at top fading to white at bottom
-  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  grad.addColorStop(0, '#b8d8e8');
-  grad.addColorStop(0.55, '#dceef5');
-  grad.addColorStop(1, '#f4faff');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Sky: hot pink → warm orange → lemon yellow
+  const sky = ctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0,    '#ff7ec7');
+  sky.addColorStop(0.45, '#ff9944');
+  sky.addColorStop(1,    '#ffe066');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, h);
 
-  // Distant mountains silhouette
-  ctx.fillStyle = '#9bb8c8';
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height * 0.45);
-  const peaks = 7;
-  for (let i = 0; i <= peaks; i++) {
-    const px = (canvas.width / peaks) * i;
-    const py = canvas.height * (0.30 + (i % 2 === 0 ? 0 : 0.10) + Math.sin(i * 1.3) * 0.04);
-    ctx.lineTo(px, py);
-  }
-  ctx.lineTo(canvas.width, canvas.height * 0.45);
-  ctx.closePath();
-  ctx.fill();
-
-  // Snowcap highlights on mountains
-  ctx.fillStyle = '#ffffff';
-  ctx.globalAlpha = 0.6;
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height * 0.45);
-  for (let i = 0; i <= peaks; i++) {
-    const px = (canvas.width / peaks) * i;
-    const py = canvas.height * (0.30 + (i % 2 === 0 ? 0 : 0.10) + Math.sin(i * 1.3) * 0.04);
-    ctx.lineTo(px, py - 4);
-    ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // Ice cracks on the ground
-  ctx.strokeStyle = 'rgba(120, 160, 190, 0.35)';
-  ctx.lineWidth = 1.2;
-  for (const crack of iceCracks) {
-    for (const seg of crack) {
-      ctx.beginPath();
-      ctx.moveTo(seg.x1, seg.y1);
-      ctx.lineTo(seg.x2, seg.y2);
-      ctx.stroke();
-    }
+  // Twinkling Seuss stars
+  for (const s of seussStars) {
+    const twinkle = 0.55 + 0.45 * Math.sin(now / 550 + s.phase);
+    ctx.globalAlpha = twinkle;
+    ctx.fillStyle = s.color;
+    drawSeussStar(s.x, s.y, s.r);
+    ctx.globalAlpha = 1;
   }
 
-  // Drifting snowflakes
-  ctx.fillStyle = '#ffffff';
-  for (const flake of snowflakes) {
-    flake.sway += 0.05;
-    flake.x += flake.vx + Math.sin(flake.sway) * 0.6;
-    flake.y += flake.vy;
-    if (flake.x < -10) flake.x = canvas.width + 10;
-    if (flake.y > canvas.height + 10) {
-      flake.y = -10;
-      flake.x = Math.random() * canvas.width;
-    }
-    ctx.globalAlpha = 0.7 + (flake.r / 4) * 0.3;
+  // Rolling hills — 3 layers, back to front
+  drawSeussHill(w * -0.05, h * 0.70, w * 1.10, h * 0.32, '#4ed9c0');
+  drawSeussHill(w * -0.05, h * 0.79, w * 0.78, h * 0.24, '#ff7777');
+  drawSeussHill(w * -0.05, h * 0.87, w * 1.15, h * 0.17, '#66cc33');
+  ctx.fillStyle = '#66cc33';
+  ctx.fillRect(0, h * 0.94, w, h * 0.07);
+
+  // Truffula trees wobbling in the breeze
+  const groundY = h * 0.90;
+  for (const tree of seussTrees) {
+    const wobble = Math.sin(now / 900 + tree.wobbleOff) * 5;
+    const tipX = tree.x + wobble;
+    const tipY = groundY - tree.trunkH;
+
+    // Trunk — thin, slightly curved
+    ctx.strokeStyle = '#7a4010';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2);
+    ctx.moveTo(tree.x, groundY);
+    ctx.quadraticCurveTo(tree.x + wobble * 0.4, groundY - tree.trunkH * 0.55, tipX, tipY);
+    ctx.stroke();
+
+    // Pom-pom
+    ctx.fillStyle = tree.puffColor;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY - tree.puffR * 0.55, tree.puffR, 0, Math.PI * 2);
+    ctx.fill();
+    // Highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.beginPath();
+    ctx.arc(tipX - tree.puffR * 0.3, tipY - tree.puffR * 1.0, tree.puffR * 0.4, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.globalAlpha = 1;
 }
 
-// Re-init on resize so flakes/cracks fill the new canvas.
-window.addEventListener('resize', () => { antarcticaInitialized = false; });
+function drawSeussHill(x, y, width, height, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y + height);
+  ctx.bezierCurveTo(x + width * 0.25, y - height * 0.1, x + width * 0.75, y - height * 0.1, x + width, y + height);
+  ctx.lineTo(x + width, canvas.height);
+  ctx.lineTo(x, canvas.height);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawSeussStar(x, y, r) {
+  const pts = 5;
+  ctx.beginPath();
+  for (let i = 0; i < pts * 2; i++) {
+    const a = (i * Math.PI) / pts - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.4;
+    const sx = x + Math.cos(a) * rad;
+    const sy = y + Math.sin(a) * rad;
+    i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Re-init on resize so trees and stars fill the new canvas.
+window.addEventListener('resize', () => { seussReady = false; });
 
 export function drawTitleScreen() {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
+  const now = performance.now();
+  const bounce = Math.sin(now / 350) * 6;
 
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 48px monospace';
+  // Drop shadow
+  ctx.font = 'bold 54px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('ARENA SURVIVAL', cx, cy - 30);
+  ctx.fillStyle = '#880022';
+  ctx.fillText('ARENA SURVIVAL!', cx + 3, cy - 26 + bounce);
 
-  ctx.font = '20px monospace';
-  ctx.fillStyle = '#888';
-  ctx.fillText('PRESS START', cx, cy + 30);
+  // White fill + red outline
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('ARENA SURVIVAL!', cx, cy - 30 + bounce);
+  ctx.strokeStyle = '#cc0000';
+  ctx.lineWidth = 3;
+  ctx.strokeText('ARENA SURVIVAL!', cx, cy - 30 + bounce);
+
+  // Pulsing subtitle
+  ctx.font = 'bold 22px monospace';
+  ctx.fillStyle = '#cc0000';
+  ctx.globalAlpha = 0.7 + 0.3 * Math.sin(now / 400);
+  ctx.fillText('~ PRESS START ~', cx, cy + 30);
+  ctx.globalAlpha = 1;
 
   ctx.textAlign = 'left';
 }
@@ -182,14 +203,12 @@ export function drawVictoryScreen() {
   const now = performance.now() / 1000;
   ensureVictoryParticles(now);
 
-  // Confetti particles
   for (const p of victoryParticles) {
     p.x += p.vx;
     p.y += p.vy;
-    p.vy += 0.04; // gravity
+    p.vy += 0.04;
     p.rotation += p.rotSpeed;
 
-    // Wrap horizontally, reset when falling off bottom
     if (p.x < -20) p.x = canvas.width + 20;
     if (p.x > canvas.width + 20) p.x = -20;
     if (p.y > canvas.height + 20) {
@@ -212,14 +231,12 @@ export function drawVictoryScreen() {
     ctx.restore();
   }
 
-  // Pulsing glow behind text
   const pulse = 0.3 + Math.sin(now * 3) * 0.15;
   ctx.fillStyle = `rgba(46, 204, 113, ${pulse})`;
   ctx.beginPath();
   ctx.arc(cx, cy - 20, 180, 0, Math.PI * 2);
   ctx.fill();
 
-  // Main title — rainbow cycling letters
   const title = 'CHAMPION!';
   ctx.font = 'bold 64px monospace';
   ctx.textAlign = 'center';
@@ -238,15 +255,13 @@ export function drawVictoryScreen() {
     ctx.restore();
   }
 
-  // Subtitle
   ctx.font = 'bold 24px monospace';
   ctx.fillStyle = '#fff';
   ctx.globalAlpha = 0.6 + Math.sin(now * 2) * 0.4;
   ctx.fillText('PRESS START TO PLAY AGAIN', cx, cy + 40);
   ctx.globalAlpha = 1;
 
-  // Star bursts in corners
-  const corners = [[80, 80], [canvas.width - 80, 80], [80, canvas.height - 80], [canvas.width - 80, canvas.height - 80]];
+  const corners = [[60, 60], [canvas.width - 60, 60], [60, canvas.height - 60], [canvas.width - 60, canvas.height - 60]];
   for (let c = 0; c < corners.length; c++) {
     const [sx, sy] = corners[c];
     const starSize = 12 + Math.sin(now * 5 + c * 1.5) * 5;
@@ -254,7 +269,6 @@ export function drawVictoryScreen() {
     ctx.save();
     ctx.translate(sx, sy);
     ctx.rotate(now * 2 + c);
-    // 4-point star
     ctx.beginPath();
     for (let s = 0; s < 8; s++) {
       const angle = (s / 8) * Math.PI * 2;

@@ -25,9 +25,10 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  // Puffball traits
-  const hue = Math.floor(Math.random() * 360);
+  // Seuss-creature traits: normal = Lorax orange/yellow, crazy = THING blue-red
   const isCrazy = Math.random() < 0.35;
+  const seussNormalHues = [22, 35, 48, 280, 120]; // orange, yellow-orange, gold, purple, green
+  const hue = isCrazy ? 215 : seussNormalHues[Math.floor(Math.random() * seussNormalHues.length)];
   const eyeCount = isCrazy ? 2 + Math.floor(Math.random() * 4) : 2; // 2-5 eyes if crazy
   const eyes = [];
   for (let i = 0; i < eyeCount; i++) {
@@ -229,15 +230,12 @@ function drawPuffball(ctx, e) {
   ctx.lineWidth = 2;
   ctx.beginPath();
   if (e.isCrazy) {
-    // Wonky open grin
     ctx.arc(0, r * 0.30, r * 0.30, 0.1, Math.PI - 0.1);
   } else {
-    // Sweet smile
     ctx.arc(0, r * 0.28, r * 0.22, 0.2, Math.PI - 0.2);
   }
   ctx.stroke();
 
-  // Tongue (crazy only)
   if (e.hasTongue) {
     ctx.fillStyle = '#ff5577';
     ctx.beginPath();
@@ -245,24 +243,53 @@ function drawPuffball(ctx, e) {
     ctx.fill();
   }
 
-  // Crazy ones get little radiating sparkles
   if (e.isCrazy) {
-    ctx.strokeStyle = `hsla(${(e.hue + 180) % 360}, 100%, 70%, 0.9)`;
-    ctx.lineWidth = 2;
-    const spokes = 6;
-    const sparkleR = r * 1.15;
-    const sparkleR2 = r * 1.30;
-    for (let i = 0; i < spokes; i++) {
-      const a = (i / spokes) * Math.PI * 2 + phase * 0.5;
-      const x1 = Math.cos(a) * sparkleR;
-      const y1 = Math.sin(a) * sparkleR;
-      const x2 = Math.cos(a) * sparkleR2;
-      const y2 = Math.sin(a) * sparkleR2;
+    // THING 1/2 — electric blue wild hair shooting out in all directions
+    const hairCount = 9;
+    for (let i = 0; i < hairCount; i++) {
+      const a = (i / hairCount) * Math.PI * 2 - Math.PI / 2 + Math.sin(phase + i) * 0.3;
+      const len = r * (0.55 + 0.25 * Math.sin(phase * 1.3 + i * 1.1));
+      ctx.strokeStyle = i % 2 === 0 ? '#1199ff' : '#66ddff';
+      ctx.lineWidth = r * 0.18;
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
+      ctx.moveTo(Math.cos(a) * r * 0.7, Math.sin(a) * r * 0.7);
+      ctx.lineTo(Math.cos(a) * (r + len), Math.sin(a) * (r + len));
       ctx.stroke();
     }
+    // Red "THING" label badge
+    ctx.fillStyle = '#cc1111';
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.08, r * 0.32, r * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.round(r * 0.28)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText('THING', 0, r * 0.15);
+    ctx.textAlign = 'left';
+  } else {
+    // Lorax / Who creature — orange tuft on top
+    const tuftCount = 5;
+    for (let i = 0; i < tuftCount; i++) {
+      const a = -Math.PI / 2 + (i - 2) * 0.28 + Math.sin(phase + i) * 0.08;
+      const tuftLen = r * (0.45 + 0.15 * Math.sin(phase * 0.8 + i));
+      ctx.strokeStyle = i % 2 === 0 ? '#ff8800' : '#ffcc00';
+      ctx.lineWidth = r * 0.16;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * r * 0.75, Math.sin(a) * r * 0.75);
+      ctx.lineTo(Math.cos(a) * (r * 0.75 + tuftLen), Math.sin(a) * (r * 0.75 + tuftLen));
+      ctx.stroke();
+    }
+    // Tiny Lorax mustache
+    ctx.strokeStyle = '#cc6600';
+    ctx.lineWidth = r * 0.12;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.28, r * 0.18);
+    ctx.quadraticCurveTo(-r * 0.14, r * 0.30, 0, r * 0.22);
+    ctx.quadraticCurveTo( r * 0.14, r * 0.30, r * 0.28, r * 0.18);
+    ctx.stroke();
   }
 
   ctx.restore();

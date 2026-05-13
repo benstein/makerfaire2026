@@ -63,92 +63,172 @@ export function drawPlayer(ctx, now) {
   const half = size / 2;
   const cx = x;
   const cy = y;
+  const swing = Math.sin(now / 130) * 0.28;
 
-  // Subtle arm swing while moving (based on time)
-  const swing = Math.sin(now / 120) * (size * 0.08);
+  // --- TALL STRIPED HAT (drawn first, behind everything) ---
+  const hatH = size * 1.45;
+  const hatW = size * 0.68;
+  const brimH = size * 0.11;
+  const brimW = size * 0.96;
+  const hatTop = cy - size * 0.18 - hatH;
+  const brimY = cy - size * 0.18 - brimH;
 
-  // --- BIG ARMS (drawn first so body overlaps them) ---
-  ctx.fillStyle = '#2b1a10'; // darker arm fur
-  // Left arm — long oval reaching down-left
-  ctx.save();
-  ctx.translate(cx - half * 0.85, cy + size * 0.05 + swing);
-  ctx.rotate(-0.25);
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size * 0.22, size * 0.55, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-  // Right arm — long oval reaching down-right
-  ctx.save();
-  ctx.translate(cx + half * 0.85, cy + size * 0.05 - swing);
-  ctx.rotate(0.25);
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size * 0.22, size * 0.55, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // Hat stripes: 3 red, 3 white, alternating
+  const stripes = 6;
+  const stripeH = hatH / stripes;
+  for (let i = 0; i < stripes; i++) {
+    ctx.fillStyle = i % 2 === 0 ? '#cc1111' : '#ffffff';
+    ctx.fillRect(cx - hatW / 2, hatTop + i * stripeH, hatW, stripeH + 1);
+  }
+  ctx.strokeStyle = '#222222';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - hatW / 2, hatTop, hatW, hatH);
 
-  // Knuckle fists
-  ctx.fillStyle = '#1a0e07';
-  ctx.beginPath();
-  ctx.arc(cx - half * 1.05, cy + size * 0.55 + swing, size * 0.18, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cx + half * 1.05, cy + size * 0.55 - swing, size * 0.18, 0, Math.PI * 2);
-  ctx.fill();
+  // Brim
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(cx - brimW / 2, brimY, brimW, brimH);
+  ctx.strokeStyle = '#222222';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - brimW / 2, brimY, brimW, brimH);
 
-  // --- BODY (barrel chest) ---
-  ctx.fillStyle = '#3a2418';
+  // --- ARMS (thin, expressive, swinging) ---
+  ctx.strokeStyle = '#f0e0c0';
+  ctx.lineWidth = size * 0.09;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.ellipse(cx, cy + size * 0.1, size * 0.42, size * 0.48, 0, 0, Math.PI * 2);
+  ctx.moveTo(cx - size * 0.22, cy + size * 0.05);
+  ctx.quadraticCurveTo(cx - size * 0.52, cy + size * 0.2 + swing * 18, cx - size * 0.50, cy + size * 0.48 + swing * 22);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx + size * 0.22, cy + size * 0.05);
+  ctx.quadraticCurveTo(cx + size * 0.52, cy + size * 0.2 - swing * 18, cx + size * 0.50, cy + size * 0.48 - swing * 22);
+  ctx.stroke();
+  // White gloves
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#333333';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx - size * 0.50, cy + size * 0.48 + swing * 22, size * 0.11, 0, Math.PI * 2);
   ctx.fill();
-
-  // Lighter chest patch
-  ctx.fillStyle = '#7a5a3e';
+  ctx.stroke();
   ctx.beginPath();
-  ctx.ellipse(cx, cy + size * 0.15, size * 0.22, size * 0.28, 0, 0, Math.PI * 2);
+  ctx.arc(cx + size * 0.50, cy + size * 0.48 - swing * 22, size * 0.11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // --- BODY ---
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#222222';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(cx - size * 0.22, cy - size * 0.08, size * 0.44, size * 0.56, size * 0.08);
+  ctx.fill();
+  ctx.stroke();
+
+  // --- BOW TIE ---
+  ctx.fillStyle = '#cc1111';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + size * 0.07);
+  ctx.lineTo(cx - size * 0.17, cy - size * 0.04);
+  ctx.lineTo(cx - size * 0.17, cy + size * 0.17);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + size * 0.07);
+  ctx.lineTo(cx + size * 0.17, cy - size * 0.04);
+  ctx.lineTo(cx + size * 0.17, cy + size * 0.17);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy + size * 0.065, size * 0.045, 0, Math.PI * 2);
   ctx.fill();
 
   // --- HEAD ---
-  ctx.fillStyle = '#2b1a10';
-  ctx.beginPath();
-  ctx.arc(cx, cy - size * 0.32, size * 0.32, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Face (lighter muzzle area)
-  ctx.fillStyle = '#c9a47a';
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - size * 0.22, size * 0.20, size * 0.18, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Brow ridge
-  ctx.fillStyle = '#1a0e07';
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - size * 0.36, size * 0.22, size * 0.06, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Eyes
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(cx - size * 0.10, cy - size * 0.30, size * 0.05, 0, Math.PI * 2);
-  ctx.arc(cx + size * 0.10, cy - size * 0.30, size * 0.05, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.arc(cx - size * 0.10, cy - size * 0.30, size * 0.025, 0, Math.PI * 2);
-  ctx.arc(cx + size * 0.10, cy - size * 0.30, size * 0.025, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Nostrils
-  ctx.fillStyle = '#3a1f10';
-  ctx.beginPath();
-  ctx.arc(cx - size * 0.04, cy - size * 0.18, size * 0.018, 0, Math.PI * 2);
-  ctx.arc(cx + size * 0.04, cy - size * 0.18, size * 0.018, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Mouth
-  ctx.strokeStyle = '#3a1f10';
+  ctx.fillStyle = '#f5e8d0';
+  ctx.strokeStyle = '#333333';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(cx, cy - size * 0.12, size * 0.07, 0, Math.PI);
+  ctx.arc(cx, cy - size * 0.10, size * 0.29, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Cat ears (peek under the hat brim)
+  const earL = [cx - size * 0.22, cy - size * 0.26, cx - size * 0.34, cy - size * 0.46, cx - size * 0.10, cy - size * 0.36];
+  const earR = [cx + size * 0.22, cy - size * 0.26, cx + size * 0.34, cy - size * 0.46, cx + size * 0.10, cy - size * 0.36];
+  for (const [ex1, ey1, ex2, ey2, ex3, ey3] of [earL, earR]) {
+    ctx.fillStyle = '#f5e8d0';
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(ex1, ey1);
+    ctx.lineTo(ex2, ey2);
+    ctx.lineTo(ex3, ey3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Inner ear pink
+    ctx.fillStyle = '#ffaabb';
+    ctx.beginPath();
+    ctx.moveTo((ex1 + ex2) / 2, (ey1 + ey2) / 2);
+    ctx.lineTo(ex2, ey2);
+    ctx.lineTo((ex2 + ex3) / 2, (ey2 + ey3) / 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Big eyes (slightly tilted, mischievous)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(cx - size * 0.11, cy - size * 0.13, size * 0.08, size * 0.095, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(cx + size * 0.11, cy - size * 0.13, size * 0.08, size * 0.095,  0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#222222';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(cx - size * 0.11, cy - size * 0.13, size * 0.08, size * 0.095, -0.2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(cx + size * 0.11, cy - size * 0.13, size * 0.08, size * 0.095,  0.2, 0, Math.PI * 2);
+  ctx.stroke();
+  // Slit pupils
+  ctx.fillStyle = '#110800';
+  ctx.beginPath();
+  ctx.ellipse(cx - size * 0.11, cy - size * 0.13, size * 0.026, size * 0.068, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(cx + size * 0.11, cy - size * 0.13, size * 0.026, size * 0.068,  0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Eye shine
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx - size * 0.125, cy - size * 0.155, size * 0.020, 0, Math.PI * 2);
+  ctx.arc(cx + size * 0.095, cy - size * 0.155, size * 0.020, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Nose
+  ctx.fillStyle = '#ff9966';
+  ctx.beginPath();
+  ctx.moveTo(cx,               cy - size * 0.04);
+  ctx.lineTo(cx - size * 0.03, cy + size * 0.01);
+  ctx.lineTo(cx + size * 0.03, cy + size * 0.01);
+  ctx.closePath();
+  ctx.fill();
+
+  // Mischievous grin
+  ctx.strokeStyle = '#443322';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.11, cy + size * 0.02);
+  ctx.quadraticCurveTo(cx - size * 0.05, cy + size * 0.07, cx, cy + size * 0.04);
+  ctx.quadraticCurveTo(cx + size * 0.05, cy + size * 0.07, cx + size * 0.11, cy + size * 0.02);
+  ctx.stroke();
+
+  // Whiskers
+  ctx.strokeStyle = 'rgba(80,60,40,0.5)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.12, cy - size * 0.01); ctx.lineTo(cx - size * 0.33, cy - size * 0.05);
+  ctx.moveTo(cx - size * 0.12, cy + size * 0.03); ctx.lineTo(cx - size * 0.33, cy + size * 0.03);
+  ctx.moveTo(cx + size * 0.12, cy - size * 0.01); ctx.lineTo(cx + size * 0.33, cy - size * 0.05);
+  ctx.moveTo(cx + size * 0.12, cy + size * 0.03); ctx.lineTo(cx + size * 0.33, cy + size * 0.03);
   ctx.stroke();
 }
 

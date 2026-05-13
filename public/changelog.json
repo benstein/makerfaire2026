@@ -2,5 +2,6 @@
   { "version": 1, "name": "Baseline", "description": "Initial game" },
   { "version": 2, "name": "Jackson", "description": "Player is a mighty gorilla and bullets are spinning bananas!" },
   { "version": 3, "name": "Ben", "description": "Antarctica! Gorilla and enemies slip on the ice, bananas are frozen solid" },
-  { "version": 4, "name": "KitKat", "description": "Enemies are now SUPER cute rainbow puffballs with googly eyes — and some are CRAZY!" }
+  { "version": 4, "name": "KitKat", "description": "Enemies are now SUPER cute rainbow puffballs with googly eyes — and some are CRAZY!" },
+  { "version": 5, "name": "Ben", "description": "FULL DR. SEUSS! Cat in the Hat player, Lorax creatures + THINGS, Truffula tufts, Seussian sky!" }
 ]

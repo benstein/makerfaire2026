@@ -38,90 +38,59 @@ export function updateProjectiles(dt, arenaWidth, arenaHeight) {
 }
 
 export function drawProjectiles(ctx) {
+  const now = Date.now();
   for (const p of projectiles) {
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
-    // Banana spins as it flies, oriented to flight direction
-    const angle = Math.atan2(p.vy, p.vx) + (Date.now() / 80) % (Math.PI * 2);
-    const len = p.w * 1.6;
-    const thick = p.w * 0.55;
+    const r = p.w * 0.55;
+    // Each tuft gets its own rainbow hue that cycles
+    const hue = (now / 5 + p.x * 0.7 + p.y * 0.3) % 360;
+    const phase = now / 90;
 
-    // Frosty mist trail (drawn in world space, not rotated)
-    ctx.fillStyle = 'rgba(220, 240, 255, 0.35)';
-    for (let t = 1; t <= 3; t++) {
-      const tx = cx - p.vx * t * 1.4;
-      const ty = cy - p.vy * t * 1.4;
+    // Trailing sparkle trail
+    for (let t = 1; t <= 4; t++) {
+      const tx = cx - p.vx * t * 1.3;
+      const ty = cy - p.vy * t * 1.3;
+      const alpha = 0.55 - t * 0.11;
+      const trailHue = (hue + t * 25) % 360;
+      ctx.fillStyle = `hsla(${trailHue}, 95%, 65%, ${alpha})`;
       ctx.beginPath();
-      ctx.arc(tx, ty, thick * (0.9 - t * 0.2), 0, Math.PI * 2);
+      ctx.arc(tx, ty, r * (0.75 - t * 0.13), 0, Math.PI * 2);
       ctx.fill();
     }
 
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-
-    // Frosty halo around the banana — pale ice glow
-    ctx.fillStyle = 'rgba(180, 220, 240, 0.55)';
+    // Fluffy Truffula tuft — bumpy spinning ball
+    const bumps = 11;
+    ctx.fillStyle = `hsl(${hue}, 95%, 58%)`;
     ctx.beginPath();
-    ctx.ellipse(0, 0, len * 0.75, thick * 1.25, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Banana body: muted icy yellow (frozen, not vivid)
-    ctx.fillStyle = '#cfd8c8';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, len * 0.55, thick * 0.9, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Pale blue ice tint over the surface
-    ctx.fillStyle = 'rgba(150, 200, 230, 0.55)';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, len * 0.55, thick * 0.9, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Crisp ice highlight along the top edge
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.beginPath();
-    ctx.ellipse(0, -thick * 0.35, len * 0.45, thick * 0.20, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Frost dots / ice crystals scattered on top
-    ctx.fillStyle = '#ffffff';
-    const dots = [
-      [-len * 0.30,  thick * 0.10, thick * 0.12],
-      [ len * 0.10, -thick * 0.05, thick * 0.10],
-      [ len * 0.30,  thick * 0.20, thick * 0.09],
-      [-len * 0.05,  thick * 0.30, thick * 0.08],
-    ];
-    for (const [dx, dy, r] of dots) {
-      ctx.beginPath();
-      ctx.arc(dx, dy, r, 0, Math.PI * 2);
-      ctx.fill();
+    for (let i = 0; i < bumps; i++) {
+      const a = (i / bumps) * Math.PI * 2 + phase * 0.06;
+      const bump = r * (1 + 0.28 * Math.sin(a * 3 + phase * 0.12));
+      const px = cx + Math.cos(a) * bump;
+      const py = cy + Math.sin(a) * bump;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
     }
-
-    // Tiny six-point ice crystal
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.2;
-    const crystalR = thick * 0.32;
-    ctx.save();
-    ctx.translate(-len * 0.15, -thick * 0.20);
-    for (let i = 0; i < 6; i++) {
-      ctx.rotate(Math.PI / 3);
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, -crystalR);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Frozen tips — pale, frosted instead of brown
-    ctx.fillStyle = '#a8c0d0';
-    ctx.beginPath();
-    ctx.arc(len * 0.55, 0, thick * 0.28, 0, Math.PI * 2);
+    ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = '#8aa6b8';
-    ctx.fillRect(-len * 0.65, -thick * 0.15, thick * 0.35, thick * 0.3);
 
-    ctx.restore();
+    // Bright inner layer
+    ctx.fillStyle = `hsl(${(hue + 30) % 360}, 100%, 74%)`;
+    ctx.beginPath();
+    for (let i = 0; i < bumps; i++) {
+      const a = (i / bumps) * Math.PI * 2 + phase * 0.06 + 0.15;
+      const bump = r * (0.65 + 0.12 * Math.sin(a * 3 + phase));
+      const px = cx + Math.cos(a) * bump;
+      const py = cy + Math.sin(a) * bump;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Shiny highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.32, cy - r * 0.32, r * 0.32, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
