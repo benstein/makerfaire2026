@@ -23,6 +23,21 @@ While you work, the game shows a full-screen build progress view with the kid's 
 
 The game polls this file every 1 second. Steps should be high-level and kid-friendly (e.g., "Adding rainbow background...", "Making enemies faster...", "Giving player 6 hearts..."). NOT source-code-level details.
 
+**Exact schema — field names matter.** The renderer reads `name`, `description`, and `steps[].label` / `steps[].done`. Using any other field names (`text`, `kid`, `title`, etc.) will render as "undefined" on screen.
+
+```json
+{
+  "building": true,
+  "name": "Emma",
+  "description": "Making enemies into dancing bananas!",
+  "steps": [
+    { "label": "Turning enemies yellow...", "done": true },
+    { "label": "Giving them little dance moves...", "done": false },
+    { "label": "Adding banana peels everywhere...", "done": false }
+  ]
+}
+```
+
 After you commit, the git post-commit hook auto-clears the file to `{ "building": false }`, pushes to the remote (event mode), and the game returns to the title screen. No manual cleanup needed.
 
 ## Two-Laptop Sync (Event Mode)
