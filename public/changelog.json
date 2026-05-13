@@ -5,5 +5,6 @@
   { "version": 4, "name": "KitKat", "description": "Enemies are now SUPER cute rainbow puffballs with googly eyes — and some are CRAZY!" },
   { "version": 5, "name": "Ben", "description": "FULL DR. SEUSS! Cat in the Hat player, Lorax creatures + THINGS, Truffula tufts, Seussian sky!" },
   { "version": 6, "name": "Ben", "description": "Cat in the Hat now has a RING OF FIRE around him — enemies burn to a singed crisp!" },
-  { "version": 7, "name": "Arin", "description": "The bad guys are now ENORMOUS stomping giants with huge googly eyes!" }
+  { "version": 7, "name": "Arin", "description": "The bad guys are now ENORMOUS stomping giants with huge googly eyes!" },
+  { "version": 8, "name": "Soup", "description": "INVERTED CONTROLS! Push the stick one way, the Cat runs the OTHER way!" }
 ]

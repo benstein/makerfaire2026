@@ -1,10 +1,10 @@
 {
   "building": true,
-  "name": "Ben",
-  "request": "Cat in the Hat shoots a ring of fire instead of bullets!",
+  "name": "Soup",
+  "description": "Inverting the controls — push the stick the OPPOSITE way!",
   "steps": [
-    { "label": "Replacing bullets with a ring of fire...", "done": true },
-    { "label": "Making the fire burn enemies on contact...", "done": true },
-    { "label": "Adding singe marks to burned enemies...", "done": true }
+    { "label": "Flipping up and down on the stick...", "done": true },
+    { "label": "Mirroring left and right on the stick...", "done": true },
+    { "label": "Making the Cat run opposite of your stick!", "done": true }
   ]
 }

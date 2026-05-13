@@ -25,8 +25,9 @@ export function resetPlayer(arenaWidth, arenaHeight) {
 
 export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   const scale = dt / 16.67;
-  let mx = input.stickX;
-  let my = input.stickY;
+  // INVERTED CONTROLS — push the stick one way, the Cat goes the opposite way.
+  let mx = -input.stickX;
+  let my = -input.stickY;
   // Normalize diagonal movement
   const mag = Math.sqrt(mx * mx + my * my);
   if (mag > 1) { mx /= mag; my /= mag; }
@@ -42,8 +43,8 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
 
   if (Math.abs(input.stickX) > 0 || Math.abs(input.stickY) > 0) {
     const fmag = Math.sqrt(input.stickX * input.stickX + input.stickY * input.stickY);
-    facingX = input.stickX / fmag;
-    facingY = input.stickY / fmag;
+    facingX = -input.stickX / fmag;
+    facingY = -input.stickY / fmag;
   }
 
   // Bounce off walls — feels icy
