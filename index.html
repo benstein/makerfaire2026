@@ -339,7 +339,8 @@
             if (isDone) doneCount++;
             var cls = isDone ? 'done' : (isActive ? 'active' : 'pending');
             var icon = isDone ? '\u2714' : (isActive ? '\u25CF' : '\u25CB');
-            html += '<div class="build-step ' + cls + '"><span class="step-icon">' + icon + '</span>' + step.text + '</div>';
+            var label = step.label || step.text || step.name || step.title || '...';
+            html += '<div class="build-step ' + cls + '"><span class="step-icon">' + icon + '</span>' + label + '</div>';
           }
           stepsEl.innerHTML = html;
           var pct = Math.round((doneCount / data.steps.length) * 100);
