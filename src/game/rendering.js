@@ -21,6 +21,10 @@ export function getCanvasSize() {
   return { width: canvas.width, height: canvas.height };
 }
 
+// Preload logo — starts loading immediately, ready well before title screen shows
+const _logo = new Image();
+_logo.src = '/assets/logo.jpg';
+
 // --- Frostbite Falls scene at NIGHT (Rocky & Bullwinkle) ---
 let fbReady = false;
 let pineTrees = [];
@@ -215,24 +219,39 @@ export function drawTitleScreen() {
   const now = performance.now();
   const bounce = Math.sin(now / 400) * 5;
 
-  // Classic R&B cartoon title — thick black outline, flat yellow fill
-  ctx.font = 'bold 56px monospace';
+  const logoSize = Math.round(Math.min(canvas.width * 0.30, canvas.height * 0.60, 500));
+  const lx = Math.round(cx - logoSize / 2);
+  const ly = Math.round(cy - logoSize / 2 - 22 + bounce);
+
+  if (_logo.complete && _logo.naturalWidth) {
+    ctx.save();
+    ctx.shadowBlur = 32;
+    ctx.shadowColor = 'rgba(255, 210, 0, 0.55)';
+    ctx.beginPath();
+    ctx.roundRect(lx, ly, logoSize, logoSize, Math.round(logoSize * 0.07));
+    ctx.clip();
+    ctx.drawImage(_logo, lx, ly, logoSize, logoSize);
+    ctx.restore();
+  } else {
+    ctx.font = 'bold 52px monospace';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 8;
+    ctx.strokeText('SAY IT! PLAY IT!', cx, cy - 22 + bounce);
+    ctx.fillStyle = '#ffdd00';
+    ctx.fillText('SAY IT! PLAY IT!', cx, cy - 22 + bounce);
+  }
+
+  const pressY = ly + logoSize + 32;
+  ctx.font = 'bold 22px monospace';
   ctx.textAlign = 'center';
   ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 9;
-  ctx.strokeText('ARENA SURVIVAL', cx, cy - 28 + bounce);
-  ctx.fillStyle = '#ffdd00';
-  ctx.fillText('ARENA SURVIVAL', cx, cy - 28 + bounce);
-
-  ctx.font = 'bold 20px monospace';
-  ctx.strokeStyle = '#000000';
   ctx.lineWidth = 5;
-  ctx.strokeText('~ PRESS START ~', cx, cy + 25);
+  ctx.strokeText('~ PRESS START ~', cx, pressY);
   ctx.fillStyle = '#ff3333';
   ctx.globalAlpha = 0.7 + 0.3 * Math.sin(now / 400);
-  ctx.fillText('~ PRESS START ~', cx, cy + 25);
+  ctx.fillText('~ PRESS START ~', cx, pressY);
   ctx.globalAlpha = 1;
-
   ctx.textAlign = 'left';
 }
 

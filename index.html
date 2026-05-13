@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maker Faire 2026</title>
+  <title>Say it! Play it!</title>
   <link rel="icon" href="/favicon.ico">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,6 +30,25 @@
       overflow: hidden;
     }
     #changelog-entries { flex: 1; overflow-y: auto; min-height: 0; }
+    #game-logo {
+      width: 100%;
+      border-radius: 10px;
+      display: block;
+      margin-bottom: 14px;
+      box-shadow: 0 0 22px rgba(255, 200, 0, 0.35), 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .build-logo {
+      width: 150px;
+      height: 150px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      box-shadow: 0 0 30px rgba(255, 200, 0, 0.55), 0 4px 16px rgba(0,0,0,0.3);
+      animation: build-logo-float 2.8s ease-in-out infinite;
+    }
+    @keyframes build-logo-float {
+      0%, 100% { transform: translateY(0)   scale(1.00); }
+      50%       { transform: translateY(-6px) scale(1.03); }
+    }
     #controls-help {
       flex-shrink: 0;
       border-top: 1px solid #333;
@@ -77,6 +96,7 @@
   <div id="game-container">
     <canvas id="game-canvas"></canvas>
     <div id="changelog-panel">
+      <img id="game-logo" src="/assets/logo.jpg" alt="Say it! Play it!">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <h2 style="margin-bottom:0">Changelog</h2>
         <button id="fullscreen-btn" title="Toggle fullscreen" style="background:none;border:1px solid #333;border-radius:4px;padding:4px 6px;cursor:pointer;color:#888;display:flex;align-items:center;">
@@ -110,6 +130,7 @@
   <div id="build-overlay" style="display:none">
     <div class="build-bg"></div>
     <div class="build-content">
+      <img class="build-logo" src="/assets/logo.jpg" alt="Say it! Play it!">
       <div id="build-name" class="build-title"></div>
       <div id="build-desc" class="build-desc"></div>
       <div class="build-gear-wrap"><div class="build-gear"></div></div>
