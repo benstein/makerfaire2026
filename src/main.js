@@ -7,6 +7,7 @@ import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, upda
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, processRingHits } from './game/weapons.js';
+import { resetLightning, updateLightning, drawLightning } from './game/lightning.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -55,6 +56,7 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
+      resetLightning();
       resetVictoryEffects();
     } else {
       goToTitle();
@@ -75,6 +77,10 @@ function gameLoop(now) {
 
     // Ring of fire burns any enemy it touches (each ring only burns each enemy once)
     processRingHits(getEnemies(), removeEnemy, now);
+
+    // Lightning strikes — telegraphed bolts that hurt the player on impact
+    updateLightning(dt, now, width, height, getPlayerPos(), damagePlayer);
+    if (getPlayerHealth() <= 0) endGame(false);
 
     // Enemy-player collisions
     const playerBounds = getPlayerBounds();
@@ -100,6 +106,7 @@ function gameLoop(now) {
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
+    drawLightning(ctx, width, height, now);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
