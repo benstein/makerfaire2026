@@ -1,0 +1,5 @@
+#!/bin/sh
+# Post-commit hook: clear the "building" status so the game banner disappears,
+# then push to the remote so the other laptop can pull on its next kid build.
+echo '{ "building": false }' > public/building.json
+git push

@@ -1,0 +1,10 @@
+#!/bin/sh
+# Pre-commit hook: verify the game builds without errors.
+# Catches syntax errors, bad imports, and missing modules.
+
+npx vite build --logLevel error > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "BUILD FAILED -- fix errors before committing"
+  npx vite build --logLevel error
+  exit 1
+fi

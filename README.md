@@ -24,9 +24,12 @@ Open a terminal (on Mac that's the Terminal app, on Windows use Git Bash or Powe
 git clone https://github.com/YOUR-FORK-HERE/makerfaire2026.git
 cd makerfaire2026
 npm install
+git config core.hooksPath hooks
 ```
 
-That last command (`npm install`) downloads all the libraries the game needs. It takes about 10 seconds. You'll see a bunch of stuff scroll by. That's normal. If it finishes without saying "ERROR" in red, you're good.
+The `npm install` command downloads all the libraries the game needs. It takes about 10 seconds. You'll see a bunch of stuff scroll by. That's normal. If it finishes without saying "ERROR" in red, you're good.
+
+The `git config core.hooksPath hooks` command points Git at the project's tracked hook scripts (in the `hooks/` folder). These do two things: the **pre-commit** hook runs `vite build` to make sure your changes actually compile (no broken commits reach the TV), and the **post-commit** hook clears the build-status overlay and pushes to the remote. You only have to run this once per clone.
 
 ## Run the game
 
@@ -90,6 +93,25 @@ Claude Code will read the game files, figure out what to change, and edit them f
 
 There's a `CLAUDE.md` file in the project that tells Claude Code the rules of the game (don't break the controls, always commit changes, use the build screen, etc). If Claude does something weird, that file is where you'd tweak its behavior.
 
+## Running it live (two laptops)
+
+At the actual Maker Faire we run two laptops in parallel. While one kid plays the version that was just built for them on Laptop A, the next kid in line is having their idea built on Laptop B. The two laptops alternate, and each kid's change stacks on top of the previous kid's so the game gets gloriously cursed over the day.
+
+This works because both laptops share their commits through a normal git remote:
+
+- The Claude Code workflow on the **building** laptop runs `git pull --ff-only` right after writing the build-status overlay. The build screen hides the screen flicker while the other laptop's recent work arrives.
+- The post-commit hook on the **building** laptop runs `git push` after the build finishes, so the other laptop will pull this kid's change on its next turn.
+
+To set this up:
+
+1. Clone the repo onto both laptops (the `git config core.hooksPath hooks` step gives both the right pre-commit and post-commit behavior).
+2. Make sure both can push and pull from the same remote without needing a password prompt mid-event (set up SSH keys or a credential helper).
+3. Start `npm run dev` on each, plug each into its TV, and you're ready.
+
+If a `git pull --ff-only` fails during the event, that means the two laptops have somehow diverged — wait ~10 seconds for any in-flight push to land and retry. Don't reach for `git pull --rebase` or a regular `git pull`: the `--ff-only` failure is the signal that the alternation broke, and you want to know rather than have git silently merge a tangle.
+
+If you only have one laptop, none of this is necessary; the workflow still works, and `git push` in the post-commit hook is harmless (it'll fail if there's no remote, but the commit itself succeeded).
+
 ## Reset the game back to normal
 
 After kids have been mashing changes into the game for a while, it gets pretty wild. To get back to the boring original version (a white square shooting red squares), there's a `baseline` git tag. From a terminal in the project folder:
@@ -131,7 +153,11 @@ makerfaire2026/
 │       ├── hud.js           # hearts + timer
 │       ├── changelog.js     # the side panel of changes
 │       ├── buildStatus.js   # build mode polling
-│       └── buildScreen.js   # the "BUILDING..." overlay
+│       ├── buildScreen.js   # the "BUILDING..." overlay
+│       └── errorBadge.js    # "glitchy" warning if the game throws at runtime
+├── hooks/
+│   ├── pre-commit           # runs `vite build` before every commit
+│   └── post-commit          # clears the build overlay, pushes to remote
 ├── public/
 │   ├── changelog.json       # list of every kid's change
 │   ├── building.json        # whether we're currently building
