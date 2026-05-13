@@ -25,10 +25,10 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  // Seuss-creature traits: normal = Lorax orange/yellow, crazy = THING blue-red
+  // R&B spy traits: Boris = dark olive/grey, Natasha (crazy) = deep purple-red
   const isCrazy = Math.random() < 0.35;
-  const seussNormalHues = [22, 35, 48, 280, 120]; // orange, yellow-orange, gold, purple, green
-  const hue = isCrazy ? 215 : seussNormalHues[Math.floor(Math.random() * seussNormalHues.length)];
+  const borisHues = [80, 100, 40, 200]; // olive, dark green, dark khaki, slate
+  const hue = isCrazy ? 300 : borisHues[Math.floor(Math.random() * borisHues.length)];
   const eyeCount = isCrazy ? 2 + Math.floor(Math.random() * 4) : 2; // 2-5 eyes if crazy
   const eyes = [];
   for (let i = 0; i < eyeCount; i++) {
@@ -244,52 +244,72 @@ function drawPuffball(ctx, e) {
   }
 
   if (e.isCrazy) {
-    // THING 1/2 — electric blue wild hair shooting out in all directions
-    const hairCount = 9;
-    for (let i = 0; i < hairCount; i++) {
-      const a = (i / hairCount) * Math.PI * 2 - Math.PI / 2 + Math.sin(phase + i) * 0.3;
-      const len = r * (0.55 + 0.25 * Math.sin(phase * 1.3 + i * 1.1));
-      ctx.strokeStyle = i % 2 === 0 ? '#1199ff' : '#66ddff';
-      ctx.lineWidth = r * 0.18;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * r * 0.7, Math.sin(a) * r * 0.7);
-      ctx.lineTo(Math.cos(a) * (r + len), Math.sin(a) * (r + len));
-      ctx.stroke();
-    }
-    // Red "THING" label badge
-    ctx.fillStyle = '#cc1111';
+    // NATASHA — glamorous spy, tall hair piled high, eyelashes, red lips
+    const hairH = r * 0.9;
+    ctx.fillStyle = '#220022';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = r * 0.06;
     ctx.beginPath();
-    ctx.ellipse(0, r * 0.08, r * 0.32, r * 0.22, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, -r - hairH * 0.5, r * 0.55, hairH * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Hair highlight
+    ctx.fillStyle = '#440044';
+    ctx.beginPath();
+    ctx.ellipse(-r * 0.15, -r - hairH * 0.55, r * 0.20, hairH * 0.28, -0.3, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${Math.round(r * 0.28)}px monospace`;
-    ctx.textAlign = 'center';
-    ctx.fillText('THING', 0, r * 0.15);
-    ctx.textAlign = 'left';
-  } else {
-    // Lorax / Who creature — orange tuft on top
-    const tuftCount = 5;
-    for (let i = 0; i < tuftCount; i++) {
-      const a = -Math.PI / 2 + (i - 2) * 0.28 + Math.sin(phase + i) * 0.08;
-      const tuftLen = r * (0.45 + 0.15 * Math.sin(phase * 0.8 + i));
-      ctx.strokeStyle = i % 2 === 0 ? '#ff8800' : '#ffcc00';
-      ctx.lineWidth = r * 0.16;
-      ctx.lineCap = 'round';
+    // Eyelashes (dramatic upper lashes)
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = r * 0.09;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      const lx = -r * 0.28 + i * r * 0.18;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * r * 0.75, Math.sin(a) * r * 0.75);
-      ctx.lineTo(Math.cos(a) * (r * 0.75 + tuftLen), Math.sin(a) * (r * 0.75 + tuftLen));
+      ctx.moveTo(lx, -r * 0.30);
+      ctx.lineTo(lx - r * 0.04, -r * 0.52 - i * 0.04 * r);
       ctx.stroke();
     }
-    // Tiny Lorax mustache
-    ctx.strokeStyle = '#cc6600';
-    ctx.lineWidth = r * 0.12;
-    ctx.lineCap = 'round';
+    // Red lips
+    ctx.fillStyle = '#dd1133';
     ctx.beginPath();
-    ctx.moveTo(-r * 0.28, r * 0.18);
-    ctx.quadraticCurveTo(-r * 0.14, r * 0.30, 0, r * 0.22);
-    ctx.quadraticCurveTo( r * 0.14, r * 0.30, r * 0.28, r * 0.18);
+    ctx.ellipse(0, r * 0.35, r * 0.22, r * 0.11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#000'; ctx.lineWidth = r * 0.04;
     ctx.stroke();
+  } else {
+    // BORIS BADENOV — tall spy hat, bushy eyebrows, scheming mustache
+    const hatH = r * 1.05;
+    const hatW = r * 0.72;
+    // Hat body (tall, narrow, black)
+    ctx.fillStyle = '#111111';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = r * 0.05;
+    ctx.fillRect(-hatW / 2, -r - hatH, hatW, hatH);
+    ctx.strokeRect(-hatW / 2, -r - hatH, hatW, hatH);
+    // Hat brim
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(-hatW * 0.72, -r - r * 0.06, hatW * 1.44, r * 0.2);
+    ctx.strokeRect(-hatW * 0.72, -r - r * 0.06, hatW * 1.44, r * 0.2);
+    // Bushy eyebrows (Boris's signature)
+    ctx.fillStyle = '#111111';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = r * 0.06;
+    // Left brow
+    ctx.beginPath();
+    ctx.ellipse(-r * 0.30, -r * 0.42, r * 0.22, r * 0.10, -0.3, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Right brow
+    ctx.beginPath();
+    ctx.ellipse(r * 0.30, -r * 0.42, r * 0.22, r * 0.10, 0.3, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Scheming mustache
+    ctx.fillStyle = '#111111';
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.05, r * 0.20);
+    ctx.bezierCurveTo(-r * 0.30, r * 0.14, -r * 0.38, r * 0.36, -r * 0.20, r * 0.30);
+    ctx.bezierCurveTo(-r * 0.08, r * 0.26, 0, r * 0.28, 0, r * 0.28);
+    ctx.bezierCurveTo(0, r * 0.28, r * 0.08, r * 0.26, r * 0.20, r * 0.30);
+    ctx.bezierCurveTo(r * 0.38, r * 0.36, r * 0.30, r * 0.14, r * 0.05, r * 0.20);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
   }
 
   ctx.restore();

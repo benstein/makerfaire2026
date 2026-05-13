@@ -80,110 +80,84 @@ export function processRingHits(enemies, removeEnemyFn, now) {
   }
 }
 
+// Cartoon BOOM! starburst — thick black outline, flat yellow/orange fill
+function drawBoomStar(ctx, x, y, r, points, seed) {
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.45;
+    const jitter = i % 2 === 0 ? 1 + 0.12 * Math.sin(seed + i * 1.7) : 1;
+    const px = x + Math.cos(a) * rad * jitter;
+    const py = y + Math.sin(a) * rad * jitter;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+const BOOM_WORDS = ['BOOM!', 'POW!', 'ZAP!', 'BAM!', 'WHAM!'];
+
 export function drawProjectiles(ctx) {
   const now = performance.now();
 
-  // --- Singe marks first (drawn underneath the active flames) ---
+  // --- Smoke puffs where enemies were zapped ---
   for (const s of singes) {
     const age = now - s.bornAt;
     const t = Math.min(1, age / SINGE_LIFETIME);
-    const alpha = 1 - t;
-
-    // Charred ground patch
-    ctx.fillStyle = `rgba(15,8,4,${0.75 * alpha})`;
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r * (1 + t * 0.25), 0, Math.PI * 2);
-    ctx.fill();
-
-    // Dark ash speckles around the rim
-    for (let i = 0; i < 7; i++) {
-      const a = (i / 7) * Math.PI * 2 + s.seed;
-      const dr = s.r * (0.7 + 0.25 * Math.sin(s.seed + i));
-      ctx.fillStyle = `rgba(35,20,15,${0.6 * alpha})`;
+    const alpha = (1 - t) * 0.7;
+    const puffs = 3;
+    for (let i = 0; i < puffs; i++) {
+      const px = s.x + Math.cos(s.seed + i * 2.1) * s.r * 0.4;
+      const py = s.y - t * 28 + Math.sin(s.seed + i * 1.8) * s.r * 0.3;
+      ctx.fillStyle = `rgba(200,200,200,${alpha * (1 - i * 0.25)})`;
+      ctx.strokeStyle = `rgba(80,80,80,${alpha * 0.6})`;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(s.x + Math.cos(a) * dr, s.y + Math.sin(a) * dr, 2 + (i % 2), 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(px, py, s.r * (0.35 + i * 0.15) * (1 + t * 0.4), 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
     }
-
-    // Flickering orange embers — fade out faster than the char
-    const emberAlpha = Math.max(0, 1 - t * 1.6);
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * Math.PI * 2 + s.seed * 0.7;
-      const flicker = 0.45 + 0.55 * Math.sin(now / 70 + i + s.seed);
-      const ex = s.x + Math.cos(a) * s.r * 0.4;
-      const ey = s.y + Math.sin(a) * s.r * 0.4;
-      ctx.fillStyle = `rgba(255,${110 + flicker * 90},30,${0.7 * emberAlpha * flicker})`;
-      ctx.beginPath();
-      ctx.arc(ex, ey, 2.5 + flicker * 1.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Thin smoke wisp drifting upward
-    ctx.fillStyle = `rgba(110,100,100,${0.30 * alpha})`;
-    ctx.beginPath();
-    ctx.ellipse(s.x, s.y - t * 22, s.r * 0.55, s.r * 0.28 * (1 + t * 0.8), 0, 0, Math.PI * 2);
-    ctx.fill();
   }
 
-  // --- Rings of fire ---
+  // --- BOOM! cartoon explosion rings ---
   for (const ring of rings) {
     const age = now - ring.bornAt;
     const t = age / ring.lifetime;
-    const fade = t < 0.15 ? t / 0.15 : t > 0.75 ? (1 - t) / 0.25 : 1;
-    const grow = 1 + t * 0.15;
-    const r = ring.radius * grow;
+    const fade = t < 0.12 ? t / 0.12 : t > 0.70 ? (1 - t) / 0.30 : 1;
+    const r = ring.radius * (1 + t * 0.18);
 
-    // Outer heat-haze glow
-    const grad = ctx.createRadialGradient(ring.cx, ring.cy, r * 0.55, ring.cx, ring.cy, r * 1.15);
-    grad.addColorStop(0, 'rgba(255,200,80,0)');
-    grad.addColorStop(0.7, `rgba(255,130,30,${0.22 * fade})`);
-    grad.addColorStop(1, 'rgba(255,80,10,0)');
-    ctx.fillStyle = grad;
+    // Outer starburst — black outline
+    ctx.globalAlpha = fade;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = Math.max(2, r * 0.06);
+    ctx.fillStyle = '#ffdd00';
+    drawBoomStar(ctx, ring.cx, ring.cy, r, 12, ring.seed);
+    ctx.fill(); ctx.stroke();
+
+    // Inner starburst — orange
+    ctx.fillStyle = '#ff8800';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = Math.max(1.5, r * 0.04);
+    drawBoomStar(ctx, ring.cx, ring.cy, r * 0.72, 10, ring.seed + 0.5);
+    ctx.fill(); ctx.stroke();
+
+    // White hot core
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(ring.cx, ring.cy, r * 1.15, 0, Math.PI * 2);
+    ctx.arc(ring.cx, ring.cy, r * 0.30, 0, Math.PI * 2);
     ctx.fill();
 
-    // Flickering flame tongues around the perimeter
-    const tongues = 24;
-    for (let i = 0; i < tongues; i++) {
-      const a = (i / tongues) * Math.PI * 2 + now / 220 + ring.seed * 0.01;
-      const flick = 0.55 + 0.45 * Math.sin(now / 65 + i * 1.7 + ring.seed);
-      const innerR = r * 0.72;
-      const outerR = r * (1.05 + 0.22 * flick);
-      const flameW = r * 0.16;
-      const ix = ring.cx + Math.cos(a) * innerR;
-      const iy = ring.cy + Math.sin(a) * innerR;
-      const ox = ring.cx + Math.cos(a) * outerR;
-      const oy = ring.cy + Math.sin(a) * outerR;
-      const px = -Math.sin(a) * flameW;
-      const py =  Math.cos(a) * flameW;
+    // BOOM! text — flat, thick black outline, yellow fill
+    const word = BOOM_WORDS[Math.floor(ring.seed * BOOM_WORDS.length) % BOOM_WORDS.length];
+    const fontSize = Math.max(12, Math.round(r * 0.38));
+    ctx.font = `bold ${fontSize}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = Math.max(3, fontSize * 0.18);
+    ctx.strokeText(word, ring.cx, ring.cy + fontSize * 0.36);
+    ctx.fillStyle = '#ffff00';
+    ctx.fillText(word, ring.cx, ring.cy + fontSize * 0.36);
+    ctx.textAlign = 'left';
 
-      // Outer flame body — red/orange
-      ctx.fillStyle = `rgba(255,${70 + flick * 90},20,${0.85 * fade})`;
-      ctx.beginPath();
-      ctx.moveTo(ix - px, iy - py);
-      ctx.lineTo(ix + px, iy + py);
-      ctx.lineTo(ox, oy);
-      ctx.closePath();
-      ctx.fill();
-
-      // Inner flame — bright yellow core
-      const midR = innerR + (outerR - innerR) * 0.65;
-      ctx.fillStyle = `rgba(255,${210 + flick * 40},90,${0.9 * fade})`;
-      ctx.beginPath();
-      ctx.moveTo(ix - px * 0.5, iy - py * 0.5);
-      ctx.lineTo(ix + px * 0.5, iy + py * 0.5);
-      ctx.lineTo(ring.cx + Math.cos(a) * midR, ring.cy + Math.sin(a) * midR);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // Hot inner ring outline (pure white-yellow)
-    ctx.strokeStyle = `rgba(255,240,170,${0.55 * fade})`;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(ring.cx, ring.cy, r * 0.72, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 }
 
