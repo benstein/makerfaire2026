@@ -1,11 +1,1 @@
-{
-  "building": true,
-  "name": "KitKat",
-  "description": "Turning the bad guys into super cute rainbow puffballs with googly eyes!",
-  "steps": [
-    { "label": "Fluffing them up into puffballs...", "done": true },
-    { "label": "Painting them rainbow colors...", "done": true },
-    { "label": "Sticking googly eyes everywhere...", "done": true },
-    { "label": "Making some of them go CRAZY!", "done": true }
-  ]
-}
+{ "building": false }
