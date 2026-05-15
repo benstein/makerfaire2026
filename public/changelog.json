@@ -1,14 +1,3 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Jackson", "description": "Player is a mighty gorilla and bullets are spinning bananas!" },
-  { "version": 3, "name": "Ben", "description": "Antarctica! Gorilla and enemies slip on the ice, bananas are frozen solid" },
-  { "version": 4, "name": "KitKat", "description": "Enemies are now SUPER cute rainbow puffballs with googly eyes — and some are CRAZY!" },
-  { "version": 5, "name": "Ben", "description": "FULL DR. SEUSS! Cat in the Hat player, Lorax creatures + THINGS, Truffula tufts, Seussian sky!" },
-  { "version": 6, "name": "Ben", "description": "Cat in the Hat now has a RING OF FIRE around him — enemies burn to a singed crisp!" },
-  { "version": 7, "name": "Arin", "description": "The bad guys are now ENORMOUS stomping giants with huge googly eyes!" },
-  { "version": 8, "name": "Soup", "description": "INVERTED CONTROLS! Push the stick one way, the Cat runs the OTHER way!" },
-  { "version": 9, "name": "Sunny", "description": "Rocky & Bullwinkle! Rocky the flying squirrel, Boris & Natasha spies, BOOM! POW! ZAP! explosions, Frostbite Falls!" },
-  { "version": 10, "name": "Lou", "description": "NIGHTTIME at Frostbite Falls! Dark sky, glowing moon, twinkling stars, cozy lit-up cabin!" },
-  { "version": 11, "name": "Ben", "description": "LIGHTNING! Bolts crack from the sky with a warning target — don't stand under one or you get ZAPPED!" },
-  { "version": 12, "name": "Soup", "description": "Tetris theme plays while you fight! Plus BOOM explosions, ZAP lightning, OOF when you get hit, and a victory fanfare!" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" }
 ]

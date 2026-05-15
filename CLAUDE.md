@@ -6,12 +6,11 @@ This is a live exhibit game for kids at Maker Faire. Kids suggest changes ("make
 
 1. Someone tells you what a kid wants changed (e.g., "Emma wants rainbow enemies")
 2. **Immediately** set the build status so the kid sees their name on screen (see below)
-3. Run `git pull --ff-only` to sync with the other laptop (event mode — see "Two-Laptop Sync" below)
-4. Interpret the request creatively — go big, make it dramatic
-5. Edit the relevant source file(s)
-6. Update `public/changelog.json` with the kid's name and a description
-7. Commit the change with a descriptive message (post-commit hook auto-clears build status and pushes)
-8. Vite HMR auto-reloads the browser — the kid sees the change in seconds
+3. Interpret the request creatively — go big, make it dramatic
+4. Edit the relevant source file(s)
+5. Update `public/changelog.json` with the kid's name and a description
+6. Commit the change with a descriptive message (post-commit hook auto-clears build status)
+7. Vite HMR auto-reloads the browser — the kid sees the change in seconds
 
 ## Build Progress Screen
 
@@ -23,31 +22,7 @@ While you work, the game shows a full-screen build progress view with the kid's 
 
 The game polls this file every 1 second. Steps should be high-level and kid-friendly (e.g., "Adding rainbow background...", "Making enemies faster...", "Giving player 6 hearts..."). NOT source-code-level details.
 
-**Exact schema — field names matter.** The renderer reads `name`, `description`, and `steps[].label` / `steps[].done`. Using any other field names (`text`, `kid`, `title`, etc.) will render as "undefined" on screen.
-
-```json
-{
-  "building": true,
-  "name": "Emma",
-  "description": "Making enemies into dancing bananas!",
-  "steps": [
-    { "label": "Turning enemies yellow...", "done": true },
-    { "label": "Giving them little dance moves...", "done": false },
-    { "label": "Adding banana peels everywhere...", "done": false }
-  ]
-}
-```
-
-After you commit, the git post-commit hook auto-clears the file to `{ "building": false }`, pushes to the remote (event mode), and the game returns to the title screen. No manual cleanup needed.
-
-## Two-Laptop Sync (Event Mode)
-
-At Maker Faire we run two laptops in parallel — while one kid plays their just-built version, the next kid's change builds on the other laptop. To keep both laptops merging cleanly:
-
-- **Workflow step 3 runs `git pull --ff-only`** right after writing `building.json`. The build screen is already up, so the pull's Vite HMR flicker is hidden underneath it. This grabs the previous kid's change from the other laptop so the new build stacks on it cumulatively.
-- **The post-commit hook runs `git push`** after clearing `building.json`. This propagates this kid's change to the other laptop's next pull.
-
-If the pull fails (laptops diverged), wait 10 seconds for the other laptop's in-flight push to land, then retry. Do not switch to `--rebase` or a default `pull` — the `--ff-only` failure is a real signal that the strict alternation broke, not noise to paper over.
+After you commit, the git post-commit hook auto-clears the file to `{ "building": false }` and the game returns to the title screen. No manual cleanup needed.
 
 **Step guidelines:**
 - 3-5 steps is ideal — enough to show progress, not so many it's overwhelming
