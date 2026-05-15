@@ -19,7 +19,7 @@ export function resetWeapons() {
 }
 
 export function tryFire(playerPos, facing, now) {
-  if (now - lastFireTime < CONFIG.fireRateCooldown) return;
+  if (now - lastFireTime < CONFIG.fireRateCooldown) return false;
   lastFireTime = now;
 
   rings.push({
@@ -28,9 +28,10 @@ export function tryFire(playerPos, facing, now) {
     radius: RING_RADIUS,
     bornAt: now,
     lifetime: RING_LIFETIME,
-    hit: new Set(), // enemies already burned by this ring (so we don't double-singe)
+    hit: new Set(),
     seed: Math.random() * 1000,
   });
+  return true;
 }
 
 export function updateProjectiles(dt, arenaWidth, arenaHeight, playerPos) {

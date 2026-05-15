@@ -15,6 +15,7 @@ import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
 import { drawBuildScreen } from './ui/buildScreen.js';
 import { drawErrorBadge } from './ui/errorBadge.js';
+import { startMusic, stopMusic, sfxFire, sfxExplosion, sfxHurt, sfxLightning, sfxGameOver, sfxVictory } from './game/audio.js';
 
 // --- Smoke check: catch any runtime errors and surface them on screen ---
 let errorCount = 0;
@@ -38,6 +39,7 @@ loadChangelog();
 initBuildStatus();
 
 let lastTime = performance.now();
+let prevState = null;
 
 function gameLoop(now) {
   try {
@@ -48,6 +50,15 @@ function gameLoop(now) {
   const input = getInput();
   const state = getState();
   const { width, height } = getCanvasSize();
+
+  // --- Audio: react to state changes ---
+  if (state !== prevState) {
+    if (state === STATES.PLAYING) startMusic();
+    if (state === STATES.GAMEOVER) sfxGameOver();
+    if (state === STATES.VICTORY)  sfxVictory();
+    if (state === STATES.TITLE && prevState === STATES.PLAYING) stopMusic();
+    prevState = state;
+  }
 
   // --- State transitions ---
   if (input.start && state !== STATES.BUILDING) {
@@ -71,15 +82,23 @@ function gameLoop(now) {
 
     // Firing
     if (input.fire || input.fireHeld) {
-      tryFire(getPlayerPos(), getPlayerFacing(), now);
+      const firedNow = tryFire(getPlayerPos(), getPlayerFacing(), now);
+      if (firedNow) sfxFire();
     }
     updateProjectiles(dt, width, height, getPlayerPos());
 
-    // Ring of fire burns any enemy it touches (each ring only burns each enemy once)
+    // Ring of fire — count kills for explosion sounds
+    const beforeKill = getEnemies().length;
     processRingHits(getEnemies(), removeEnemy, now);
+    const killed = beforeKill - getEnemies().length;
+    for (let k = 0; k < Math.min(killed, 3); k++) sfxExplosion();
 
-    // Lightning strikes — telegraphed bolts that hurt the player on impact
-    updateLightning(dt, now, width, height, getPlayerPos(), damagePlayer);
+    // Lightning — play zap when bolt connects
+    const lightningDamage = (t) => {
+      if (damagePlayer(t)) { sfxLightning(); return true; }
+      return false;
+    };
+    updateLightning(dt, now, width, height, getPlayerPos(), lightningDamage);
     if (getPlayerHealth() <= 0) endGame(false);
 
     // Enemy-player collisions
@@ -88,6 +107,7 @@ function gameLoop(now) {
     for (let i = enemies.length - 1; i >= 0; i--) {
       if (aabb(playerBounds, enemies[i])) {
         if (damagePlayer(now)) {
+          sfxHurt();
           removeEnemy(i);
           if (getPlayerHealth() <= 0) {
             endGame(false);

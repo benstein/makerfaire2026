@@ -9,5 +9,6 @@
   { "version": 8, "name": "Soup", "description": "INVERTED CONTROLS! Push the stick one way, the Cat runs the OTHER way!" },
   { "version": 9, "name": "Sunny", "description": "Rocky & Bullwinkle! Rocky the flying squirrel, Boris & Natasha spies, BOOM! POW! ZAP! explosions, Frostbite Falls!" },
   { "version": 10, "name": "Lou", "description": "NIGHTTIME at Frostbite Falls! Dark sky, glowing moon, twinkling stars, cozy lit-up cabin!" },
-  { "version": 11, "name": "Ben", "description": "LIGHTNING! Bolts crack from the sky with a warning target — don't stand under one or you get ZAPPED!" }
+  { "version": 11, "name": "Ben", "description": "LIGHTNING! Bolts crack from the sky with a warning target — don't stand under one or you get ZAPPED!" },
+  { "version": 12, "name": "Soup", "description": "Tetris theme plays while you fight! Plus BOOM explosions, ZAP lightning, OOF when you get hit, and a victory fanfare!" }
 ]
