@@ -17,6 +17,11 @@ export function resetPlayer(arenaWidth, arenaHeight) {
   invincibleUntil = 0;
 }
 
+export function setPlayerPosition(nx, ny) {
+  x = nx;
+  y = ny;
+}
+
 export function updatePlayer(dt, input, arenaWidth, arenaHeight, now, speedMultiplier = 1) {
   const scale = dt / 16.67;
   let mx = input.stickX;

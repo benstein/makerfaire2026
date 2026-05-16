@@ -4,7 +4,7 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer, startBossFight } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, setPlayerPosition } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
@@ -12,8 +12,9 @@ import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictory
 import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMultiplier, getFireCooldownMultiplier } from './game/powerups.js';
 import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from './game/roadblocks.js';
 import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss } from './game/boss.js';
-import { resetPasture, getPenBounds, getDangerBounds, isInPen, isPlayerInDangerZone, captureBear, getCapturedCount, BEARS_NEEDED, drawPasture } from './game/pasture.js';
 import { resetAirstrike, triggerAirstrike, updateAirstrike, getChickens, drawAirstrike, canAirstrike } from './game/airstrike.js';
+import { resetRace, updateRaceAI, advancePlayerMap, getPlayerMap, getSoupMap, getSoupRaceX, getSoupRaceY, getRaceWinner, getCurrentMapConfig, TOTAL_MAPS, resetSoupToLeftEdge, drawRaceHUD } from './game/race.js';
+import { resetSoup, drawSoup, setSoupPosition } from './game/soup.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -26,7 +27,6 @@ loadChangelog();
 initBuildStatus();
 
 let lastTime = performance.now();
-let penZoneTime = 0; // ms player has been inside the pen
 
 function gameLoop(now) {
   const dt = now - lastTime;
@@ -52,10 +52,10 @@ function gameLoop(now) {
       resetPowerups();
       resetRoadblocks();
       resetBoss();
-      resetPasture();
       resetAirstrike();
       resetVictoryEffects();
-      penZoneTime = 0;
+      resetRace(width, height);
+      resetSoup(width / 2, height / 2);
     } else if (input.start) {
       goToTitle();
     }
@@ -63,9 +63,17 @@ function gameLoop(now) {
 
   // --- Update ---
   if (state === STATES.PLAYING) {
-    updateTimer(dt);
     updatePlayer(dt, input, width, height, now, getSpeedMultiplier(now));
     updateEnemies(dt, getPlayerPos(), now, width, height);
+
+    // Soup races across the screen autonomously — bears ignore him
+    updateRaceAI(dt, width, height, now);
+    setSoupPosition(getSoupRaceX(), getSoupRaceY());
+
+    // Soup won — player loses
+    if (getRaceWinner() === 'soup') {
+      endGame(false);
+    }
 
     // Firing
     if (input.fire || input.fireHeld) {
@@ -87,7 +95,7 @@ function gameLoop(now) {
       }
     }
 
-    // Enemy-player collisions
+    // Enemy-player collisions (bears only chase player, not Soup)
     const playerBounds = getPlayerBounds();
     const enemies = getEnemies();
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -101,35 +109,23 @@ function gameLoop(now) {
       }
     }
 
-    // Bear capture — herd bears into the pen; fill the pen to summon the boss
-    const enemiesNow = getEnemies();
-    for (let i = enemiesNow.length - 1; i >= 0; i--) {
-      if (isInPen(enemiesNow[i], width, height)) {
-        captureBear(enemiesNow[i], width, height);
-        removeEnemy(i);
-        if (getCapturedCount() >= BEARS_NEEDED) {
-          startBossFight();
-          resetEnemies();
-          resetWeapons();
-          spawnBoss(width, height, now);
-        }
+    // Player reaches right edge → advance to next map
+    const pb = getPlayerBounds();
+    if (pb.x + pb.w >= width - 8) {
+      advancePlayerMap();
+      if (getRaceWinner() === 'player') {
+        // Player finished all 15 maps — boss fight!
+        startBossFight();
+        resetEnemies();
+        resetWeapons();
+        spawnBoss(width, height, now);
+      } else {
+        // Next map — clear enemies, move player back to left
+        resetEnemies();
+        resetWeapons();
+        setPlayerPosition(60, height / 2);
+        resetSoupToLeftEdge(height);
       }
-    }
-
-    // Pen zone — player can only stand here 2 seconds before losing a heart
-    if (isInPen(getPlayerBounds(), width, height)) {
-      penZoneTime += dt;
-      if (penZoneTime >= 2000) {
-        penZoneTime = 0;
-        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
-      }
-    } else {
-      penZoneTime = 0;
-    }
-
-    // Danger zone — instant death
-    if (isPlayerInDangerZone(getPlayerBounds(), width, height)) {
-      endGame(false);
     }
 
     // Roadblock-player collisions
@@ -231,30 +227,25 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
-    drawPasture(ctx, width, height, now);
+    // Map background color
+    const mapCfg = getCurrentMapConfig();
+    ctx.fillStyle = mapCfg.bg;
+    ctx.fillRect(0, 0, width, height);
+
     drawRoadblocks(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
     drawPowerups(ctx, now);
     drawAirstrike(ctx, now);
-    // Pen zone countdown warning
-    if (penZoneTime > 0) {
-      const secsLeft = ((2000 - penZoneTime) / 1000).toFixed(1);
-      ctx.save();
-      ctx.font = 'bold 28px monospace';
-      ctx.textAlign = 'center';
-      ctx.strokeStyle = '#4a1a00';
-      ctx.lineWidth = 5;
-      ctx.lineJoin = 'round';
-      ctx.strokeText(`GET OUT! ${secsLeft}s`, width / 2, height / 2 - 60);
-      ctx.fillStyle = '#ff4400';
-      ctx.fillText(`GET OUT! ${secsLeft}s`, width / 2, height / 2 - 60);
-      ctx.restore();
-    }
+    drawSoup(ctx, now);
+    drawRaceHUD(ctx, width, height, now);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.BOSS_FIGHT) {
-    drawPasture(ctx, width, height, now);
+    const mapCfg = getCurrentMapConfig();
+    ctx.fillStyle = mapCfg.bg;
+    ctx.fillRect(0, 0, width, height);
+
     drawRoadblocks(ctx, now);
     drawBoss(ctx, now, width);
     drawPlayer(ctx, now);

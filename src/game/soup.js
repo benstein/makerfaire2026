@@ -289,6 +289,11 @@ export function getSoupPos() {
   return { x: sx, y: sy };
 }
 
+export function setSoupPosition(nx, ny) {
+  sx = nx;
+  sy = ny;
+}
+
 export function isSoupEating() {
   return state === 'eating';
 }
