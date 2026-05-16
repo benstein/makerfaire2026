@@ -10,6 +10,7 @@ import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectil
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMultiplier, getFireCooldownMultiplier } from './game/powerups.js';
+import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from './game/roadblocks.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -45,6 +46,7 @@ function gameLoop(now) {
       resetEnemies();
       resetWeapons();
       resetPowerups();
+      resetRoadblocks();
       resetVictoryEffects();
     } else {
       goToTitle();
@@ -83,7 +85,21 @@ function gameLoop(now) {
     for (let i = enemies.length - 1; i >= 0; i--) {
       if (aabb(playerBounds, enemies[i])) {
         if (damagePlayer(now)) {
+          const pos = getPlayerPos();
+          spawnRoadblock(pos.x, pos.y, width, height);
           removeEnemy(i);
+          if (getPlayerHealth() <= 0) {
+            endGame(false);
+          }
+        }
+      }
+    }
+
+    // Roadblock-player collisions
+    const roadblockList = getRoadblocks();
+    for (const rb of roadblockList) {
+      if (aabb(playerBounds, rb)) {
+        if (damagePlayer(now)) {
           if (getPlayerHealth() <= 0) {
             endGame(false);
           }
@@ -100,6 +116,7 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    drawRoadblocks(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
