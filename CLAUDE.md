@@ -37,7 +37,7 @@ After you commit, the git post-commit hook auto-clears the file to `{ "building"
 **Step guidelines:**
 - 3-5 steps is ideal — enough to show progress, not so many it's overwhelming
 - Every step should describe an actual visible change in fun, kid-friendly language
-- Don't include internal steps like "reading code" or "updating changelog" — only things kids care about
+- Don't include internal steps like "reading code", "updating changelog", or "committing" — only things kids care about seeing in the game
 - The steps array is optional — omit it in the initial placeholder, add real steps once you've planned
 
 **Critical sequencing:** After your initial file reads, rewrite `building.json` with all steps listed (`done: false`) **before touching any code**. Then mark each step `done: true` as you complete it. Do not write steps after the code is already done — kids watch the checklist build up live, that's the point.
