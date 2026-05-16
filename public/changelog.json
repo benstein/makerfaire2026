@@ -68,5 +68,10 @@
     "version": 14,
     "name": "Papi",
     "description": "Wordle in the middle of the arena! Type letters while dodging bears \u2014 Tab to submit. Auto-resets after each round."
+  },
+  {
+    "version": 15,
+    "name": "Arin",
+    "description": "Silence! The music is off \u2014 just the sounds of battle."
   }
 ]

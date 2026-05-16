@@ -14,7 +14,7 @@ import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMul
 import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from './game/roadblocks.js';
 import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss, returnBossToSpawn } from './game/boss.js';
 import { resetAirstrike, triggerAirstrike, updateAirstrike, getChickens, drawAirstrike, canAirstrike } from './game/airstrike.js';
-import { startMusic, stopMusic } from './game/audio.js';
+import { stopMusic } from './game/audio.js';
 import { resetWordle, drawWordle } from './game/wordle.js';
 import { resetRace, updateRaceAI, advancePlayerMap, getPlayerMap, getSoupMap, getSoupRaceX, getSoupRaceY, getRaceWinner, getCurrentMapConfig, TOTAL_MAPS, resetSoupToLeftEdge, drawRaceHUD, drawMapBackground } from './game/race.js';
 import { resetSoup, drawSoup, setSoupPosition } from './game/soup.js';
@@ -41,10 +41,8 @@ function gameLoop(now) {
   const state = getState();
   const { width, height } = getCanvasSize();
 
-  // Music — start on gameplay states, stop on non-gameplay states
   if (state !== prevState) {
-    const playing = state === STATES.PLAYING || state === STATES.BOSS_FIGHT;
-    playing ? startMusic() : stopMusic();
+    stopMusic();
     prevState = state;
   }
 
