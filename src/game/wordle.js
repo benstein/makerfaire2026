@@ -62,7 +62,27 @@ let shakeUntil = 0;
 let shakeRow   = -1;
 let resetAt    = 0;   // when to auto-reset after win/loss
 
+// Win rewards — persist across rounds within one game session
+let winCount          = 0;
+let firstWinPending   = false;  // signals main.js to clear bears
+let goToBedUntil      = 0;      // timestamp for GO TO BED overlay
+
 export function resetWordle() {
+  targetWord      = WORDS[Math.floor(Math.random() * WORDS.length)];
+  guesses         = [];
+  current         = '';
+  done            = false;
+  flash           = '';
+  flashUntil      = 0;
+  shakeUntil      = 0;
+  shakeRow        = -1;
+  resetAt         = 0;
+  winCount        = 0;
+  firstWinPending = false;
+  goToBedUntil    = 0;
+}
+
+function resetRound() {
   targetWord = WORDS[Math.floor(Math.random() * WORDS.length)];
   guesses    = [];
   current    = '';
@@ -72,6 +92,13 @@ export function resetWordle() {
   shakeUntil = 0;
   shakeRow   = -1;
   resetAt    = 0;
+}
+
+// Called by main.js — returns true once after first win, then clears the flag
+export function consumeFirstWinReward() {
+  if (!firstWinPending) return false;
+  firstWinPending = false;
+  return true;
 }
 
 function showFlash(msg, ms = 1800) {
@@ -113,8 +140,17 @@ function submit() {
   current = '';
 
   if (word === targetWord) {
-    const msgs = ['NICE!', 'YES!', 'GOT IT!', 'WORDLE!'];
-    showFlash(msgs[Math.floor(Math.random() * msgs.length)], 3000);
+    winCount++;
+    if (winCount === 1) {
+      firstWinPending = true;
+      showFlash('BEARS GONE!', 3000);
+    } else if (winCount === 2) {
+      goToBedUntil = performance.now() + 10000;
+      showFlash('GO TO BED!!!', 3000);
+    } else {
+      const msgs = ['NICE!', 'YES!', 'GOT IT!', 'WORDLE!'];
+      showFlash(msgs[Math.floor(Math.random() * msgs.length)], 3000);
+    }
     done    = true;
     resetAt = performance.now() + 3500;
   } else if (guesses.length >= 6) {
@@ -162,8 +198,8 @@ const BORDER = {
 };
 
 export function drawWordle(ctx, W, H, now) {
-  // Auto-reset
-  if (resetAt > 0 && now >= resetAt) { resetAt = 0; resetWordle(); }
+  // Auto-reset round (not the full game — winCount persists)
+  if (resetAt > 0 && now >= resetAt) { resetAt = 0; resetRound(); }
 
   const gx = Math.round(W / 2 - GW / 2);
   const gy = Math.round(H / 2 - GH / 2) - 8;
@@ -244,4 +280,30 @@ export function drawWordle(ctx, W, H, now) {
   ctx.fillText('Tab to submit  ·  Backspace to delete', W / 2, gy + GH + PAD + 6);
 
   ctx.textAlign = 'left';
+
+  // GO TO BED overlay — 10 seconds of flashing red shame
+  if (goToBedUntil > 0 && now < goToBedUntil) {
+    const remaining = goToBedUntil - now;
+    const flash = Math.sin(now / 180) > 0;  // flashes ~2.8x per second
+    if (flash) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(180, 0, 0, 0.18)';
+      ctx.fillRect(0, 0, W, H);
+
+      const fontSize = Math.round(Math.min(W, H) * 0.16);
+      ctx.font      = `bold ${fontSize}px Arial Black, Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Shadow for drama
+      ctx.fillStyle   = 'rgba(0,0,0,0.5)';
+      ctx.fillText('GO TO BED', W / 2 + 6, H / 2 + 6);
+
+      ctx.fillStyle = '#ff0000';
+      ctx.fillText('GO TO BED', W / 2, H / 2);
+
+      ctx.textBaseline = 'alphabetic';
+      ctx.restore();
+    }
+  }
 }

@@ -21,7 +21,7 @@ const MAP_CONFIGS = [
   { name: 'Boss Gateway',    bg: '#f0d0d0', border: '#a00000' },
 ];
 
-const SOUP_SPEED = 2.4; // px/frame at 60fps — player speed is 4, so Soup is ~60% but doesn't get slowed by bears
+const SOUP_SPEED = 3.8; // px/frame at 60fps — player speed is 4, nearly neck-and-neck
 
 let playerMap = 0;
 let soupMap = 0;

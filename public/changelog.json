@@ -88,5 +88,10 @@
     "version": 18,
     "name": "Ben",
     "description": "After a few seconds, the simulation starts to break. Screen tears, Matrix rain, corrupted pixels, and messages that know you're watching."
+  },
+  {
+    "version": 19,
+    "name": "Zeke",
+    "description": "Win Wordle once: all bears vanish! Win it twice: GO TO BED flashes in giant red letters for 10 seconds. Soup is way faster now."
   }
 ]

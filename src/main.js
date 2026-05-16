@@ -15,7 +15,7 @@ import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from '
 import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss, returnBossToSpawn } from './game/boss.js';
 import { resetAirstrike, triggerAirstrike, updateAirstrike, getChickens, drawAirstrike, canAirstrike } from './game/airstrike.js';
 import { stopMusic } from './game/audio.js';
-import { resetWordle, drawWordle } from './game/wordle.js';
+import { resetWordle, drawWordle, consumeFirstWinReward } from './game/wordle.js';
 import { resetGlitch, drawGlitch } from './game/glitch.js';
 import { resetRace, updateRaceAI, advancePlayerMap, getPlayerMap, getSoupMap, getSoupRaceX, getSoupRaceY, getRaceWinner, getCurrentMapConfig, TOTAL_MAPS, resetSoupToLeftEdge, drawRaceHUD, drawMapBackground } from './game/race.js';
 import { resetSoup, drawSoup, setSoupPosition } from './game/soup.js';
@@ -154,6 +154,9 @@ function gameLoop(now) {
     }
 
     updatePowerups(dt, playerBounds, now);
+
+    // First Wordle win — zap all bears
+    if (consumeFirstWinReward()) resetEnemies();
 
     // X button — cartwheel (player + all bears spin and lunge)
     if (input.cartwheel) {
