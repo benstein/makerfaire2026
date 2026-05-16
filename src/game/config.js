@@ -24,7 +24,7 @@ export const CONFIG = {
   fireRateCooldown: 250, // ms between shots
 
   // Game
-  gameDuration: 60, // seconds
+  gameDuration: 15, // seconds
   arenaBackground: '#eaf2f8',
 
   // HUD

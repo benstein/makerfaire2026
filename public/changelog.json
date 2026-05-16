@@ -2,5 +2,6 @@
   { "version": 1, "name": "Baseline", "description": "Initial game" },
   { "version": 2, "name": "Judah", "description": "Power-ups! Kill 10 enemies to get a speed boost or rapid fire!" },
   { "version": 3, "name": "June", "description": "Roadblocks! Lose a heart and one appears — touch it again and ouch!" },
-  { "version": 4, "name": "Judah", "description": "Boss fight! Survive 60 seconds and a giant boss appears — kill it to win!" }
+  { "version": 4, "name": "Judah", "description": "Boss fight! Survive 60 seconds and a giant boss appears — kill it to win!" },
+  { "version": 5, "name": "June", "description": "Timer is now 15 seconds — boss fight starts fast!" }
 ]
