@@ -46,8 +46,10 @@ export function pollInput() {
 
   const rawX = gp.axes[0];
   const rawY = gp.axes[1];
-  state.stickX = Math.abs(rawX) > DEADZONE ? rawX : 0;
-  state.stickY = Math.abs(rawY) > DEADZONE ? rawY : 0;
+  const dpadX = (gp.buttons[15]?.pressed ? 1 : 0) - (gp.buttons[14]?.pressed ? 1 : 0);
+  const dpadY = (gp.buttons[13]?.pressed ? 1 : 0) - (gp.buttons[12]?.pressed ? 1 : 0);
+  state.stickX = dpadX !== 0 ? dpadX : (Math.abs(rawX) > DEADZONE ? rawX : 0);
+  state.stickY = dpadY !== 0 ? dpadY : (Math.abs(rawY) > DEADZONE ? rawY : 0);
 
   const fireNow = gp.buttons[0]?.pressed ?? false;
   state.fire = fireNow && !prevFire;
