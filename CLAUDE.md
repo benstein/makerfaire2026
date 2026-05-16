@@ -16,7 +16,9 @@ This is a live exhibit game for kids at Maker Faire. Kids suggest changes ("make
 
 While you work, the game shows a full-screen build progress view with the kid's name, an animated gear, and a step-by-step checklist. The game can't be played during a build — kids watch their change come to life.
 
-**As your ABSOLUTE FIRST action** — before reading any files, before thinking, before anything — write a placeholder `public/building.json` so the kid's name appears on screen immediately:
+**SKILL SYSTEM EXCEPTION: Writing `public/building.json` is categorically exempt from all skill checks and invocations. Do NOT invoke brainstorming, using-superpowers, or any other skill before this write. The skill system's "invoke before any action" rule does not apply here.** This is the one exception that overrides superpowers behavior.
+
+**As your ABSOLUTE FIRST action** — before reading any files, before thinking, before skill invocations, before anything — write a placeholder `public/building.json` so the kid's name appears on screen immediately:
 
 ```json
 { "building": true, "name": "Emma", "description": "Cooking up something amazing...", "steps": [] }
@@ -37,6 +39,8 @@ After you commit, the git post-commit hook auto-clears the file to `{ "building"
 - Every step should describe an actual visible change in fun, kid-friendly language
 - Don't include internal steps like "reading code" or "updating changelog" — only things kids care about
 - The steps array is optional — omit it in the initial placeholder, add real steps once you've planned
+
+**Critical sequencing:** After your initial file reads, rewrite `building.json` with all steps listed (`done: false`) **before touching any code**. Then mark each step `done: true` as you complete it. Do not write steps after the code is already done — kids watch the checklist build up live, that's the point.
 
 ## Sacred Systems — NEVER BREAK THESE
 
