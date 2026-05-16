@@ -121,13 +121,15 @@
   <script type="module" src="/src/main.js"></script>
 
   <script>
-    document.getElementById('fullscreen-btn').addEventListener('click', function() {
+    function toggleFullscreen() {
       if (document.fullscreenElement) {
         document.exitFullscreen();
       } else {
         document.documentElement.requestFullscreen();
       }
-    });
+    }
+    document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+    document.getElementById('game-canvas').addEventListener('dblclick', toggleFullscreen);
   </script>
 
   <!-- Build overlay: independent of Vite modules, survives HMR and syntax errors -->
