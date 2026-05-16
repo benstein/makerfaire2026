@@ -11,6 +11,7 @@ import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMultiplier, getFireCooldownMultiplier } from './game/powerups.js';
 import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from './game/roadblocks.js';
+import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss } from './game/boss.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -47,6 +48,7 @@ function gameLoop(now) {
       resetWeapons();
       resetPowerups();
       resetRoadblocks();
+      resetBoss();
       resetVictoryEffects();
     } else {
       goToTitle();
@@ -110,6 +112,50 @@ function gameLoop(now) {
     updatePowerups(dt, playerBounds, now);
   }
 
+  if (state === STATES.BOSS_FIGHT) {
+    // First frame of boss fight — clear enemies and spawn boss
+    if (!getBoss()) {
+      resetEnemies();
+      resetWeapons();
+      spawnBoss(width, height, now);
+    }
+
+    updatePlayer(dt, input, width, height, now, getSpeedMultiplier(now));
+
+    if (input.fire || input.fireHeld) {
+      tryFire(getPlayerPos(), getPlayerFacing(), now, getFireCooldownMultiplier(now));
+    }
+    updateProjectiles(dt, width, height);
+    updateBoss(dt, getPlayerPos(), now, width, height);
+
+    // Projectile-boss collisions
+    const projList = getProjectiles();
+    const boss = getBoss();
+    if (boss) {
+      for (let i = projList.length - 1; i >= 0; i--) {
+        if (aabb(projList[i], boss)) {
+          removeProjectile(i);
+          if (damageBoss()) endGame(true);
+          break;
+        }
+      }
+    }
+
+    // Boss-player collision
+    const playerBounds = getPlayerBounds();
+    if (boss && aabb(playerBounds, boss)) {
+      if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+    }
+
+    // Roadblocks still hurt
+    const roadblockList = getRoadblocks();
+    for (const rb of roadblockList) {
+      if (aabb(getPlayerBounds(), rb)) {
+        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+      }
+    }
+  }
+
   // --- Render ---
   clearCanvas();
 
@@ -122,6 +168,12 @@ function gameLoop(now) {
     drawProjectiles(ctx);
     drawPowerups(ctx, now);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+  } else if (state === STATES.BOSS_FIGHT) {
+    drawRoadblocks(ctx, now);
+    drawBoss(ctx, now, width);
+    drawPlayer(ctx, now);
+    drawProjectiles(ctx);
+    drawHUD(ctx, getPlayerHealth(), 0, width);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
   } else if (state === STATES.GAMEOVER) {

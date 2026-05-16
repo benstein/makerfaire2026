@@ -6,6 +6,7 @@ import { CONFIG } from './config.js';
 export const STATES = {
   TITLE: 'title',
   PLAYING: 'playing',
+  BOSS_FIGHT: 'boss_fight',
   VICTORY: 'victory',
   GAMEOVER: 'gameover',
   BUILDING: 'building',
@@ -57,6 +58,6 @@ export function updateTimer(dt) {
   timeRemaining -= dt / 1000;
   if (timeRemaining <= 0) {
     timeRemaining = 0;
-    endGame(true);
+    currentState = STATES.BOSS_FIGHT;
   }
 }
