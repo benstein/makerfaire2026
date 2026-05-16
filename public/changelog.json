@@ -6,5 +6,6 @@
   { "version": 5, "name": "June", "description": "Timer is now 15 seconds — boss fight starts fast!" },
   { "version": 6, "name": "Rebecca", "description": "Pasture mode! Lure 8 bears into the pen — but avoid the danger zone!" },
   { "version": 7, "name": "A Kid", "description": "No timer! Fill the BEAR ZONE to summon the boss — but stay too long and lose a heart!" },
-  { "version": 8, "name": "Ben", "description": "Press B for an AIRSTRIKE — jets fly over and drop bouncing chickens that hurt everything!" }
+  { "version": 8, "name": "Ben", "description": "Press B for an AIRSTRIKE — jets fly over and drop bouncing chickens that hurt everything!" },
+  { "version": 9, "name": "Ben", "description": "The bears are now ENORMOUS stomping giants!" }
 ]
