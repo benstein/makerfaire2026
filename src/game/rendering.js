@@ -30,13 +30,13 @@ export function drawTitleScreen() {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#2c3e50';
   ctx.font = 'bold 48px monospace';
   ctx.textAlign = 'center';
   ctx.fillText('ARENA SURVIVAL', cx, cy - 30);
 
   ctx.font = '20px monospace';
-  ctx.fillStyle = '#888';
+  ctx.fillStyle = '#5d6d7e';
   ctx.fillText('PRESS START', cx, cy + 30);
 
   ctx.textAlign = 'left';
@@ -132,7 +132,7 @@ export function drawVictoryScreen() {
 
   // Subtitle
   ctx.font = 'bold 24px monospace';
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#2c3e50';
   ctx.globalAlpha = 0.6 + Math.sin(now * 2) * 0.4;
   ctx.fillText('PRESS START TO PLAY AGAIN', cx, cy + 40);
   ctx.globalAlpha = 1;
@@ -176,7 +176,7 @@ export function drawGameOverScreen() {
   ctx.fillText('GAME OVER', cx, cy - 30);
 
   ctx.font = '20px monospace';
-  ctx.fillStyle = '#888';
+  ctx.fillStyle = '#5d6d7e';
   ctx.fillText('PRESS START TO TRY AGAIN', cx, cy + 30);
 
   ctx.textAlign = 'left';
