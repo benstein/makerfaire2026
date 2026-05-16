@@ -42,8 +42,8 @@ function gameLoop(now) {
   }
 
   // --- State transitions ---
-  if ((input.start || (input.fire && state === STATES.TITLE)) && state !== STATES.BUILDING) {
-    if (state === STATES.TITLE) {
+  if (state !== STATES.BUILDING) {
+    if ((input.start || input.fire) && (state === STATES.TITLE || state === STATES.GAMEOVER)) {
       startGame();
       resetPlayer(width, height);
       resetEnemies();
@@ -54,7 +54,7 @@ function gameLoop(now) {
       resetPasture();
       resetVictoryEffects();
       penZoneTime = 0;
-    } else {
+    } else if (input.start) {
       goToTitle();
     }
   }

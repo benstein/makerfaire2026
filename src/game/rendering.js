@@ -57,11 +57,14 @@ export function drawTitleScreen() {
   }
 
   const pressY = ly + logoSize + 32;
-  ctx.font = '20px monospace';
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#5d6d7e';
   ctx.globalAlpha = 0.7 + 0.3 * Math.sin(now / 400);
-  ctx.fillText('PRESS START', cx, pressY);
+  ctx.font = 'bold 20px monospace';
+  ctx.fillStyle = '#5d6d7e';
+  ctx.fillText('Press Start / A to play', cx, pressY);
+  ctx.globalAlpha = 0.45;
+  ctx.font = '14px monospace';
+  ctx.fillText('(or Return on keyboard)', cx, pressY + 24);
   ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
 }
@@ -193,15 +196,42 @@ export function resetVictoryEffects() {
 export function drawGameOverScreen() {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
+  const now = performance.now();
 
-  ctx.fillStyle = '#e74c3c';
+  const logoSize = Math.round(Math.min(canvas.width * 0.25, canvas.height * 0.50, 400));
+  const lx = Math.round(cx - logoSize / 2);
+  const ly = Math.round(cy - logoSize / 2 - 44);
+  const r  = Math.round(logoSize * 0.07);
+
+  if (_logo.complete && _logo.naturalWidth) {
+    // Logo with red glow
+    ctx.save();
+    ctx.shadowBlur = 44;
+    ctx.shadowColor = 'rgba(231, 76, 60, 0.85)';
+    ctx.beginPath(); ctx.roundRect(lx, ly, logoSize, logoSize, r); ctx.clip();
+    ctx.drawImage(_logo, lx, ly, logoSize, logoSize);
+    ctx.restore();
+    // Red tint overlay
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(lx, ly, logoSize, logoSize, r); ctx.clip();
+    ctx.fillStyle = 'rgba(200, 0, 0, 0.28)';
+    ctx.fillRect(lx, ly, logoSize, logoSize);
+    ctx.restore();
+  }
+
+  const textY = ly + logoSize + 36;
   ctx.font = 'bold 48px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('GAME OVER', cx, cy - 30);
+  ctx.fillStyle = '#e74c3c';
+  ctx.fillText('GAME OVER', cx, textY);
 
-  ctx.font = '20px monospace';
+  ctx.globalAlpha = 0.7 + 0.3 * Math.sin(now / 400);
+  ctx.font = 'bold 18px monospace';
   ctx.fillStyle = '#5d6d7e';
-  ctx.fillText('PRESS START TO TRY AGAIN', cx, cy + 30);
-
+  ctx.fillText('Press Start / A to try again', cx, textY + 36);
+  ctx.globalAlpha = 0.4;
+  ctx.font = '14px monospace';
+  ctx.fillText('(or Return on keyboard)', cx, textY + 58);
+  ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
 }
