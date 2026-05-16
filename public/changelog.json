@@ -83,5 +83,10 @@
     "version": 17,
     "name": "Soup",
     "description": "Cyclones? Gone. The arena is calm again."
+  },
+  {
+    "version": 18,
+    "name": "Ben",
+    "description": "After a few seconds, the simulation starts to break. Screen tears, Matrix rain, corrupted pixels, and messages that know you're watching."
   }
 ]

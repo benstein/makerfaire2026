@@ -16,6 +16,7 @@ import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, dra
 import { resetAirstrike, triggerAirstrike, updateAirstrike, getChickens, drawAirstrike, canAirstrike } from './game/airstrike.js';
 import { stopMusic } from './game/audio.js';
 import { resetWordle, drawWordle } from './game/wordle.js';
+import { resetGlitch, drawGlitch } from './game/glitch.js';
 import { resetRace, updateRaceAI, advancePlayerMap, getPlayerMap, getSoupMap, getSoupRaceX, getSoupRaceY, getRaceWinner, getCurrentMapConfig, TOTAL_MAPS, resetSoupToLeftEdge, drawRaceHUD, drawMapBackground } from './game/race.js';
 import { resetSoup, drawSoup, setSoupPosition } from './game/soup.js';
 import { drawHUD } from './ui/hud.js';
@@ -67,6 +68,7 @@ function gameLoop(now) {
       resetVictoryEffects();
       resetRace(width, height);
       resetSoup(width / 2, height / 2);
+      resetGlitch(now);
     } else if (input.start) {
       goToTitle();
     }
@@ -266,6 +268,7 @@ function gameLoop(now) {
     drawRaceHUD(ctx, width, height, now);
     drawWordle(ctx, width, height, now);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+    drawGlitch(ctx, width, height, now);
   } else if (state === STATES.BOSS_FIGHT) {
     drawMapBackground(ctx, width, height, now);
     drawRoadblocks(ctx, now);
@@ -276,6 +279,7 @@ function gameLoop(now) {
     drawAirstrike(ctx, now);
     drawWordle(ctx, width, height, now);
     drawHUD(ctx, getPlayerHealth(), 0, width);
+    drawGlitch(ctx, width, height, now);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
   } else if (state === STATES.GAMEOVER) {
