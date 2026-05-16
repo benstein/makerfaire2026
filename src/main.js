@@ -18,6 +18,7 @@ import { stopMusic } from './game/audio.js';
 import { resetWordle, drawWordle } from './game/wordle.js';
 import { resetRace, updateRaceAI, advancePlayerMap, getPlayerMap, getSoupMap, getSoupRaceX, getSoupRaceY, getRaceWinner, getCurrentMapConfig, TOTAL_MAPS, resetSoupToLeftEdge, drawRaceHUD, drawMapBackground } from './game/race.js';
 import { resetSoup, drawSoup, setSoupPosition } from './game/soup.js';
+import { resetCyclones, updateCyclones, drawCyclones } from './game/cyclones.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -67,6 +68,7 @@ function gameLoop(now) {
       resetVictoryEffects();
       resetRace(width, height);
       resetSoup(width / 2, height / 2);
+      resetCyclones();
     } else if (input.start) {
       goToTitle();
     }
@@ -75,6 +77,10 @@ function gameLoop(now) {
   // --- Update ---
   if (state === STATES.PLAYING) {
     updatePlayer(dt, input, width, height, now, getSpeedMultiplier(now));
+
+    // Cyclones pull the player around
+    updateCyclones(dt, getPlayerPos(), setPlayerPosition);
+
     updateEnemies(dt, getPlayerPos(), now, width, height);
 
     // Soup races across the screen autonomously — bears ignore him
@@ -196,6 +202,9 @@ function gameLoop(now) {
 
     updatePlayer(dt, input, width, height, now, getSpeedMultiplier(now));
 
+    // Cyclones pull the player around even in boss fight
+    updateCyclones(dt, getPlayerPos(), setPlayerPosition);
+
     if (input.fire || input.fireHeld) {
       tryFire(getPlayerPos(), getPlayerFacing(), now, getFireCooldownMultiplier(now));
     }
@@ -256,6 +265,7 @@ function gameLoop(now) {
 
     drawRoadblocks(ctx, now);
     drawHeartDrops(ctx, now);
+    drawCyclones(ctx);
     drawPlayer(ctx, now);
     drawEnemies(ctx, now);
     drawProjectiles(ctx);
@@ -268,6 +278,7 @@ function gameLoop(now) {
   } else if (state === STATES.BOSS_FIGHT) {
     drawMapBackground(ctx, width, height, now);
     drawRoadblocks(ctx, now);
+    drawCyclones(ctx);
     drawBoss(ctx, now, width);
     drawPlayer(ctx, now);
     drawProjectiles(ctx);
