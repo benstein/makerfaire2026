@@ -13,6 +13,7 @@ import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMul
 import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from './game/roadblocks.js';
 import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss, returnBossToSpawn } from './game/boss.js';
 import { resetAirstrike, triggerAirstrike, updateAirstrike, getChickens, drawAirstrike, canAirstrike } from './game/airstrike.js';
+import { startMusic, stopMusic } from './game/audio.js';
 import { resetRace, updateRaceAI, advancePlayerMap, getPlayerMap, getSoupMap, getSoupRaceX, getSoupRaceY, getRaceWinner, getCurrentMapConfig, TOTAL_MAPS, resetSoupToLeftEdge, drawRaceHUD, drawMapBackground } from './game/race.js';
 import { resetSoup, drawSoup, setSoupPosition } from './game/soup.js';
 import { drawHUD } from './ui/hud.js';
@@ -27,6 +28,7 @@ loadChangelog();
 initBuildStatus();
 
 let lastTime = performance.now();
+let prevState = null;
 
 function gameLoop(now) {
   const dt = now - lastTime;
@@ -36,6 +38,13 @@ function gameLoop(now) {
   const input = getInput();
   const state = getState();
   const { width, height } = getCanvasSize();
+
+  // Music — start on gameplay states, stop on non-gameplay states
+  if (state !== prevState) {
+    const playing = state === STATES.PLAYING || state === STATES.BOSS_FIGHT;
+    playing ? startMusic() : stopMusic();
+    prevState = state;
+  }
 
   // Re-enter fullscreen on any button press if we lost it (e.g. after Vite HMR reload)
   if ((input.fire || input.start) && !document.fullscreenElement) {

@@ -9,5 +9,6 @@
   { "version": 8, "name": "Ben", "description": "Press B for an AIRSTRIKE — jets fly over and drop bouncing chickens that hurt everything!" },
   { "version": 9, "name": "Ben", "description": "The bears are now ENORMOUS stomping giants!" },
   { "version": 10, "name": "Zeke", "description": "RACE! Run through 15 maps faster than Soup the dog — beat them all to fight the boss!" },
-  { "version": 11, "name": "Gabi", "description": "Bears follow you between maps! Each map has a unique design! Boss bounces back when it hits you! Huge slow shots!" }
+  { "version": 11, "name": "Gabi", "description": "Bears follow you between maps! Each map has a unique design! Boss bounces back when it hits you! Huge slow shots!" },
+  { "version": 12, "name": "Papi", "description": "Super Mario Bros overworld theme plays in 8-bit square wave while you play!" }
 ]

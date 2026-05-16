@@ -1,5 +1,5 @@
 // src/game/audio.js
-// Web Audio API — Tetris A-Type theme (Korobeiniki) + arcade sound effects.
+// Web Audio API — Super Mario Bros overworld theme + arcade sound effects.
 // AudioContext is created on first call (after user gesture) to satisfy browser policy.
 
 let actx = null;
@@ -10,27 +10,56 @@ let noteIndex = 0;
 let nextNoteAt = 0;
 let schedTimer = null;
 
-// ── Tetris A-Type (Korobeiniki) melody ─────────────────────────────────────
-const BPM  = 158;
+// ── Super Mario Bros Overworld Theme (Koji Kondo) ───────────────────────────
+const BPM  = 200;
 const BEAT = 60 / BPM; // seconds per quarter note
+const _    = 0;         // rest
 
 const F = {
-  E4:330, F4:349, G4:392, A4:440, B4:494,
-  C5:523, D5:587, E5:659, F5:698, G5:784, A5:880, C6:1047,
+  E4:330, Fs4:370, G4:392, Gs4:415, A4:440, Bb4:466, B4:494,
+  C5:523, D5:587, Ds5:622, E5:659, F5:698, Fs5:740, G5:784, A5:880,
+  C6:1047,
 };
 
-// [note, quarter-note-beats]
+// [frequency, quarter-note-beats]  — frequency 0 = rest
 const MELODY = [
-  // Part A
-  [F.E5,1],[F.B4,.5],[F.C5,.5],[F.D5,1],[F.C5,.5],[F.B4,.5],
-  [F.A4,1],[F.A4,.5],[F.C5,.5],[F.E5,1],[F.D5,.5],[F.C5,.5],
-  [F.B4,1.5],[F.C5,.5],[F.D5,1],[F.E5,1],
-  [F.C5,1],[F.A4,1],[F.A4,2],
-  // Part B
-  [F.D5,1.5],[F.F5,.5],[F.A5,1],[F.G5,.5],[F.F5,.5],
-  [F.E5,1.5],[F.C5,.5],[F.E5,1],[F.D5,.5],[F.C5,.5],
-  [F.B4,1.5],[F.C5,.5],[F.D5,1],[F.E5,1],
-  [F.C5,1],[F.A4,1],[F.A4,2],
+  // ── Intro ───────────────────────────────────────────────────────────────
+  [F.E5,.5],[F.E5,.5],[_,.5],[F.E5,.5],[_,.5],[F.C5,.5],[F.E5,1],
+  [F.G5,1],[_,1],[F.G4,1],[_,1],
+
+  // ── Main theme A (x2) ───────────────────────────────────────────────────
+  [F.C5,1],[_,.5],[F.G4,1],[_,.5],[F.E4,1],[_,.5],
+  [F.A4,1],[F.B4,1],[F.Bb4,.5],[F.A4,1],
+  [F.G4,.667],[F.E5,.667],[F.G5,.667],
+  [F.A5,1],[F.F5,.5],[F.G5,.5],[_,.5],[F.E5,1],[F.C5,.5],[F.D5,.5],[F.B4,1],[_,.5],
+
+  [F.C5,1],[_,.5],[F.G4,1],[_,.5],[F.E4,1],[_,.5],
+  [F.A4,1],[F.B4,1],[F.Bb4,.5],[F.A4,1],
+  [F.G4,.667],[F.E5,.667],[F.G5,.667],
+  [F.A5,1],[F.F5,.5],[F.G5,.5],[_,.5],[F.E5,1],[F.C5,.5],[F.D5,.5],[F.B4,1],[_,.5],
+
+  // ── Bridge ──────────────────────────────────────────────────────────────
+  [_,.5],[F.G5,.5],[F.Fs5,.5],[F.F5,.5],[F.Ds5,1],[_,.5],
+  [F.E5,.5],[_,.5],[F.Gs4,.5],[F.A4,.5],[F.C5,.5],[_,.5],[F.A4,.5],[F.C5,.5],[F.D5,.5],
+
+  [_,.5],[F.G5,.5],[F.Fs5,.5],[F.F5,.5],[F.Ds5,1],[_,.5],
+  [F.E5,.5],[_,.5],[F.C6,.5],[_,.5],[F.C6,.5],[F.C6,1],[_,1],
+
+  [_,.5],[F.G5,.5],[F.Fs5,.5],[F.F5,.5],[F.Ds5,1],[_,.5],
+  [F.E5,.5],[_,.5],[F.Gs4,.5],[F.A4,.5],[F.C5,.5],[_,.5],[F.A4,.5],[F.C5,.5],[F.D5,.5],
+
+  [_,.5],[F.Ds5,.5],[_,.5],[F.D5,1],[_,.5],[F.C5,2],[_,1],
+
+  // ── Main theme A again (x2) then loop ───────────────────────────────────
+  [F.C5,1],[_,.5],[F.G4,1],[_,.5],[F.E4,1],[_,.5],
+  [F.A4,1],[F.B4,1],[F.Bb4,.5],[F.A4,1],
+  [F.G4,.667],[F.E5,.667],[F.G5,.667],
+  [F.A5,1],[F.F5,.5],[F.G5,.5],[_,.5],[F.E5,1],[F.C5,.5],[F.D5,.5],[F.B4,1],[_,.5],
+
+  [F.C5,1],[_,.5],[F.G4,1],[_,.5],[F.E4,1],[_,.5],
+  [F.A4,1],[F.B4,1],[F.Bb4,.5],[F.A4,1],
+  [F.G4,.667],[F.E5,.667],[F.G5,.667],
+  [F.A5,1],[F.F5,.5],[F.G5,.5],[_,.5],[F.E5,1],[F.C5,.5],[F.D5,.5],[F.B4,1],[_,.5],
 ];
 
 // ── Context creation ────────────────────────────────────────────────────────
@@ -70,7 +99,7 @@ function scheduleBatch() {
   while (nextNoteAt < horizon) {
     const [freq, beats] = MELODY[noteIndex % MELODY.length];
     const dur = beats * BEAT;
-    scheduleNote(freq, nextNoteAt, dur);
+    if (freq > 0) scheduleNote(freq, nextNoteAt, dur);
     nextNoteAt += dur;
     noteIndex++;
   }
