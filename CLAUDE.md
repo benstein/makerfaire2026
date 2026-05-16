@@ -16,7 +16,15 @@ This is a live exhibit game for kids at Maker Faire. Kids suggest changes ("make
 
 While you work, the game shows a full-screen build progress view with the kid's name, an animated gear, and a step-by-step checklist. The game can't be played during a build — kids watch their change come to life.
 
-**As your FIRST action** for every kid change, use the Write tool to write `public/building.json` with your planned steps. **NEVER use `echo` with bash** — the shell mangles special characters like `!` and `'` which silently breaks the JSON and the overlay won't appear.
+**As your ABSOLUTE FIRST action** — before reading any files, before thinking, before anything — write a placeholder `public/building.json` so the kid's name appears on screen immediately:
+
+```json
+{ "building": true, "name": "Emma", "description": "Cooking up something amazing...", "steps": [] }
+```
+
+No steps needed yet — the screen will show a generic "Building..." spinner. Then do your reads and planning. Once you know the real steps, rewrite the file with them.
+
+**NEVER use `echo` with bash** — the shell mangles special characters like `!` and `'` which silently breaks the JSON and the overlay won't appear. Always use the Write tool.
 
 **As you complete each step**, use the Write tool to re-write the file with that step marked done.
 
@@ -28,7 +36,7 @@ After you commit, the git post-commit hook auto-clears the file to `{ "building"
 - 3-5 steps is ideal — enough to show progress, not so many it's overwhelming
 - Every step should describe an actual visible change in fun, kid-friendly language
 - Don't include internal steps like "reading code" or "updating changelog" — only things kids care about
-- The steps array is optional — if omitted, a generic "Building..." message shows
+- The steps array is optional — omit it in the initial placeholder, add real steps once you've planned
 
 ## Sacred Systems — NEVER BREAK THESE
 
