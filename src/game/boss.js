@@ -96,70 +96,73 @@ export function drawBoss(ctx, now, canvasWidth) {
   const phase2 = boss.health <= BOSS_MAX_HEALTH / 2;
   const age = now - spawnTime;
 
-  // Drop-in entrance
   const entryT = Math.min(1, age / 700);
   const bounce = entryT < 1 ? (1 + Math.sin(entryT * Math.PI) * 0.35) : 1;
   const pulse = 1 + Math.sin(now / 160) * 0.04;
 
   const drawW = boss.w * bounce * pulse;
   const drawH = boss.h * bounce * pulse;
-  const drawX = boss.x + boss.w / 2 - drawW / 2;
-  const drawY = boss.y + boss.h / 2 - drawH / 2;
+  const cx = boss.x + boss.w / 2;
+  const cy = boss.y + boss.h / 2;
+  const drawX = cx - drawW / 2;
+  const drawY = cy - drawH / 2;
 
-  const baseColor = phase2 ? '#7d3c98' : '#c0392b';
-  const glowColor = phase2 ? '#e056fd' : '#ff4444';
+  const bodyColor = phase2 ? '#7a5fa0' : '#7a9aaa';
+  const glowColor = phase2 ? '#e056fd' : '#aaddff';
 
   // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(drawX + 7, drawY + 7, drawW, drawH);
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(cx + 6, cy + drawH * 0.5 + 6, drawW * 0.45, drawH * 0.15, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Body with glow
+  // Glow
   ctx.save();
   ctx.shadowColor = glowColor;
-  ctx.shadowBlur = 22 + Math.sin(now / 180) * 8;
-  ctx.fillStyle = baseColor;
-  ctx.fillRect(drawX, drawY, drawW, drawH);
+  ctx.shadowBlur = 24 + Math.sin(now / 200) * 8;
+
+  // Ears (behind body)
+  ctx.fillStyle = phase2 ? '#9b7bc0' : '#8aabb8';
+  ctx.beginPath(); ctx.arc(drawX + drawW * 0.18, drawY + drawH * 0.08, drawW * 0.13, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(drawX + drawW * 0.82, drawY + drawH * 0.08, drawW * 0.13, 0, Math.PI * 2); ctx.fill();
+
+  // Body
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.roundRect(drawX, drawY + drawH * 0.08, drawW, drawH * 0.85, drawW * 0.18);
+  ctx.fill();
   ctx.restore();
 
-  // Angry face
-  const eyeY = drawY + drawH * 0.28;
-  const eyeW = drawW * 0.13;
-  const eyeH = eyeW * 1.4;
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(drawX + drawW * 0.22, eyeY, eyeW, eyeH);
-  ctx.fillRect(drawX + drawW * 0.65, eyeY, eyeW, eyeH);
+  // Inner ears
+  ctx.fillStyle = '#ffb3cc';
+  ctx.beginPath(); ctx.arc(drawX + drawW * 0.18, drawY + drawH * 0.08, drawW * 0.07, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(drawX + drawW * 0.82, drawY + drawH * 0.08, drawW * 0.07, 0, Math.PI * 2); ctx.fill();
 
-  // Pupils (track player direction)
+  // Eyes (beady and high up)
+  const eyeY = drawY + drawH * 0.28;
   ctx.fillStyle = '#111';
-  ctx.fillRect(drawX + drawW * 0.22 + 2, eyeY + 2, eyeW - 4, eyeH - 4);
-  ctx.fillRect(drawX + drawW * 0.65 + 2, eyeY + 2, eyeW - 4, eyeH - 4);
+  ctx.beginPath(); ctx.arc(drawX + drawW * 0.33, eyeY, drawW * 0.08, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(drawX + drawW * 0.67, eyeY, drawW * 0.08, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(drawX + drawW * 0.33 + drawW * 0.03, eyeY - drawH * 0.03, drawW * 0.03, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(drawX + drawW * 0.67 + drawW * 0.03, eyeY - drawH * 0.03, drawW * 0.03, 0, Math.PI * 2); ctx.fill();
 
   // Angry brows
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(drawX + drawW * 0.16, eyeY - 7);
-  ctx.lineTo(drawX + drawW * 0.38, eyeY - 1);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(drawX + drawW * 0.84, eyeY - 7);
-  ctx.lineTo(drawX + drawW * 0.62, eyeY - 1);
-  ctx.stroke();
+  ctx.strokeStyle = '#444';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(drawX + drawW * 0.2, eyeY - drawH * 0.08); ctx.lineTo(drawX + drawW * 0.42, eyeY - drawH * 0.02); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(drawX + drawW * 0.8, eyeY - drawH * 0.08); ctx.lineTo(drawX + drawW * 0.58, eyeY - drawH * 0.02); ctx.stroke();
 
-  // Jagged mouth
+  // Wide snout
+  ctx.fillStyle = phase2 ? '#9980c0' : '#90b8c8';
   ctx.beginPath();
-  const mouthY = drawY + drawH * 0.65;
-  const mouthL = drawX + drawW * 0.22;
-  const mouthR = drawX + drawW * 0.78;
-  ctx.moveTo(mouthL, mouthY);
-  for (let i = 0; i <= 5; i++) {
-    const tx = mouthL + (mouthR - mouthL) * (i / 5);
-    const ty = mouthY + (i % 2 === 0 ? 8 : 0);
-    ctx.lineTo(tx, ty);
-  }
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
+  ctx.ellipse(cx, drawY + drawH * 0.7, drawW * 0.38, drawH * 0.22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Big nostrils
+  ctx.fillStyle = '#445566';
+  ctx.beginPath(); ctx.ellipse(cx - drawW * 0.14, drawY + drawH * 0.67, drawW * 0.08, drawH * 0.07, -0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + drawW * 0.14, drawY + drawH * 0.67, drawW * 0.08, drawH * 0.07, 0.3, 0, Math.PI * 2); ctx.fill();
 
   // --- Health bar ---
   const barW = 280;

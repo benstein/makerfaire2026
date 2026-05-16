@@ -4,8 +4,9 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer, startBossFight } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, setPlayerPosition } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, setPlayerPosition, triggerCartwheel, isCartwheeling, healPlayer } from './game/player.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, triggerBearCartwheel } from './game/enemies.js';
+import { resetHeartDrops, spawnHeartDrop, updateHeartDrops, drawHeartDrops } from './game/heartDrops.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
@@ -61,6 +62,7 @@ function gameLoop(now) {
       resetPowerups();
       resetRoadblocks();
       resetBoss();
+      resetHeartDrops();
       resetAirstrike();
       resetVictoryEffects();
       resetRace(width, height);
@@ -96,9 +98,11 @@ function gameLoop(now) {
     for (let i = projList.length - 1; i >= 0; i--) {
       for (let j = enemyList.length - 1; j >= 0; j--) {
         if (aabb(projList[i], enemyList[j])) {
+          const killed = enemyList[j];
           removeProjectile(i);
           removeEnemy(j);
           onEnemyKilled(width, height);
+          if (Math.random() < 0.3) spawnHeartDrop(killed.x + killed.w / 2, killed.y + killed.h / 2);
           break;
         }
       }
@@ -148,9 +152,17 @@ function gameLoop(now) {
 
     updatePowerups(dt, playerBounds, now);
 
+    // X button — cartwheel (player + all bears spin and lunge)
+    if (input.cartwheel) {
+      triggerCartwheel(now);
+      triggerBearCartwheel(getPlayerPos(), now);
+    }
+
     // B button — airstrike
     if (input.bomb && canAirstrike(now)) triggerAirstrike(width, height, now);
     updateAirstrike(dt, now, width, height);
+
+    updateHeartDrops(getPlayerBounds(), healPlayer, now);
 
     // Chickens hit enemies
     const chickens = getChickens();
@@ -243,8 +255,9 @@ function gameLoop(now) {
     drawMapBackground(ctx, width, height, now);
 
     drawRoadblocks(ctx, now);
+    drawHeartDrops(ctx, now);
     drawPlayer(ctx, now);
-    drawEnemies(ctx);
+    drawEnemies(ctx, now);
     drawProjectiles(ctx);
     drawPowerups(ctx, now);
     drawAirstrike(ctx, now);
