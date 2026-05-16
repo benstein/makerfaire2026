@@ -78,5 +78,10 @@
     "version": 16,
     "name": "Soup",
     "description": "Little cyclones spin across the arena \u2014 touch one and you get pulled into a whirling orbit!"
+  },
+  {
+    "version": 17,
+    "name": "Soup",
+    "description": "Cyclones? Gone. The arena is calm again."
   }
 ]
