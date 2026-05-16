@@ -13,6 +13,7 @@ import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMul
 import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from './game/roadblocks.js';
 import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss } from './game/boss.js';
 import { resetPasture, getPenBounds, getDangerBounds, isInPen, isPlayerInDangerZone, captureBear, getCapturedCount, BEARS_NEEDED, drawPasture } from './game/pasture.js';
+import { resetAirstrike, triggerAirstrike, updateAirstrike, getChickens, drawAirstrike, canAirstrike } from './game/airstrike.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -52,6 +53,7 @@ function gameLoop(now) {
       resetRoadblocks();
       resetBoss();
       resetPasture();
+      resetAirstrike();
       resetVictoryEffects();
       penZoneTime = 0;
     } else if (input.start) {
@@ -141,6 +143,31 @@ function gameLoop(now) {
     }
 
     updatePowerups(dt, playerBounds, now);
+
+    // B button — airstrike
+    if (input.bomb && canAirstrike(now)) triggerAirstrike(width, height, now);
+    updateAirstrike(dt, now, width, height);
+
+    // Chickens hit enemies
+    const chickens = getChickens();
+    for (let ci = chickens.length - 1; ci >= 0; ci--) {
+      const ch = chickens[ci];
+      const enemyList2 = getEnemies();
+      for (let ei = enemyList2.length - 1; ei >= 0; ei--) {
+        if (aabb(ch, enemyList2[ei])) {
+          removeEnemy(ei);
+          onEnemyKilled(width, height);
+          break;
+        }
+      }
+      // Chickens hit player
+      if (aabb(ch, getPlayerBounds())) {
+        if (damagePlayer(now)) {
+          chickens.splice(ci, 1);
+          if (getPlayerHealth() <= 0) endGame(false);
+        }
+      }
+    }
   }
 
   if (state === STATES.BOSS_FIGHT) {
@@ -185,6 +212,17 @@ function gameLoop(now) {
         if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
       }
     }
+
+    // Airstrike works in boss fight too
+    if (input.bomb && canAirstrike(now)) triggerAirstrike(width, height, now);
+    updateAirstrike(dt, now, width, height);
+    const bossChickens = getChickens();
+    for (let ci = bossChickens.length - 1; ci >= 0; ci--) {
+      const ch = bossChickens[ci];
+      if (aabb(ch, getPlayerBounds())) {
+        if (damagePlayer(now) && getPlayerHealth() <= 0) { endGame(false); break; }
+      }
+    }
   }
 
   // --- Render ---
@@ -199,6 +237,7 @@ function gameLoop(now) {
     drawEnemies(ctx);
     drawProjectiles(ctx);
     drawPowerups(ctx, now);
+    drawAirstrike(ctx, now);
     // Pen zone countdown warning
     if (penZoneTime > 0) {
       const secsLeft = ((2000 - penZoneTime) / 1000).toFixed(1);
@@ -220,6 +259,7 @@ function gameLoop(now) {
     drawBoss(ctx, now, width);
     drawPlayer(ctx, now);
     drawProjectiles(ctx);
+    drawAirstrike(ctx, now);
     drawHUD(ctx, getPlayerHealth(), 0, width);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();

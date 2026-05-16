@@ -6,12 +6,14 @@ const state = {
   stickY: 0,
   fire: false,
   start: false,
+  bomb: false,
   fireHeld: false,
   startHeld: false,
 };
 
 let prevFire = false;
 let prevStart = false;
+let prevBomb = false;
 
 const DEADZONE = 0.2;
 
@@ -27,11 +29,12 @@ export function pollInput() {
   // Keyboard
   const kbX = (keys['d'] || keys['ArrowRight'] ? 1 : 0) - (keys['a'] || keys['ArrowLeft'] ? 1 : 0);
   const kbY = (keys['s'] || keys['ArrowDown'] ? 1 : 0) - (keys['w'] || keys['ArrowUp'] ? 1 : 0);
-  const kbFire = keys[' '] || false;
+  const kbFire  = keys[' '] || false;
   const kbStart = keys['Enter'] || false;
+  const kbBomb  = keys['b'] || keys['B'] || false;
 
   // Gamepad
-  let gpX = 0, gpY = 0, gpFire = false, gpStart = false;
+  let gpX = 0, gpY = 0, gpFire = false, gpStart = false, gpBomb = false;
   if (gp) {
     const rawX = gp.axes[0];
     const rawY = gp.axes[1];
@@ -39,8 +42,9 @@ export function pollInput() {
     const dpadY = (gp.buttons[13]?.pressed ? 1 : 0) - (gp.buttons[12]?.pressed ? 1 : 0);
     gpX = dpadX !== 0 ? dpadX : (Math.abs(rawX) > DEADZONE ? rawX : 0);
     gpY = dpadY !== 0 ? dpadY : (Math.abs(rawY) > DEADZONE ? rawY : 0);
-    gpFire = gp.buttons[0]?.pressed ?? false;
+    gpFire  = gp.buttons[0]?.pressed ?? false;
     gpStart = gp.buttons[9]?.pressed ?? false;
+    gpBomb  = gp.buttons[1]?.pressed ?? false; // B button
   }
 
   // Gamepad takes priority for stick; either source works for buttons
@@ -56,6 +60,10 @@ export function pollInput() {
   state.start = startNow && !prevStart;
   state.startHeld = startNow;
   prevStart = startNow;
+
+  const bombNow = gpBomb || kbBomb;
+  state.bomb = bombNow && !prevBomb;
+  prevBomb = bombNow;
 
   return state;
 }
