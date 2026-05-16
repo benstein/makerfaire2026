@@ -11,9 +11,9 @@ import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMultiplier, getFireCooldownMultiplier } from './game/powerups.js';
 import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from './game/roadblocks.js';
-import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss } from './game/boss.js';
+import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss, returnBossToSpawn } from './game/boss.js';
 import { resetAirstrike, triggerAirstrike, updateAirstrike, getChickens, drawAirstrike, canAirstrike } from './game/airstrike.js';
-import { resetRace, updateRaceAI, advancePlayerMap, getPlayerMap, getSoupMap, getSoupRaceX, getSoupRaceY, getRaceWinner, getCurrentMapConfig, TOTAL_MAPS, resetSoupToLeftEdge, drawRaceHUD } from './game/race.js';
+import { resetRace, updateRaceAI, advancePlayerMap, getPlayerMap, getSoupMap, getSoupRaceX, getSoupRaceY, getRaceWinner, getCurrentMapConfig, TOTAL_MAPS, resetSoupToLeftEdge, drawRaceHUD, drawMapBackground } from './game/race.js';
 import { resetSoup, drawSoup, setSoupPosition } from './game/soup.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
@@ -120,10 +120,9 @@ function gameLoop(now) {
         resetWeapons();
         spawnBoss(width, height, now);
       } else {
-        // Next map — clear enemies, move player back to left
-        resetEnemies();
+        // Next map — bears stay! Player enters from the left at the same Y they exited
         resetWeapons();
-        setPlayerPosition(60, height / 2);
+        setPlayerPosition(60, getPlayerPos().y);
         resetSoupToLeftEdge(height);
       }
     }
@@ -195,11 +194,16 @@ function gameLoop(now) {
       }
     }
 
-    // Boss-player collision
+    // Boss-player collision — boss bounces back to spawn on hit
     const playerBounds = getPlayerBounds();
     if (boss && aabb(playerBounds, boss)) {
-      if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+      if (damagePlayer(now)) {
+        returnBossToSpawn();
+        if (getPlayerHealth() <= 0) endGame(false);
+      }
     }
+
+    updatePowerups(dt, playerBounds, now);
 
     // Roadblocks still hurt
     const roadblockList = getRoadblocks();
@@ -227,10 +231,7 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
-    // Map background color
-    const mapCfg = getCurrentMapConfig();
-    ctx.fillStyle = mapCfg.bg;
-    ctx.fillRect(0, 0, width, height);
+    drawMapBackground(ctx, width, height, now);
 
     drawRoadblocks(ctx, now);
     drawPlayer(ctx, now);
@@ -242,14 +243,12 @@ function gameLoop(now) {
     drawRaceHUD(ctx, width, height, now);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.BOSS_FIGHT) {
-    const mapCfg = getCurrentMapConfig();
-    ctx.fillStyle = mapCfg.bg;
-    ctx.fillRect(0, 0, width, height);
-
+    drawMapBackground(ctx, width, height, now);
     drawRoadblocks(ctx, now);
     drawBoss(ctx, now, width);
     drawPlayer(ctx, now);
     drawProjectiles(ctx);
+    drawPowerups(ctx, now);
     drawAirstrike(ctx, now);
     drawHUD(ctx, getPlayerHealth(), 0, width);
   } else if (state === STATES.VICTORY) {

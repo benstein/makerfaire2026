@@ -14,11 +14,14 @@ let chargeVX = 0, chargeVY = 0;
 let chargeUntil = 0;
 let lastChargeTime = 0;
 let spawnTime = 0;
+let spawnX = 0, spawnY = 0;
 
 export function spawnBoss(arenaWidth, arenaHeight, now) {
+  spawnX = arenaWidth / 2 - BOSS_SIZE / 2;
+  spawnY = 80;
   boss = {
-    x: arenaWidth / 2 - BOSS_SIZE / 2,
-    y: 80,
+    x: spawnX,
+    y: spawnY,
     w: BOSS_SIZE,
     h: BOSS_SIZE,
     health: BOSS_MAX_HEALTH,
@@ -26,6 +29,13 @@ export function spawnBoss(arenaWidth, arenaHeight, now) {
   charging = false;
   lastChargeTime = now + 2000; // 2s grace before first charge
   spawnTime = now;
+}
+
+export function returnBossToSpawn() {
+  if (!boss) return;
+  boss.x = spawnX;
+  boss.y = spawnY;
+  charging = false;
 }
 
 export function resetBoss() {

@@ -67,6 +67,96 @@ export function resetSoupToLeftEdge(height) {
   soupY = height * 0.4;
 }
 
+export function drawMapBackground(ctx, width, height, now) {
+  const idx = Math.min(playerMap, TOTAL_MAPS - 1);
+  const cfg = MAP_CONFIGS[idx];
+  ctx.fillStyle = cfg.bg;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.strokeStyle = cfg.border;
+  ctx.fillStyle = cfg.border;
+
+  if (idx === 0) { // Sunny Meadow — flowers
+    for (let gx = 50; gx < width; gx += 90) for (let gy = 45; gy < height; gy += 75) {
+      for (let p = 0; p < 5; p++) { const a = p / 5 * Math.PI * 2; ctx.beginPath(); ctx.arc(gx + Math.cos(a) * 13, gy + Math.sin(a) * 13, 8, 0, Math.PI * 2); ctx.fill(); }
+      ctx.beginPath(); ctx.arc(gx, gy, 8, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (idx === 1) { // Pink Desert — diagonal sand ripples
+    ctx.lineWidth = 4;
+    for (let s = -height; s < width + height; s += 38) { ctx.beginPath(); ctx.moveTo(s, 0); ctx.lineTo(s + height, height); ctx.stroke(); }
+  } else if (idx === 2) { // Crystal Cave — hexagonal grid
+    ctx.lineWidth = 1.5;
+    const r = 28;
+    for (let col = 0; col * r * 1.5 < width + r * 2; col++) for (let row = 0; row * r * 1.73 < height + r * 2; row++) {
+      const hx = col * r * 1.5, hy = row * r * 1.73 + (col % 2) * r * 0.87;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; i === 0 ? ctx.moveTo(hx + Math.cos(a) * r, hy + Math.sin(a) * r) : ctx.lineTo(hx + Math.cos(a) * r, hy + Math.sin(a) * r); }
+      ctx.closePath(); ctx.stroke();
+    }
+  } else if (idx === 3) { // Mushroom Forest — polka dots with spots
+    for (let gx = 55; gx < width; gx += 75) for (let gy = 50; gy < height; gy += 65) {
+      ctx.beginPath(); ctx.arc(gx, gy, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.5; ctx.fillStyle = cfg.bg;
+      for (const [ox, oy] of [[-8, -6], [8, -6], [0, 8]]) { ctx.beginPath(); ctx.arc(gx + ox, gy + oy, 5, 0, Math.PI * 2); ctx.fill(); }
+      ctx.globalAlpha = 0.16; ctx.fillStyle = cfg.border;
+    }
+  } else if (idx === 4) { // Candy Land — diagonal stripes
+    ctx.lineWidth = 16;
+    for (let s = -height; s < width + height; s += 44) {
+      ctx.strokeStyle = s % 88 < 44 ? cfg.border : '#ffffff';
+      ctx.beginPath(); ctx.moveTo(s, 0); ctx.lineTo(s - height, height); ctx.stroke();
+    }
+  } else if (idx === 5) { // Snowy Hills — snowflakes
+    ctx.lineWidth = 1.5;
+    for (let gx = 40; gx < width; gx += 65) for (let gy = 40; gy < height; gy += 58) {
+      for (let arm = 0; arm < 6; arm++) { const a = arm / 6 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(a) * 18, gy + Math.sin(a) * 18); ctx.stroke(); }
+      ctx.beginPath(); ctx.arc(gx, gy, 3, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (idx === 6) { // Golden Fields — horizontal harvest lines
+    ctx.lineWidth = 3;
+    for (let gy = 12; gy < height; gy += 22) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(width, gy); ctx.stroke(); }
+  } else if (idx === 7) { // Thunderstorm — lightning bolts
+    ctx.lineWidth = 2.5;
+    for (let gx = 60; gx < width; gx += 110) for (let gy = 30; gy < height; gy += 100) {
+      ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx - 10, gy + 22); ctx.lineTo(gx + 6, gy + 22); ctx.lineTo(gx - 8, gy + 50); ctx.stroke();
+    }
+  } else if (idx === 8) { // Lava Plains — lava blobs
+    for (let gx = 55; gx < width; gx += 85) for (let gy = 45; gy < height; gy += 72) {
+      ctx.beginPath(); ctx.ellipse(gx, gy, 30, 18, gx / 120, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (idx === 9) { // Ice World — diamond lattice
+    ctx.lineWidth = 1.5;
+    for (let gx = 35; gx < width; gx += 58) for (let gy = 30; gy < height; gy += 48) {
+      ctx.beginPath(); ctx.moveTo(gx, gy - 20); ctx.lineTo(gx + 20, gy); ctx.lineTo(gx, gy + 20); ctx.lineTo(gx - 20, gy); ctx.closePath(); ctx.stroke();
+    }
+  } else if (idx === 10) { // Enchanted Wood — tree silhouettes
+    for (let gx = 65; gx < width; gx += 95) {
+      ctx.fillRect(gx - 5, height * 0.28, 10, height * 0.72);
+      ctx.beginPath(); ctx.arc(gx, height * 0.22, 35, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (idx === 11) { // Rainbow Valley — stacked arcs
+    ctx.lineWidth = 10; ctx.globalAlpha = 0.12;
+    const colors = ['#ff6b6b', '#ffd700', '#6bff6b', '#6bb4ff', '#d06bff'];
+    for (let a = 0; a < 5; a++) { ctx.strokeStyle = colors[a]; ctx.beginPath(); ctx.arc(width / 2, height * 0.8, 70 + a * 65, Math.PI, Math.PI * 2); ctx.stroke(); }
+  } else if (idx === 12) { // Shadow Realm — crosshatch
+    ctx.lineWidth = 1;
+    for (let s = 0; s < width + height; s += 32) { ctx.beginPath(); ctx.moveTo(s, 0); ctx.lineTo(0, s); ctx.stroke(); ctx.beginPath(); ctx.moveTo(width - s, 0); ctx.lineTo(width, s); ctx.stroke(); }
+  } else if (idx === 13) { // Volcano Peak — concentric heat rings
+    ctx.lineWidth = 3;
+    for (let r = 35; r < Math.max(width, height) * 1.2; r += 52) { ctx.beginPath(); ctx.arc(width / 2, height, r, 0, Math.PI * 2); ctx.stroke(); }
+  } else if (idx === 14) { // Boss Gateway — 5-point stars
+    for (let gx = 55; gx < width; gx += 88) for (let gy = 45; gy < height; gy += 75) {
+      ctx.beginPath();
+      for (let pt = 0; pt < 10; pt++) { const a = pt / 10 * Math.PI * 2 - Math.PI / 2; const r = pt % 2 === 0 ? 22 : 9; pt === 0 ? ctx.moveTo(gx + Math.cos(a) * r, gy + Math.sin(a) * r) : ctx.lineTo(gx + Math.cos(a) * r, gy + Math.sin(a) * r); }
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
 export function drawRaceHUD(ctx, width, height, now) {
   const mapCfg = getCurrentMapConfig();
 

@@ -19,9 +19,9 @@ export const CONFIG = {
 
   // Weapons
   projectileSpeed: 7,
-  projectileSize: 6,
+  projectileSize: 14,
   projectileColor: '#1f3a5f',
-  fireRateCooldown: 250, // ms between shots
+  fireRateCooldown: 500, // ms between shots
 
   // Game
   gameDuration: 15, // seconds
