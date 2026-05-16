@@ -21,6 +21,10 @@ export function getCanvasSize() {
   return { width: canvas.width, height: canvas.height };
 }
 
+// Preload logo — ready well before title screen is shown
+const _logo = new Image();
+_logo.src = '/assets/logo.jpg';
+
 export function clearCanvas() {
   ctx.fillStyle = CONFIG.arenaBackground;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -29,20 +33,36 @@ export function clearCanvas() {
 export function drawTitleScreen() {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
+  const now = performance.now();
+  const bounce = Math.sin(now / 400) * 5;
 
-  ctx.fillStyle = '#2c3e50';
-  ctx.font = 'bold 48px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('ARENA SURVIVAL', cx, cy - 30);
+  const logoSize = Math.round(Math.min(canvas.width * 0.30, canvas.height * 0.60, 500));
+  const lx = Math.round(cx - logoSize / 2);
+  const ly = Math.round(cy - logoSize / 2 - 22 + bounce);
 
+  if (_logo.complete && _logo.naturalWidth) {
+    ctx.save();
+    ctx.shadowBlur = 32;
+    ctx.shadowColor = 'rgba(255, 210, 0, 0.55)';
+    ctx.beginPath();
+    ctx.roundRect(lx, ly, logoSize, logoSize, Math.round(logoSize * 0.07));
+    ctx.clip();
+    ctx.drawImage(_logo, lx, ly, logoSize, logoSize);
+    ctx.restore();
+  } else {
+    ctx.font = 'bold 48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#2c3e50';
+    ctx.fillText('SAY IT! PLAY IT!', cx, cy - 22 + bounce);
+  }
+
+  const pressY = ly + logoSize + 32;
   ctx.font = '20px monospace';
+  ctx.textAlign = 'center';
   ctx.fillStyle = '#5d6d7e';
-  ctx.fillText('PRESS START', cx, cy + 30);
-
-  ctx.font = '13px monospace';
-  ctx.fillStyle = '#3d4f5e';
-  ctx.fillText("Return on keyboard or 'A' button also works", cx, cy + 60);
-
+  ctx.globalAlpha = 0.7 + 0.3 * Math.sin(now / 400);
+  ctx.fillText('PRESS START', cx, pressY);
+  ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
 }
 
