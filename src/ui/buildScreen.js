@@ -6,8 +6,8 @@ const RAINBOW = ['#ff6b6b', '#ffa500', '#ffd700', '#69ff69', '#69b4ff', '#b469ff
 
 export function drawBuildScreen(ctx, width, height, buildData, now) {
   // buildData may be null if poll hasn't returned yet
-  const name = buildData?.kid || buildData?.name || 'Someone';
-  const description = buildData?.description || '';
+  const name = buildData?.name ?? buildData?.kid ?? buildData?.child ?? buildData?.player ?? 'Someone';
+  const description = buildData?.description ?? buildData?.desc ?? buildData?.subtitle ?? '';
   const steps = buildData?.steps || [];
 
   const cx = width / 2;
@@ -97,7 +97,7 @@ export function drawBuildScreen(ctx, width, height, buildData, now) {
       } else {
         ctx.fillStyle = 'rgba(255,255,255,0.25)';
       }
-      ctx.fillText(step.label, textX, y + 1);
+      ctx.fillText(step.label ?? step.text ?? step.title ?? step.name ?? '...', textX, y + 1);
     }
 
     // --- Progress bar ---
