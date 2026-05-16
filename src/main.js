@@ -120,9 +120,9 @@ function gameLoop(now) {
         resetWeapons();
         spawnBoss(width, height, now);
       } else {
-        // Next map — bears stay! Only clear projectiles, reset positions
+        // Next map — bears stay! Player enters from the left at the same Y they exited
         resetWeapons();
-        setPlayerPosition(60, height / 2);
+        setPlayerPosition(60, getPlayerPos().y);
         resetSoupToLeftEdge(height);
       }
     }
