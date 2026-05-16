@@ -197,6 +197,95 @@ const BORDER = {
   empty:   '#d3d6da',
 };
 
+// Disco: each tile gets a unique phase offset for independent flashing
+const TILE_PHASES = Array.from({ length: 30 }, () => Math.random() * Math.PI * 2);
+const DISCO_COLORS = [
+  '#ff0080', '#ff4000', '#ffcc00', '#00ff80', '#00ccff',
+  '#8800ff', '#ff00ff', '#ff6600', '#00ff00', '#0080ff',
+];
+
+function getDiscoColor(tileIndex, now) {
+  const phase = TILE_PHASES[tileIndex];
+  const t = (now / 400 + phase) % (DISCO_COLORS.length);
+  const i = Math.floor(t) % DISCO_COLORS.length;
+  return DISCO_COLORS[i];
+}
+
+function drawDiscoBall(ctx, cx, cy, radius, now) {
+  // Ball body with metallic sheen
+  const grad = ctx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, radius * 0.05, cx, cy, radius);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.3, '#cccccc');
+  grad.addColorStop(1, '#555555');
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Mirror facets — grid of small squares clipped to the ball
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.clip();
+  const facetSize = Math.max(4, radius / 4);
+  for (let fx = cx - radius; fx < cx + radius; fx += facetSize) {
+    for (let fy = cy - radius; fy < cy + radius; fy += facetSize) {
+      const colorIdx = Math.floor((fx + fy + now / 200)) % DISCO_COLORS.length;
+      const col = DISCO_COLORS[((colorIdx % DISCO_COLORS.length) + DISCO_COLORS.length) % DISCO_COLORS.length];
+      ctx.fillStyle = col + 'aa';
+      ctx.fillRect(fx + 0.5, fy + 0.5, facetSize - 1, facetSize - 1);
+    }
+  }
+  ctx.restore();
+
+  // Rotating shine spot
+  const shineAngle = now / 1000;
+  ctx.beginPath();
+  ctx.arc(
+    cx + Math.cos(shineAngle) * radius * 0.25,
+    cy + Math.sin(shineAngle) * radius * 0.25,
+    radius * 0.18, 0, Math.PI * 2
+  );
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fill();
+
+  // String hanging from top
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - radius);
+  ctx.lineTo(cx, cy - radius - 20);
+  ctx.stroke();
+}
+
+function drawLightBeams(ctx, W, H, cx, cy, now) {
+  const numBeams = 6;
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  for (let i = 0; i < numBeams; i++) {
+    const angle = (now / 1800 + (i / numBeams) * Math.PI * 2);
+    const col = DISCO_COLORS[(i + Math.floor(now / 500)) % DISCO_COLORS.length];
+    const bx = cx + Math.cos(angle) * 2000;
+    const by = cy + Math.sin(angle) * 2000;
+    const grad = ctx.createLinearGradient(cx, cy, bx, by);
+    grad.addColorStop(0, col);
+    grad.addColorStop(1, col + '00');
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    // Wide beam
+    const perp = angle + Math.PI / 2;
+    const spread = 30;
+    ctx.moveTo(cx + Math.cos(perp) * spread, cy + Math.sin(perp) * spread);
+    ctx.lineTo(bx + Math.cos(perp) * spread * 8, by + Math.sin(perp) * spread * 8);
+    ctx.lineTo(bx - Math.cos(perp) * spread * 8, by - Math.sin(perp) * spread * 8);
+    ctx.lineTo(cx - Math.cos(perp) * spread, cy - Math.sin(perp) * spread);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 export function drawWordle(ctx, W, H, now) {
   // Auto-reset round (not the full game — winCount persists)
   if (resetAt > 0 && now >= resetAt) { resetAt = 0; resetRound(); }
@@ -204,26 +293,40 @@ export function drawWordle(ctx, W, H, now) {
   const gx = Math.round(W / 2 - GW / 2);
   const gy = Math.round(H / 2 - GH / 2) - 8;
 
-  // Panel background
+  // Disco ball above the board
+  const ballRadius = 28;
+  const ballCx = W / 2;
+  const ballCy = gy - PAD - 26 - ballRadius - 24;
+
+  // Light beams emanate from disco ball
+  drawLightBeams(ctx, W, H, ballCx, ballCy, now);
+
+  // Panel background — dark for disco vibes
   ctx.save();
   ctx.shadowBlur = 18;
-  ctx.shadowColor = 'rgba(0,0,0,0.35)';
-  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.fillStyle = 'rgba(10,10,20,0.92)';
   ctx.beginPath();
   ctx.roundRect(gx - PAD, gy - PAD - 26, GW + PAD * 2, GH + PAD * 2 + 26, 10);
   ctx.fill();
   ctx.restore();
-  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-  ctx.lineWidth = 1.5;
+  // Animated rainbow border
+  const borderHue = (now / 20) % 360;
+  ctx.strokeStyle = `hsl(${borderHue},100%,60%)`;
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
   ctx.roundRect(gx - PAD, gy - PAD - 26, GW + PAD * 2, GH + PAD * 2 + 26, 10);
   ctx.stroke();
 
-  // Header
+  // Disco ball drawn on top of panel
+  drawDiscoBall(ctx, ballCx, ballCy, ballRadius, now);
+
+  // Header — rainbow letters
   ctx.font = 'bold 18px Arial, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#1a1a1a';
   ctx.letterSpacing = '4px';
+  const headerHue = (now / 15) % 360;
+  ctx.fillStyle = `hsl(${headerHue},100%,65%)`;
   ctx.fillText('WORDLE', W / 2, gy - 6);
   ctx.letterSpacing = '0px';
 
@@ -231,7 +334,7 @@ export function drawWordle(ctx, W, H, now) {
   if (flash && now < flashUntil) {
     const alpha = Math.min(1, (flashUntil - now) / 300);
     ctx.font = 'bold 15px Arial, sans-serif';
-    ctx.fillStyle = `rgba(26,26,26,${alpha})`;
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
     ctx.fillText(flash, W / 2, gy - PAD - 12);
   }
 
@@ -254,9 +357,21 @@ export function drawWordle(ctx, W, H, now) {
         if (col < current.length) { letter = current[col]; state = 'filled'; }
       }
 
-      ctx.fillStyle   = COL[state] ?? '#fff';
-      ctx.strokeStyle = BORDER[state] ?? '#d3d6da';
-      ctx.lineWidth   = state === 'empty' ? 1.5 : 2.5;
+      const tileIndex = row * 5 + col;
+      let tileFill, tileBorder;
+      if (state === 'empty' || state === 'filled') {
+        // Disco dance floor: each empty/filled tile flashes its own color
+        const discoCol = getDiscoColor(tileIndex, now);
+        tileFill   = discoCol + 'cc';
+        tileBorder = discoCol;
+      } else {
+        tileFill   = COL[state] ?? '#fff';
+        tileBorder = BORDER[state] ?? '#d3d6da';
+      }
+
+      ctx.fillStyle   = tileFill;
+      ctx.strokeStyle = tileBorder;
+      ctx.lineWidth   = 2.5;
       ctx.beginPath();
       ctx.roundRect(tx, ty, TILE, TILE, 3);
       ctx.fill();
@@ -265,9 +380,7 @@ export function drawWordle(ctx, W, H, now) {
       if (letter) {
         ctx.font      = `bold ${Math.round(TILE * 0.52)}px Arial, sans-serif`;
         ctx.textAlign = 'center';
-        const textColor = (state === 'correct' || state === 'present' || state === 'absent')
-          ? '#ffffff' : '#1a1a1a';
-        ctx.fillStyle = textColor;
+        ctx.fillStyle = '#ffffff';
         ctx.fillText(letter, tx + TILE / 2, ty + TILE * 0.68);
       }
     }
@@ -276,7 +389,7 @@ export function drawWordle(ctx, W, H, now) {
   // Hint
   ctx.font      = '11px Arial, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(100,100,100,0.65)';
+  ctx.fillStyle = 'rgba(200,200,200,0.65)';
   ctx.fillText('Tab to submit  ·  Backspace to delete', W / 2, gy + GH + PAD + 6);
 
   ctx.textAlign = 'left';

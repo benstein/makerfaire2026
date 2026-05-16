@@ -93,5 +93,10 @@
     "version": 19,
     "name": "Zeke",
     "description": "Win Wordle once: all bears vanish! Win it twice: GO TO BED flashes in giant red letters for 10 seconds. Soup is way faster now."
+  },
+  {
+    "version": 20,
+    "name": "Ben",
+    "description": "Wordle is now a DISCO DANCE FLOOR! Every tile flashes wild colors, a spinning disco ball hangs above it, and light beams sweep the arena!"
   }
 ]
