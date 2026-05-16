@@ -12,6 +12,7 @@ import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictory
 import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMultiplier, getFireCooldownMultiplier } from './game/powerups.js';
 import { resetRoadblocks, spawnRoadblock, getRoadblocks, drawRoadblocks } from './game/roadblocks.js';
 import { spawnBoss, resetBoss, getBoss, isBossAlive, damageBoss, updateBoss, drawBoss } from './game/boss.js';
+import { resetPasture, getPenBounds, getDangerBounds, isInPen, isPlayerInDangerZone, captureBear, getCapturedCount, BEARS_NEEDED, drawPasture } from './game/pasture.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -49,6 +50,7 @@ function gameLoop(now) {
       resetPowerups();
       resetRoadblocks();
       resetBoss();
+      resetPasture();
       resetVictoryEffects();
     } else {
       goToTitle();
@@ -90,11 +92,26 @@ function gameLoop(now) {
           const pos = getPlayerPos();
           spawnRoadblock(pos.x, pos.y, width, height);
           removeEnemy(i);
-          if (getPlayerHealth() <= 0) {
-            endGame(false);
-          }
+          if (getPlayerHealth() <= 0) endGame(false);
         }
       }
+    }
+
+    // Bear capture — herd bears into the pen
+    const enemiesNow = getEnemies();
+    for (let i = enemiesNow.length - 1; i >= 0; i--) {
+      if (isInPen(enemiesNow[i], width, height)) {
+        captureBear(enemiesNow[i], width, height);
+        removeEnemy(i);
+        if (getCapturedCount() >= BEARS_NEEDED) {
+          endGame(true);
+        }
+      }
+    }
+
+    // Danger zone — instant death
+    if (isPlayerInDangerZone(getPlayerBounds(), width, height)) {
+      endGame(false);
     }
 
     // Roadblock-player collisions
@@ -102,9 +119,7 @@ function gameLoop(now) {
     for (const rb of roadblockList) {
       if (aabb(playerBounds, rb)) {
         if (damagePlayer(now)) {
-          if (getPlayerHealth() <= 0) {
-            endGame(false);
-          }
+          if (getPlayerHealth() <= 0) endGame(false);
         }
       }
     }
@@ -162,11 +177,19 @@ function gameLoop(now) {
   if (state === STATES.TITLE) {
     drawTitleScreen();
   } else if (state === STATES.PLAYING) {
+    drawPasture(ctx, width, height, now);
     drawRoadblocks(ctx, now);
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
     drawPowerups(ctx, now);
+    // Show bears-in-pen count instead of timer
+    ctx.save();
+    ctx.font = 'bold 20px monospace';
+    ctx.fillStyle = '#2d5a1b';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Bears: ${getCapturedCount()} / ${BEARS_NEEDED}`, width - 16, 36);
+    ctx.restore();
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.BOSS_FIGHT) {
     drawRoadblocks(ctx, now);
