@@ -92,35 +92,67 @@ export function updateCyclones(dt, playerPos, setPlayerPos) {
 
 export function drawCyclones(ctx) {
   cyclones.forEach(c => {
-    // Draw tornado-like spiral
     ctx.save();
     ctx.translate(c.x, c.y);
 
-    // Outer ring
-    ctx.strokeStyle = 'rgba(127, 140, 141, 0.5)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(0, 0, CYCLONE_PULL_RADIUS, 0, Math.PI * 2);
-    ctx.stroke();
+    const topW = 48;
+    const midW = 22;
+    const botW = 5;
+    const height = 70;
+    const bands = 6;
 
-    // Spinning spiral
-    ctx.strokeStyle = 'rgba(127, 140, 141, 0.8)';
-    ctx.lineWidth = 2;
-    ctx.rotate(c.rotation);
-    for (let i = 0; i < 3; i++) {
-      ctx.save();
-      ctx.rotate((Math.PI * 2 / 3) * i);
+    // Faint pull-zone hint — just a soft glow on the ground
+    const grd = ctx.createRadialGradient(0, height * 0.4, 0, 0, height * 0.4, CYCLONE_PULL_RADIUS * 0.9);
+    grd.addColorStop(0, 'rgba(150, 180, 210, 0.12)');
+    grd.addColorStop(1, 'rgba(150, 180, 210, 0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(0, height * 0.4, CYCLONE_PULL_RADIUS * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tornado body — horizontal bands that narrow from top to bottom
+    for (let b = 0; b < bands; b++) {
+      const t = b / bands;
+      const t1 = (b + 1) / bands;
+      const w0 = topW * (1 - t)   + botW * t;
+      const w1 = topW * (1 - t1)  + botW * t1;
+      // mix in midW bulge
+      const wAdjusted0 = w0 - (w0 - midW) * Math.sin(t * Math.PI) * 0.4;
+      const wAdjusted1 = w1 - (w1 - midW) * Math.sin(t1 * Math.PI) * 0.4;
+      const y0 = -height * 0.5 + height * t;
+      const y1 = -height * 0.5 + height * t1;
+
+      // Swirl offset makes bands feel like they're rotating
+      const swirl = Math.sin(c.rotation * 2 + b * 0.9) * 6;
+
+      const alpha = 0.55 + 0.3 * (1 - t);
+      ctx.fillStyle = `rgba(130, 160, 200, ${alpha})`;
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, CYCLONE_PULL_RADIUS * 0.8);
-      ctx.stroke();
-      ctx.restore();
+      ctx.moveTo(-wAdjusted0 + swirl,  y0);
+      ctx.lineTo( wAdjusted0 + swirl,  y0);
+      ctx.lineTo( wAdjusted1 - swirl,  y1);
+      ctx.lineTo(-wAdjusted1 - swirl,  y1);
+      ctx.closePath();
+      ctx.fill();
     }
 
-    // Center
-    ctx.fillStyle = 'rgba(127, 140, 141, 0.9)';
+    // Swirling debris dots orbiting the funnel
+    for (let d = 0; d < 5; d++) {
+      const angle = c.rotation * 3 + (d / 5) * Math.PI * 2;
+      const tPos  = d / 5;
+      const r = (topW * (1 - tPos) + botW * tPos) * 0.85;
+      const dy = -height * 0.5 + height * tPos;
+      const dx = Math.cos(angle) * r;
+      ctx.fillStyle = `rgba(80, 110, 160, ${0.7 - tPos * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(dx, dy, 3 - tPos * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Narrow tip at the bottom
+    ctx.fillStyle = 'rgba(80, 110, 160, 0.9)';
     ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, Math.PI * 2);
+    ctx.arc(0, height * 0.5, botW, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
