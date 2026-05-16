@@ -1,4 +1,3 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Ben", "description": "Bright light-blue background — no more dark arena!" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" }
 ]
