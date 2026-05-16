@@ -3,7 +3,7 @@
 
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
-import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
+import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer, startBossFight } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
@@ -25,6 +25,7 @@ loadChangelog();
 initBuildStatus();
 
 let lastTime = performance.now();
+let penZoneTime = 0; // ms player has been inside the pen
 
 function gameLoop(now) {
   const dt = now - lastTime;
@@ -52,6 +53,7 @@ function gameLoop(now) {
       resetBoss();
       resetPasture();
       resetVictoryEffects();
+      penZoneTime = 0;
     } else {
       goToTitle();
     }
@@ -97,16 +99,30 @@ function gameLoop(now) {
       }
     }
 
-    // Bear capture — herd bears into the pen
+    // Bear capture — herd bears into the pen; fill the pen to summon the boss
     const enemiesNow = getEnemies();
     for (let i = enemiesNow.length - 1; i >= 0; i--) {
       if (isInPen(enemiesNow[i], width, height)) {
         captureBear(enemiesNow[i], width, height);
         removeEnemy(i);
         if (getCapturedCount() >= BEARS_NEEDED) {
-          endGame(true);
+          startBossFight();
+          resetEnemies();
+          resetWeapons();
+          spawnBoss(width, height, now);
         }
       }
+    }
+
+    // Pen zone — player can only stand here 2 seconds before losing a heart
+    if (isInPen(getPlayerBounds(), width, height)) {
+      penZoneTime += dt;
+      if (penZoneTime >= 2000) {
+        penZoneTime = 0;
+        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+      }
+    } else {
+      penZoneTime = 0;
     }
 
     // Danger zone — instant death
@@ -183,15 +199,23 @@ function gameLoop(now) {
     drawEnemies(ctx);
     drawProjectiles(ctx);
     drawPowerups(ctx, now);
-    // Show bears-in-pen count instead of timer
-    ctx.save();
-    ctx.font = 'bold 20px monospace';
-    ctx.fillStyle = '#2d5a1b';
-    ctx.textAlign = 'right';
-    ctx.fillText(`Bears: ${getCapturedCount()} / ${BEARS_NEEDED}`, width - 16, 36);
-    ctx.restore();
+    // Pen zone countdown warning
+    if (penZoneTime > 0) {
+      const secsLeft = ((2000 - penZoneTime) / 1000).toFixed(1);
+      ctx.save();
+      ctx.font = 'bold 28px monospace';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = '#4a1a00';
+      ctx.lineWidth = 5;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(`GET OUT! ${secsLeft}s`, width / 2, height / 2 - 60);
+      ctx.fillStyle = '#ff4400';
+      ctx.fillText(`GET OUT! ${secsLeft}s`, width / 2, height / 2 - 60);
+      ctx.restore();
+    }
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.BOSS_FIGHT) {
+    drawPasture(ctx, width, height, now);
     drawRoadblocks(ctx, now);
     drawBoss(ctx, now, width);
     drawPlayer(ctx, now);

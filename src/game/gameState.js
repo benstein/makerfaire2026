@@ -55,9 +55,9 @@ export function goToBuilding() {
 export function updateTimer(dt) {
   if (currentState !== STATES.PLAYING) return;
   elapsedMs += dt;
-  timeRemaining -= dt / 1000;
-  if (timeRemaining <= 0) {
-    timeRemaining = 0;
-    currentState = STATES.BOSS_FIGHT;
-  }
+  // No time limit — boss spawns when all bears are penned
+}
+
+export function startBossFight() {
+  currentState = STATES.BOSS_FIGHT;
 }

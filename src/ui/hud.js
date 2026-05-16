@@ -20,18 +20,6 @@ export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
     drawHeart(ctx, hx + heartSize / 2, hy + heartSize / 2, heartSize * 0.5);
   }
 
-  // Timer (top-right)
-  const timerText = `${Math.ceil(timeRemaining)}s`;
-  const tx = canvasWidth - padding;
-  const ty = padding + CONFIG.hudFontSize;
-  ctx.font = `bold ${CONFIG.hudFontSize}px monospace`;
-  ctx.textAlign = 'right';
-  ctx.lineWidth = 6;
-  ctx.strokeStyle = '#2c3e50';
-  ctx.lineJoin = 'round';
-  ctx.strokeText(timerText, tx, ty);
-  ctx.fillStyle = CONFIG.timerColor;
-  ctx.fillText(timerText, tx, ty);
   ctx.textAlign = 'left'; // reset
 }
 

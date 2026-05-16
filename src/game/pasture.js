@@ -110,7 +110,7 @@ export function drawPasture(ctx, width, height, now) {
   ctx.fillText('DANGER', dzCX, dzCY - 8);
   ctx.font = 'bold 14px monospace';
   ctx.fillStyle = '#ffcccc';
-  ctx.fillText('INSTANT DEATH', dzCX, dzCY + 14);
+  ctx.fillText('KEEP OUT', dzCX, dzCY + 14);
 
   // Blinking border
   if (Math.floor(now / 400) % 2 === 0) {
@@ -130,7 +130,10 @@ export function drawPasture(ctx, width, height, now) {
   ctx.fillStyle = '#4a6e2a';
   ctx.font = 'bold 14px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText(`PEN (${capturedBears.length}/${BEARS_NEEDED})`, pen.x + pen.w / 2, pen.y + 18);
+  ctx.fillText(`BEAR ZONE (${capturedBears.length}/${BEARS_NEEDED})`, pen.x + pen.w / 2, pen.y + 18);
+  ctx.font = '11px monospace';
+  ctx.fillStyle = '#c0392b';
+  ctx.fillText('2 SEC LIMIT!', pen.x + pen.w / 2, pen.y + 34);
 
   // Fence posts + rails
   drawFence(ctx, pen);
