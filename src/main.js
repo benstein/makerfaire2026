@@ -32,7 +32,7 @@ function gameLoop(now) {
   const { width, height } = getCanvasSize();
 
   // --- State transitions ---
-  if (input.start && state !== STATES.BUILDING) {
+  if ((input.start || (input.fire && state === STATES.TITLE)) && state !== STATES.BUILDING) {
     if (state === STATES.TITLE) {
       startGame();
       resetPlayer(width, height);

@@ -39,6 +39,10 @@ export function drawTitleScreen() {
   ctx.fillStyle = '#5d6d7e';
   ctx.fillText('PRESS START', cx, cy + 30);
 
+  ctx.font = '13px monospace';
+  ctx.fillStyle = '#3d4f5e';
+  ctx.fillText("Return on keyboard or 'A' button also works", cx, cy + 60);
+
   ctx.textAlign = 'left';
 }
 
