@@ -198,9 +198,10 @@ export function drawGameOverScreen() {
   const cy = canvas.height / 2;
   const now = performance.now();
 
+  const bounce = Math.sin(now / 400) * 5;
   const logoSize = Math.round(Math.min(canvas.width * 0.25, canvas.height * 0.50, 400));
   const lx = Math.round(cx - logoSize / 2);
-  const ly = Math.round(cy - logoSize / 2 - 44);
+  const ly = Math.round(cy - logoSize / 2 - 44 + bounce);
   const r  = Math.round(logoSize * 0.07);
 
   if (_logo.complete && _logo.naturalWidth) {
@@ -219,7 +220,7 @@ export function drawGameOverScreen() {
     ctx.restore();
   }
 
-  const textY = ly + logoSize + 36;
+  const textY = ly + logoSize + 64;
   ctx.font = 'bold 48px monospace';
   ctx.textAlign = 'center';
   ctx.fillStyle = '#e74c3c';
