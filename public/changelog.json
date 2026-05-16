@@ -1,3 +1,4 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  { "version": 2, "name": "Judah", "description": "Power-ups! Kill 10 enemies to get a speed boost or rapid fire!" }
 ]

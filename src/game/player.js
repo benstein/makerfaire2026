@@ -17,15 +17,15 @@ export function resetPlayer(arenaWidth, arenaHeight) {
   invincibleUntil = 0;
 }
 
-export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
+export function updatePlayer(dt, input, arenaWidth, arenaHeight, now, speedMultiplier = 1) {
   const scale = dt / 16.67;
   let mx = input.stickX;
   let my = input.stickY;
   // Normalize diagonal movement
   const mag = Math.sqrt(mx * mx + my * my);
   if (mag > 1) { mx /= mag; my /= mag; }
-  const dx = mx * CONFIG.playerSpeed * scale;
-  const dy = my * CONFIG.playerSpeed * scale;
+  const dx = mx * CONFIG.playerSpeed * speedMultiplier * scale;
+  const dy = my * CONFIG.playerSpeed * speedMultiplier * scale;
 
   x += dx;
   y += dy;

@@ -9,6 +9,7 @@ import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } fro
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { resetPowerups, onEnemyKilled, updatePowerups, drawPowerups, getSpeedMultiplier, getFireCooldownMultiplier } from './game/powerups.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -38,6 +39,7 @@ function gameLoop(now) {
       resetPlayer(width, height);
       resetEnemies();
       resetWeapons();
+      resetPowerups();
       resetVictoryEffects();
     } else {
       goToTitle();
@@ -47,12 +49,12 @@ function gameLoop(now) {
   // --- Update ---
   if (state === STATES.PLAYING) {
     updateTimer(dt);
-    updatePlayer(dt, input, width, height, now);
+    updatePlayer(dt, input, width, height, now, getSpeedMultiplier(now));
     updateEnemies(dt, getPlayerPos(), now, width, height);
 
     // Firing
     if (input.fire || input.fireHeld) {
-      tryFire(getPlayerPos(), getPlayerFacing(), now);
+      tryFire(getPlayerPos(), getPlayerFacing(), now, getFireCooldownMultiplier(now));
     }
     updateProjectiles(dt, width, height);
 
@@ -64,6 +66,7 @@ function gameLoop(now) {
         if (aabb(projList[i], enemyList[j])) {
           removeProjectile(i);
           removeEnemy(j);
+          onEnemyKilled(width, height);
           break;
         }
       }
@@ -82,6 +85,8 @@ function gameLoop(now) {
         }
       }
     }
+
+    updatePowerups(dt, playerBounds, now);
   }
 
   // --- Render ---
@@ -93,6 +98,7 @@ function gameLoop(now) {
     drawPlayer(ctx, now);
     drawEnemies(ctx);
     drawProjectiles(ctx);
+    drawPowerups(ctx, now);
     drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
   } else if (state === STATES.VICTORY) {
     drawVictoryScreen();
