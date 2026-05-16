@@ -37,7 +37,7 @@ function pollKeyboard() {
 
 export function pollInput() {
   const gamepads = navigator.getGamepads();
-  const gp = gamepads[0];
+  const gp = Array.from(gamepads).find(g => g && g.connected);
 
   if (!gp) {
     pollKeyboard();
