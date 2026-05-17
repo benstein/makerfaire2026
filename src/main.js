@@ -6,6 +6,7 @@ import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, clearEnemies } from './game/enemies.js';
+import { resetBoss, shouldSpawnBoss, spawnBoss, getBoss, isBossAlive, updateBoss, damageBoss, drawBoss } from './game/boss.js';
 import { resetFinalSmash, addKill, getKillCount, isFinalSmashActive, updateFinalSmash, drawFinalSmash, KILLS_FOR_SMASH } from './game/finalSmash.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
@@ -63,6 +64,7 @@ function gameLoop(now) {
         resetWeapons();
         resetVictoryEffects();
         resetFinalSmash();
+        resetBoss();
       } else if (input.start) {
         goToTitle();
       }
@@ -72,6 +74,10 @@ function gameLoop(now) {
     if (state === STATES.PLAYING) {
       updateTimer(dt);
       updatePlayer(dt, input, width, height, now);
+
+      // Spawn boss at 20s remaining
+      if (shouldSpawnBoss(getTimeRemaining())) spawnBoss(width, height);
+      updateBoss(dt, getPlayerPos());
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
       // Firing
@@ -80,17 +86,29 @@ function gameLoop(now) {
       }
       updateProjectiles(dt, width, height);
 
-      // Projectile-enemy collisions
+      // Projectile collisions
       const projList = getProjectiles();
+
+      // vs boss
+      const currentBoss = getBoss();
+      if (currentBoss && isBossAlive()) {
+        for (let i = projList.length - 1; i >= 0; i--) {
+          if (aabb(projList[i], currentBoss)) {
+            removeProjectile(i);
+            if (damageBoss()) endGame(true); // boss dead → victory!
+            break;
+          }
+        }
+      }
+
+      // vs regular enemies
       const enemyList = getEnemies();
       for (let i = projList.length - 1; i >= 0; i--) {
         for (let j = enemyList.length - 1; j >= 0; j--) {
           if (aabb(projList[i], enemyList[j])) {
             removeProjectile(i);
             removeEnemy(j);
-            if (addKill(now)) {
-              clearEnemies();
-            }
+            if (addKill(now)) clearEnemies();
             break;
           }
         }
@@ -98,16 +116,17 @@ function gameLoop(now) {
 
       updateFinalSmash(now);
 
-      // Enemy-player collisions
+      // Enemy/boss–player collisions
       const playerBounds = getPlayerBounds();
+      if (isBossAlive() && aabb(playerBounds, getBoss())) {
+        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+      }
       const enemies = getEnemies();
       for (let i = enemies.length - 1; i >= 0; i--) {
         if (aabb(playerBounds, enemies[i])) {
           if (damagePlayer(now)) {
             removeEnemy(i);
-            if (getPlayerHealth() <= 0) {
-              endGame(false);
-            }
+            if (getPlayerHealth() <= 0) endGame(false);
           }
         }
       }
@@ -122,6 +141,7 @@ function gameLoop(now) {
       drawForestBackground(ctx, width, height);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
+      drawBoss(ctx, now);
       drawProjectiles(ctx);
       drawFinalSmash(ctx, getPlayerPos(), width, height, now);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getKillCount(), KILLS_FOR_SMASH);

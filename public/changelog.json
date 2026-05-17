@@ -5,5 +5,6 @@
   { "version": 4, "name": "Reed", "description": "The Maker has 6 hearts and moves nearly twice as fast" },
   { "version": 5, "name": "Gabi", "description": "Forest theme with dark tree canopies. Kill 10 yetis and FINAL SMASH wipes the whole screen!" },
   { "version": 6, "name": "Shelley", "description": "Bright pink Maker and big hot-pink bullets" },
-  { "version": 7, "name": "Sayer", "description": "The Maker now shoots spinning glowing stars!" }
+  { "version": 7, "name": "Sayer", "description": "The Maker now shoots spinning glowing stars!" },
+  { "version": 8, "name": "Ethan", "description": "BOSS YETI arrives at 20s! Giant, stomping, red-eyed — take 10 shots to bring it down and win!" }
 ]

@@ -1,196 +1,169 @@
 // src/game/boss.js
-// Boss fight — appears when the timer hits zero. Kill it to win.
+// Giant boss yeti — spawns at 20s remaining, takes 10 hits, killing it wins the game.
 
-const BOSS_MAX_HEALTH = 15;
-const BOSS_SIZE = 72;
-const BOSS_SPEED = 1.8;
-const BOSS_CHARGE_SPEED = 9;
-const CHARGE_INTERVAL = 2800;
-const CHARGE_DURATION = 480;
+import { CONFIG } from './config.js';
+
+const BOSS_HP_MAX   = 10;
+const BOSS_SIZE     = CONFIG.enemySize * 4;   // ~88px — imposing
+const BOSS_SPEED    = CONFIG.enemySpeed * 1.4;
+const SPAWN_AT_SECS = 20;                      // seconds remaining when boss appears
 
 let boss = null;
-let charging = false;
-let chargeVX = 0, chargeVY = 0;
-let chargeUntil = 0;
-let lastChargeTime = 0;
-let spawnTime = 0;
-let spawnX = 0, spawnY = 0;
-
-export function spawnBoss(arenaWidth, arenaHeight, now) {
-  spawnX = arenaWidth / 2 - BOSS_SIZE / 2;
-  spawnY = 80;
-  boss = {
-    x: spawnX,
-    y: spawnY,
-    w: BOSS_SIZE,
-    h: BOSS_SIZE,
-    health: BOSS_MAX_HEALTH,
-  };
-  charging = false;
-  lastChargeTime = now + 2000; // 2s grace before first charge
-  spawnTime = now;
-}
-
-export function returnBossToSpawn() {
-  if (!boss) return;
-  boss.x = spawnX;
-  boss.y = spawnY;
-  charging = false;
-}
+let spawned = false;
 
 export function resetBoss() {
-  boss = null;
-  charging = false;
+  boss    = null;
+  spawned = false;
 }
 
-export function getBoss() {
-  return boss;
+export function shouldSpawnBoss(timeRemaining) {
+  return !spawned && timeRemaining <= SPAWN_AT_SECS;
 }
 
-export function isBossAlive() {
-  return boss !== null && boss.health > 0;
+export function spawnBoss(arenaWidth, arenaHeight) {
+  spawned = true;
+  const edge = Math.floor(Math.random() * 4);
+  let bx, by;
+  switch (edge) {
+    case 0: bx = arenaWidth / 2;       by = -BOSS_SIZE;             break;
+    case 1: bx = arenaWidth + BOSS_SIZE; by = arenaHeight / 2;      break;
+    case 2: bx = arenaWidth / 2;       by = arenaHeight + BOSS_SIZE; break;
+    default: bx = -BOSS_SIZE;          by = arenaHeight / 2;        break;
+  }
+  boss = { x: bx, y: by, w: BOSS_SIZE, h: BOSS_SIZE, hp: BOSS_HP_MAX };
 }
 
-export function damageBoss() {
-  if (!boss) return false;
-  boss.health = Math.max(0, boss.health - 1);
-  return boss.health <= 0;
-}
+export function getBoss()     { return boss; }
+export function isBossAlive() { return boss !== null && boss.hp > 0; }
 
-export function updateBoss(dt, playerPos, now, arenaWidth, arenaHeight) {
+export function updateBoss(dt, playerPos) {
   if (!boss) return;
-  const scale = dt / 16.67;
-  const phase2 = boss.health <= BOSS_MAX_HEALTH / 2;
-  const speed = BOSS_SPEED * (phase2 ? 1.7 : 1);
-
   const cx = boss.x + boss.w / 2;
   const cy = boss.y + boss.h / 2;
   const dx = playerPos.x - cx;
   const dy = playerPos.y - cy;
-  const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-
-  if (charging && now < chargeUntil) {
-    boss.x += chargeVX * scale;
-    boss.y += chargeVY * scale;
-    boss.x = Math.max(0, Math.min(arenaWidth - boss.w, boss.x));
-    boss.y = Math.max(0, Math.min(arenaHeight - boss.h, boss.y));
-    if (now >= chargeUntil) charging = false;
-  } else {
-    charging = false;
-    boss.x += (dx / dist) * speed * scale;
-    boss.y += (dy / dist) * speed * scale;
-
-    const interval = phase2 ? CHARGE_INTERVAL * 0.6 : CHARGE_INTERVAL;
-    if (now - lastChargeTime > interval) {
-      charging = true;
-      chargeUntil = now + CHARGE_DURATION;
-      lastChargeTime = now;
-      chargeVX = (dx / dist) * BOSS_CHARGE_SPEED;
-      chargeVY = (dy / dist) * BOSS_CHARGE_SPEED;
-    }
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist > 0) {
+    const scale = dt / 16.67;
+    boss.x += (dx / dist) * BOSS_SPEED * scale;
+    boss.y += (dy / dist) * BOSS_SPEED * scale;
   }
 }
 
-export function drawBoss(ctx, now, canvasWidth) {
+// Returns true when the boss is dead
+export function damageBoss() {
+  if (!boss) return false;
+  boss.hp--;
+  return boss.hp <= 0;
+}
+
+export function drawBoss(ctx, now) {
   if (!boss) return;
-  const phase2 = boss.health <= BOSS_MAX_HEALTH / 2;
-  const age = now - spawnTime;
-
-  const entryT = Math.min(1, age / 700);
-  const bounce = entryT < 1 ? (1 + Math.sin(entryT * Math.PI) * 0.35) : 1;
-  const pulse = 1 + Math.sin(now / 160) * 0.04;
-
-  const drawW = boss.w * bounce * pulse;
-  const drawH = boss.h * bounce * pulse;
   const cx = boss.x + boss.w / 2;
   const cy = boss.y + boss.h / 2;
-  const drawX = cx - drawW / 2;
-  const drawY = cy - drawH / 2;
+  const r  = boss.w / 2;
 
-  const bodyColor = phase2 ? '#7a5fa0' : '#7a9aaa';
-  const glowColor = phase2 ? '#e056fd' : '#aaddff';
-
-  // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.beginPath();
-  ctx.ellipse(cx + 6, cy + drawH * 0.5 + 6, drawW * 0.45, drawH * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Glow
   ctx.save();
-  ctx.shadowColor = glowColor;
-  ctx.shadowBlur = 24 + Math.sin(now / 200) * 8;
-
-  // Ears (behind body)
-  ctx.fillStyle = phase2 ? '#9b7bc0' : '#8aabb8';
-  ctx.beginPath(); ctx.arc(drawX + drawW * 0.18, drawY + drawH * 0.08, drawW * 0.13, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(drawX + drawW * 0.82, drawY + drawH * 0.08, drawW * 0.13, 0, Math.PI * 2); ctx.fill();
-
-  // Body
-  ctx.fillStyle = bodyColor;
-  ctx.beginPath();
-  ctx.roundRect(drawX, drawY + drawH * 0.08, drawW, drawH * 0.85, drawW * 0.18);
-  ctx.fill();
+  ctx.shadowBlur  = 40;
+  ctx.shadowColor = `rgba(220, 0, 0, ${0.3 + 0.2 * Math.sin(now / 300)})`;
+  drawBossYeti(ctx, cx, cy, r, now);
   ctx.restore();
 
-  // Inner ears
-  ctx.fillStyle = '#ffb3cc';
-  ctx.beginPath(); ctx.arc(drawX + drawW * 0.18, drawY + drawH * 0.08, drawW * 0.07, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(drawX + drawW * 0.82, drawY + drawH * 0.08, drawW * 0.07, 0, Math.PI * 2); ctx.fill();
+  drawBossHealthBar(ctx, cx, boss.y - 24, r, boss.hp, BOSS_HP_MAX);
+}
 
-  // Eyes (beady and high up)
-  const eyeY = drawY + drawH * 0.28;
-  ctx.fillStyle = '#111';
-  ctx.beginPath(); ctx.arc(drawX + drawW * 0.33, eyeY, drawW * 0.08, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(drawX + drawW * 0.67, eyeY, drawW * 0.08, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(drawX + drawW * 0.33 + drawW * 0.03, eyeY - drawH * 0.03, drawW * 0.03, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(drawX + drawW * 0.67 + drawW * 0.03, eyeY - drawH * 0.03, drawW * 0.03, 0, Math.PI * 2); ctx.fill();
+function drawBossYeti(ctx, cx, cy, r, now) {
+  const stomp = Math.sin(now / 180) * r * 0.04;
+  cy += stomp;
 
-  // Angry brows
-  ctx.strokeStyle = '#444';
-  ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(drawX + drawW * 0.2, eyeY - drawH * 0.08); ctx.lineTo(drawX + drawW * 0.42, eyeY - drawH * 0.02); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(drawX + drawW * 0.8, eyeY - drawH * 0.08); ctx.lineTo(drawX + drawW * 0.58, eyeY - drawH * 0.02); ctx.stroke();
-
-  // Wide snout
-  ctx.fillStyle = phase2 ? '#9980c0' : '#90b8c8';
-  ctx.beginPath();
-  ctx.ellipse(cx, drawY + drawH * 0.7, drawW * 0.38, drawH * 0.22, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Big nostrils
-  ctx.fillStyle = '#445566';
-  ctx.beginPath(); ctx.ellipse(cx - drawW * 0.14, drawY + drawH * 0.67, drawW * 0.08, drawH * 0.07, -0.3, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + drawW * 0.14, drawY + drawH * 0.67, drawW * 0.08, drawH * 0.07, 0.3, 0, Math.PI * 2); ctx.fill();
-
-  // --- Health bar ---
-  const barW = 280;
-  const barH = 16;
-  const barX = canvasWidth / 2 - barW / 2;
-  const barY = 18;
-  const pct = boss.health / BOSS_MAX_HEALTH;
-
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
-  ctx.fillStyle = '#222';
-  ctx.fillRect(barX, barY, barW, barH);
-  ctx.fillStyle = phase2 ? '#9b59b6' : '#e74c3c';
-  ctx.fillRect(barX, barY, barW * pct, barH);
-
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 11px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('BOSS', canvasWidth / 2, barY + barH - 3);
-
-  if (phase2) {
-    const blink = Math.floor(now / 300) % 2 === 0;
-    if (blink) {
-      ctx.fillStyle = '#e056fd';
-      ctx.font = 'bold 13px monospace';
-      ctx.fillText('⚡ ENRAGED! ⚡', canvasWidth / 2, barY + barH + 18);
-    }
+  for (let i = 3; i >= 0; i--) {
+    ctx.fillStyle = i % 2 === 0 ? '#bbccdd' : '#ddeeff';
+    ctx.beginPath();
+    ctx.arc(cx, cy + r * 0.15, r * (0.85 + i * 0.05), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#aabbd0';
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a) * r * 0.88, cy + r * 0.15 + Math.sin(a) * r * 0.88, r * 0.22, 0, Math.PI * 2);
+    ctx.fill();
   }
 
+  ctx.fillStyle = '#cce0f5';
+  ctx.beginPath();
+  ctx.arc(cx, cy - r * 0.55, r * 0.56, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#aabbd0';
+  for (let i = 0; i < 6; i++) {
+    const a = Math.PI + (i / 5) * Math.PI;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a) * r * 0.5, cy - r * 0.55 + Math.sin(a) * r * 0.5, r * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Angry glowing red eyes
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(cx - r * 0.2,  cy - r * 0.63, r * 0.2,  0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + r * 0.2,  cy - r * 0.63, r * 0.2,  0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ff0000';
+  ctx.beginPath(); ctx.arc(cx - r * 0.18, cy - r * 0.61, r * 0.12, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + r * 0.22, cy - r * 0.61, r * 0.12, 0, Math.PI * 2); ctx.fill();
+
+  ctx.strokeStyle = '#336699'; ctx.lineWidth = r * 0.08; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - r * 0.32, cy - r * 0.77); ctx.lineTo(cx - r * 0.08, cy - r * 0.72); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + r * 0.32, cy - r * 0.77); ctx.lineTo(cx + r * 0.08, cy - r * 0.72); ctx.stroke();
+
+  ctx.strokeStyle = '#224466'; ctx.lineWidth = r * 0.1;
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.28, cy - r * 0.40);
+  ctx.quadraticCurveTo(cx, cy - r * 0.52, cx + r * 0.28, cy - r * 0.40);
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.beginPath();
+    ctx.moveTo(cx + side * r * 0.06, cy - r * 0.44);
+    ctx.lineTo(cx + side * r * 0.10, cy - r * 0.30);
+    ctx.lineTo(cx + side * r * 0.14, cy - r * 0.44);
+    ctx.fill();
+  }
+
+  // Massive reaching arms
+  ctx.strokeStyle = '#bbccdd'; ctx.lineWidth = r * 0.35; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - r * 0.7, cy + r * 0.1); ctx.lineTo(cx - r * 1.35, cy - r * 0.25); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + r * 0.7, cy + r * 0.1); ctx.lineTo(cx + r * 1.35, cy - r * 0.25); ctx.stroke();
+  ctx.strokeStyle = '#336699'; ctx.lineWidth = r * 0.09;
+  for (let s = -1; s <= 1; s++) {
+    ctx.beginPath(); ctx.moveTo(cx - r * 1.35 + s * r * 0.1, cy - r * 0.25); ctx.lineTo(cx - r * 1.55 + s * r * 0.14, cy - r * 0.48); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + r * 1.35 + s * r * 0.1, cy - r * 0.25); ctx.lineTo(cx + r * 1.55 + s * r * 0.14, cy - r * 0.48); ctx.stroke();
+  }
+}
+
+function drawBossHealthBar(ctx, cx, top, r, hp, maxHp) {
+  const bw = r * 2.4;
+  const bh = 14;
+  const bx = cx - bw / 2;
+  const pct = hp / maxHp;
+
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff4444';
+  ctx.fillText('BOSS YETI', cx, top - 4);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.beginPath(); ctx.roundRect(bx - 2, top, bw + 4, bh + 4, 4); ctx.fill();
+  ctx.fillStyle = '#330000';
+  ctx.beginPath(); ctx.roundRect(bx, top + 2, bw, bh, 3); ctx.fill();
+
+  if (pct > 0) {
+    ctx.fillStyle = `hsl(${Math.round(pct * 50)}, 100%, 45%)`;
+    ctx.beginPath(); ctx.roundRect(bx, top + 2, bw * pct, bh, 3); ctx.fill();
+  }
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1;
+  for (let i = 1; i < maxHp; i++) {
+    const tx = bx + bw * i / maxHp;
+    ctx.beginPath(); ctx.moveTo(tx, top + 2); ctx.lineTo(tx, top + 2 + bh); ctx.stroke();
+  }
   ctx.textAlign = 'left';
 }
