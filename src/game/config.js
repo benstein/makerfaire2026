@@ -6,7 +6,7 @@ export const CONFIG = {
   // Player
   playerSpeed: 4,
   playerSize: 28,
-  playerColor: '#2c3e50',
+  playerColor: '#ff1493',
   playerMaxHealth: 3,
   invincibilityDuration: 1000, // ms
 
