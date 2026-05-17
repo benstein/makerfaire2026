@@ -139,7 +139,7 @@ export function drawBuildScreen(ctx, width, height, buildData, now) {
     ctx.textAlign = 'center';
     const dots = '.'.repeat(Math.floor((now / 500) % 4));
     ctx.fillStyle = '#ff88cc';
-    ctx.fillText(`Building${dots}`, cx, height * 0.55);
+    ctx.fillText(`Thinking hard about changes${dots}`, cx, height * 0.55);
   }
 
   ctx.textAlign = 'left';
