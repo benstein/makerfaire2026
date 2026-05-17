@@ -2,7 +2,7 @@
 
 import { CONFIG } from '../game/config.js';
 
-export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
+export function drawHUD(ctx, health, timeRemaining, canvasWidth, killCount = 0, killsForSmash = 10) {
   const padding = 20;
 
   // Hearts (top-left)
@@ -32,7 +32,39 @@ export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
   ctx.strokeText(timerText, tx, ty);
   ctx.fillStyle = CONFIG.timerColor;
   ctx.fillText(timerText, tx, ty);
-  ctx.textAlign = 'left'; // reset
+  ctx.textAlign = 'left';
+
+  // Final Smash meter (bottom-left)
+  const meterX = padding;
+  const meterY = 80;
+  const meterW = 160;
+  const meterH = 18;
+  const fill = killCount / killsForSmash;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.beginPath();
+  ctx.roundRect(meterX - 2, meterY - 2, meterW + 4, meterH + 4, 6);
+  ctx.fill();
+
+  ctx.fillStyle = '#1a3d00';
+  ctx.beginPath();
+  ctx.roundRect(meterX, meterY, meterW, meterH, 4);
+  ctx.fill();
+
+  if (fill > 0) {
+    const grad = ctx.createLinearGradient(meterX, 0, meterX + meterW, 0);
+    grad.addColorStop(0, '#f0c000');
+    grad.addColorStop(1, '#ff6a00');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(meterX, meterY, meterW * fill, meterH, 4);
+    ctx.fill();
+  }
+
+  ctx.font = 'bold 12px monospace';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.fillText(`FINAL SMASH  ${killCount}/${killsForSmash}`, meterX, meterY - 5);
 }
 
 function drawHeart(ctx, cx, cy, size) {

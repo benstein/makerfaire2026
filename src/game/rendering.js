@@ -30,6 +30,39 @@ export function clearCanvas() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
+export function drawForestBackground(fctx, width, height) {
+  // Darkening vignette toward edges — makes it feel like a forest clearing
+  const grd = fctx.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.15, width / 2, height / 2, Math.max(width, height) * 0.85);
+  grd.addColorStop(0, 'rgba(0,0,0,0)');
+  grd.addColorStop(1, 'rgba(0,0,0,0.6)');
+  fctx.fillStyle = grd;
+  fctx.fillRect(0, 0, width, height);
+
+  // Dark tree canopy blobs around all four edges
+  fctx.fillStyle = '#041201';
+  const depth = Math.min(width, height) * 0.11;
+  const count = 48;
+  for (let i = 0; i < count; i++) {
+    const t = i / count;
+    const perim = 2 * (width + height);
+    const d = t * perim;
+    let tx, ty;
+    const s1 = Math.abs(Math.sin(i * 31.4 + 1.1));
+    const s2 = Math.abs(Math.sin(i * 17.9 + 5.3));
+    const s3 = Math.abs(Math.sin(i * 43.1 + 2.7));
+    if (d < width)                   { tx = d;                      ty = s1 * depth; }
+    else if (d < width + height)     { tx = width - s1 * depth;     ty = d - width; }
+    else if (d < 2 * width + height) { tx = width - (d - width - height); ty = height - s1 * depth; }
+    else                             { tx = s1 * depth;             ty = height - (d - 2 * width - height); }
+
+    const rx = depth * (0.45 + s2 * 0.65);
+    const ry = depth * (0.45 + s3 * 0.65);
+    fctx.beginPath();
+    fctx.ellipse(tx, ty, rx, ry, 0, 0, Math.PI * 2);
+    fctx.fill();
+  }
+}
+
 export function drawTitleScreen() {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;

@@ -5,10 +5,11 @@ import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, clearEnemies } from './game/enemies.js';
+import { resetFinalSmash, addKill, getKillCount, isFinalSmashActive, updateFinalSmash, drawFinalSmash, KILLS_FOR_SMASH } from './game/finalSmash.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
-import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { initRendering, getCanvasSize, clearCanvas, drawForestBackground, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -61,6 +62,7 @@ function gameLoop(now) {
         resetEnemies();
         resetWeapons();
         resetVictoryEffects();
+        resetFinalSmash();
       } else if (input.start) {
         goToTitle();
       }
@@ -86,10 +88,15 @@ function gameLoop(now) {
           if (aabb(projList[i], enemyList[j])) {
             removeProjectile(i);
             removeEnemy(j);
+            if (addKill(now)) {
+              clearEnemies();
+            }
             break;
           }
         }
       }
+
+      updateFinalSmash(now);
 
       // Enemy-player collisions
       const playerBounds = getPlayerBounds();
@@ -112,10 +119,12 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
+      drawForestBackground(ctx, width, height);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);
-      drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+      drawFinalSmash(ctx, getPlayerPos(), width, height, now);
+      drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getKillCount(), KILLS_FOR_SMASH);
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();
     } else if (state === STATES.GAMEOVER) {

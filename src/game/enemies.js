@@ -159,3 +159,7 @@ export function getEnemies() {
 export function removeEnemy(index) {
   enemies.splice(index, 1);
 }
+
+export function clearEnemies() {
+  enemies = [];
+}
