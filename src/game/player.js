@@ -61,9 +61,11 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
     facingY = input.stickY / mag;
   }
 
-  const half = effectiveSize() / 2;
-  x = Math.max(half, Math.min(arenaWidth - half, x));
-  y = Math.max(half, Math.min(arenaHeight - half, y));
+  // Screen wrap — exit one edge, re-enter the opposite
+  if (x < 0)            x += arenaWidth;
+  if (x > arenaWidth)   x -= arenaWidth;
+  if (y < 0)            y += arenaHeight;
+  if (y > arenaHeight)  y -= arenaHeight;
 }
 
 export function drawPlayer(ctx, now) {

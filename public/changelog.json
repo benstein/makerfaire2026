@@ -16,5 +16,6 @@
   { "version": 15, "name": "Jonah", "description": "Grab the mushroom to become Mario (red cap with M, blue overalls)! Grab the star and enter STAR POWER — wavy rainbow star beams fire in all 8 directions automatically, killing every enemy they touch!" },
   { "version": 16, "name": "Rydia", "description": "DILLY the pill bug wanders the arena with a little sign on her back! Step on her and the Maker transforms into a big meanie muscle guy — red face, angry scowl, giant flexing biceps, tank top that says MEAN, and +5 bonus hearts." },
   { "version": 17, "name": "Elle", "description": "LEADERBOARD on the title and game over screens! Elle is #1 with 1,000,000,000 points. Every kid from the changelog gets a score between 100 and 1000." },
-  { "version": 18, "name": "Hannah", "description": "Harry Potter flies around on his broomstick — glasses, lightning bolt scar, Gryffindor scarf. Touch him and LOSE a heart. Voldemort floats in dark robes — red eyes, no nose, glowing wand. Touch him and GAIN 2 hearts!" }
+  { "version": 18, "name": "Hannah", "description": "Harry Potter flies around on his broomstick — glasses, lightning bolt scar, Gryffindor scarf. Touch him and LOSE a heart. Voldemort floats in dark robes — red eyes, no nose, glowing wand. Touch him and GAIN 2 hearts!" },
+  { "version": 19, "name": "Ryan", "description": "Screen wraps! Exit the right edge and re-enter from the left. Same for top and bottom. Asteroids-style." }
 ]
