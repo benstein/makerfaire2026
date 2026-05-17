@@ -1,13 +1,3 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Steve", "description": "ALL RAINBOW! The Maker is a pulsing star (pulsar) with spinning rainbow beams. Bad guys are poofy round creatures with giant googly eyes and goofy smiles. Rainbow glowing bullets. Deep space background." },
-  { "version": 3, "name": "Caleb", "description": "Bad guys are huge! Shoot one and it splits into 2 medium ones. Shoot those and they split into 2 tiny ones. Tiny ones finally die — but they're fast!" },
-  { "version": 4, "name": "Eloise", "description": "Monsters are now COMPLETELY ABSURD: 2-4 bloodshot googly eyes each drifting independently, 3-5 flailing wiggly arms with grabby claws, forked tongue, drool, uneven fangs, and a random accessory — top hat, party hat, spinning antenna star, or devil horns!" },
-  { "version": 5, "name": "Cyrus", "description": "LAVA at the bottom of the arena! Glowing orange-red with bubbles and heat haze. Touch it and you die instantly — no second chances!" },
-  { "version": 6, "name": "Liam", "description": "Monsters are SLOW and OOZY! They creep along leaving glowing goo puddles everywhere they go. The goo shimmers and fades — but there's a lot of it!" },
-  { "version": 7, "name": "Ben", "description": "A disco ball hangs from the ceiling! Every 15 seconds: DISCO INFERNO — monsters stop chasing and shimmy in place, rainbow spotlights sweep the arena, and DISCO INFERNO flashes in giant rainbow letters." },
-  { "version": 8, "name": "Nathan", "description": "Rocks appear in the arena! Climb on one and monsters can't touch you — but they'll chomp through it! Each rock survives 4 bites before crumbling. Cracks show how much is left." },
-  { "version": 9, "name": "Ezra", "description": "Asteroids rain down from space! Glowing hot rocks with fire trails — dodge them or shoot them down before they hit the Maker!" },
-  { "version": 10, "name": "Jacobie", "description": "HELPER TOWER! A blue turret floats back and forth in the lava. It tracks the nearest monster, then BOOM — fires a missile every 2 seconds. Red nose cone, engine glow, fiery trail. It's on your side!" },
-  { "version": 11, "name": "Cyrus", "description": "WAVE ATTACK! Every 2 seconds, 10 monsters storm in simultaneously from all four borders — top, bottom, left, and right at once!" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" }
 ]

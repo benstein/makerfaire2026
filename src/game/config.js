@@ -11,7 +11,7 @@ export const CONFIG = {
   invincibilityDuration: 1000, // ms
 
   // Enemies
-  enemySpeed: 0.9,
+  enemySpeed: 2,
   enemySize: 22,
   enemyColor: '#e74c3c',
   enemySpawnIntervalStart: 2000, // ms at game start
@@ -25,10 +25,10 @@ export const CONFIG = {
 
   // Game
   gameDuration: 60, // seconds
-  arenaBackground: '#08071a',
+  arenaBackground: '#eaf2f8',
 
   // HUD
-  heartColor: '#ff44aa',
-  timerColor: '#ff88cc',
+  heartColor: '#e74c3c',
+  timerColor: '#d35400',
   hudFontSize: 56,
 };

@@ -38,27 +38,11 @@ export function updateProjectiles(dt, arenaWidth, arenaHeight) {
 }
 
 export function drawProjectiles(ctx) {
-  const t = performance.now() / 1000;
-  for (let i = 0; i < projectiles.length; i++) {
-    const p   = projectiles[i];
-    const cx2 = p.x + p.w / 2;
-    const cy2 = p.y + p.h / 2;
-    const r   = p.w / 2;
-    const hue = (t * 120 + i * 47) % 360;
-
-    ctx.save();
-    ctx.shadowBlur  = 10;
-    ctx.shadowColor = `hsl(${hue}, 100%, 65%)`;
-    // Glowing orb
-    const grad = ctx.createRadialGradient(cx2 - r * 0.3, cy2 - r * 0.3, 0, cx2, cy2, r);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.4, `hsl(${hue}, 100%, 75%)`);
-    grad.addColorStop(1,   `hsl(${(hue + 60) % 360}, 100%, 55%)`);
-    ctx.fillStyle = grad;
+  ctx.fillStyle = CONFIG.projectileColor;
+  for (const p of projectiles) {
     ctx.beginPath();
-    ctx.arc(cx2, cy2, r, 0, Math.PI * 2);
+    ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
   }
 }
 

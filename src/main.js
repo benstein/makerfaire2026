@@ -5,15 +5,10 @@ import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, drawGooTrails, getEnemies, removeEnemy, hitEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
-import { resetLava, updateLava, drawLava, getLavaBounds } from './game/lava.js';
-import { resetDisco, updateDisco, drawDisco } from './game/disco.js';
-import { resetRocks, updateRocks, drawRocks, getRocks, chompRock, isPlayerOnRock } from './game/rocks.js';
-import { resetAsteroids, updateAsteroids, drawAsteroids, getAsteroids, removeAsteroid, getAsteroidBounds } from './game/asteroids.js';
-import { resetTower, updateTower, drawTower, getMissiles, removeMissile } from './game/tower.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -65,11 +60,6 @@ function gameLoop(now) {
         resetPlayer(width, height);
         resetEnemies();
         resetWeapons();
-        resetLava();
-        resetDisco(now);
-        resetRocks(now);
-        resetAsteroids();
-        resetTower(width, now);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -87,16 +77,6 @@ function gameLoop(now) {
         tryFire(getPlayerPos(), getPlayerFacing(), now);
       }
       updateProjectiles(dt, width, height);
-      updateLava(width);
-      updateDisco(now);
-      updateRocks(now, width, height);
-      updateAsteroids(dt, now, width, height);
-      updateTower(dt, now, width, height, getEnemies());
-
-      // Lava — instant death, no invincibility
-      if (getPlayerHealth() > 0 && aabb(getPlayerBounds(), getLavaBounds(width, height))) {
-        endGame(false);
-      }
 
       // Projectile-enemy collisions
       const projList = getProjectiles();
@@ -105,61 +85,17 @@ function gameLoop(now) {
         for (let j = enemyList.length - 1; j >= 0; j--) {
           if (aabb(projList[i], enemyList[j])) {
             removeProjectile(i);
-            hitEnemy(j);
+            removeEnemy(j);
             break;
           }
         }
       }
 
-      // Tower missile-enemy collisions
-      const missileList = getMissiles();
-      for (let i = missileList.length - 1; i >= 0; i--) {
-        for (let j = enemyList.length - 1; j >= 0; j--) {
-          if (aabb(missileList[i], enemyList[j])) {
-            removeMissile(i);
-            hitEnemy(j);
-            break;
-          }
-        }
-      }
-
-      // Asteroid collisions
-      const asteroidList = getAsteroids();
-      for (let i = asteroidList.length - 1; i >= 0; i--) {
-        const ab = getAsteroidBounds(asteroidList[i]);
-        // vs player — damage and destroy asteroid
-        if (aabb(getPlayerBounds(), ab)) {
-          removeAsteroid(i);
-          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
-          continue;
-        }
-        // vs projectiles — shoot them down
-        for (let j = getProjectiles().length - 1; j >= 0; j--) {
-          if (aabb(getProjectiles()[j], ab)) {
-            removeProjectile(j);
-            removeAsteroid(i);
-            break;
-          }
-        }
-      }
-
-      // Enemies eat rocks they overlap
-      const rockList = getRocks();
-      for (let j = rockList.length - 1; j >= 0; j--) {
-        for (const enemy of getEnemies()) {
-          if (aabb(enemy, rockList[j])) {
-            chompRock(j, now);
-            break;
-          }
-        }
-      }
-
-      // Enemy-player collisions (rock = safe zone)
+      // Enemy-player collisions
       const playerBounds = getPlayerBounds();
-      const onRock = isPlayerOnRock(playerBounds);
       const enemies = getEnemies();
       for (let i = enemies.length - 1; i >= 0; i--) {
-        if (!onRock && aabb(playerBounds, enemies[i])) {
+        if (aabb(playerBounds, enemies[i])) {
           if (damagePlayer(now)) {
             removeEnemy(i);
             if (getPlayerHealth() <= 0) {
@@ -176,12 +112,6 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
-      drawLava(ctx, width, height, now);
-      drawTower(ctx, now, width, height);
-      drawDisco(ctx, width, height, now);
-      drawRocks(ctx, now);
-      drawAsteroids(ctx, now);
-      drawGooTrails(ctx);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);
