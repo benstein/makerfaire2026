@@ -6,7 +6,7 @@ import { CONFIG } from './config.js';
 const BOSS_HP_MAX   = 10;
 const BOSS_SIZE     = CONFIG.enemySize * 4;   // ~88px — imposing
 const BOSS_SPEED    = CONFIG.enemySpeed * 1.4;
-const SPAWN_AT_SECS = 20;                      // seconds remaining when boss appears
+const SPAWN_AT_SECS = 30;                      // seconds remaining when boss appears (= immediately)
 
 let boss = null;
 let spawned = false;

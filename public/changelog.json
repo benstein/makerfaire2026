@@ -9,5 +9,6 @@
   { "version": 8, "name": "Ethan", "description": "BOSS YETI arrives at 20s! Giant, stomping, red-eyed — take 10 shots to bring it down and win!" },
   { "version": 9, "name": "Jeff", "description": "Press B to plant a landmine! Up to 3 active — any yeti that steps on one gets blown up!" },
   { "version": 10, "name": "Ethan", "description": "Hearts appear every 8 seconds — walk over them to restore a heart!" },
-  { "version": 11, "name": "Gabi", "description": "A button fires only — use the Start button to restart (keyboard unchanged)" }
+  { "version": 11, "name": "Gabi", "description": "A button fires only — use the Start button to restart (keyboard unchanged)" },
+  { "version": 12, "name": "Henry", "description": "30-second boss rush! The Boss Yeti charges in immediately — kill it to win, or time runs out and you lose!" }
 ]
