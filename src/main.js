@@ -6,6 +6,7 @@ import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerMaxHealth, getPlayerBounds, damagePlayer, growPlayer, healPlayer, activateMuscleMode } from './game/player.js';
 import { resetDilly, updateDilly, drawDilly, getDillyBounds, isDillyAlive, squishDilly } from './game/dilly.js';
+import { resetWizards, drawWizards, getHarryBounds, getVoldemortBounds, canVoldemortHeal, markVoldemortHeal } from './game/wizards.js';
 import { resetDonuts, updateDonuts, drawDonuts, getDonuts, eatDonut, isExploding, explodeDone, drawDonutExplosion } from './game/donuts.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, getFireballs, removeFireball, drawFireballs } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
@@ -105,6 +106,7 @@ function gameLoop(now) {
         resetFebreze(now);
         resetDeathStar();
         resetDilly(width, height);
+        resetWizards(width, height);
         resetPowerup(now, width, height);
         deathAnimStart = -1;
         deathParticles = [];
@@ -262,6 +264,15 @@ function gameLoop(now) {
         }
       }
 
+      // Wizard collisions
+      if (aabb(getPlayerBounds(), getHarryBounds(now))) {
+        if (damagePlayer(now) && getPlayerHealth() <= 0) triggerDeathAnim(now);
+      }
+      if (aabb(getPlayerBounds(), getVoldemortBounds(now)) && canVoldemortHeal(now)) {
+        healPlayer(2);
+        markVoldemortHeal(now);
+      }
+
       // Fireball-player collisions
       const fbs = getFireballs();
       for (let i = fbs.length - 1; i >= 0; i--) {
@@ -320,6 +331,7 @@ function gameLoop(now) {
       }
       drawEnemies(ctx, now);
       drawProjectiles(ctx);
+      drawWizards(ctx, now);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getPlayerMaxHealth());
       if (isExploding()) drawDonutExplosion(ctx, ...Object.values(getPlayerPos()), width, height, now);
       drawAd(ctx, width, height, now);
