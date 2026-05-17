@@ -11,6 +11,7 @@ import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { resetLava, updateLava, drawLava, getLavaBounds } from './game/lava.js';
 import { resetDisco, updateDisco, drawDisco } from './game/disco.js';
+import { resetRocks, updateRocks, drawRocks, getRocks, chompRock, isPlayerOnRock } from './game/rocks.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -64,6 +65,7 @@ function gameLoop(now) {
         resetWeapons();
         resetLava();
         resetDisco(now);
+        resetRocks(now);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -83,6 +85,7 @@ function gameLoop(now) {
       updateProjectiles(dt, width, height);
       updateLava(width);
       updateDisco(now);
+      updateRocks(now, width, height);
 
       // Lava — instant death, no invincibility
       if (getPlayerHealth() > 0 && aabb(getPlayerBounds(), getLavaBounds(width, height))) {
@@ -102,11 +105,23 @@ function gameLoop(now) {
         }
       }
 
-      // Enemy-player collisions
+      // Enemies eat rocks they overlap
+      const rockList = getRocks();
+      for (let j = rockList.length - 1; j >= 0; j--) {
+        for (const enemy of getEnemies()) {
+          if (aabb(enemy, rockList[j])) {
+            chompRock(j, now);
+            break;
+          }
+        }
+      }
+
+      // Enemy-player collisions (rock = safe zone)
       const playerBounds = getPlayerBounds();
+      const onRock = isPlayerOnRock(playerBounds);
       const enemies = getEnemies();
       for (let i = enemies.length - 1; i >= 0; i--) {
-        if (aabb(playerBounds, enemies[i])) {
+        if (!onRock && aabb(playerBounds, enemies[i])) {
           if (damagePlayer(now)) {
             removeEnemy(i);
             if (getPlayerHealth() <= 0) {
@@ -125,6 +140,7 @@ function gameLoop(now) {
     } else if (state === STATES.PLAYING) {
       drawLava(ctx, width, height, now);
       drawDisco(ctx, width, height, now);
+      drawRocks(ctx, now);
       drawGooTrails(ctx);
       drawPlayer(ctx, now);
       drawEnemies(ctx);

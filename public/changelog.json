@@ -5,5 +5,6 @@
   { "version": 4, "name": "Eloise", "description": "Monsters are now COMPLETELY ABSURD: 2-4 bloodshot googly eyes each drifting independently, 3-5 flailing wiggly arms with grabby claws, forked tongue, drool, uneven fangs, and a random accessory — top hat, party hat, spinning antenna star, or devil horns!" },
   { "version": 5, "name": "Cyrus", "description": "LAVA at the bottom of the arena! Glowing orange-red with bubbles and heat haze. Touch it and you die instantly — no second chances!" },
   { "version": 6, "name": "Liam", "description": "Monsters are SLOW and OOZY! They creep along leaving glowing goo puddles everywhere they go. The goo shimmers and fades — but there's a lot of it!" },
-  { "version": 7, "name": "Ben", "description": "A disco ball hangs from the ceiling! Every 15 seconds: DISCO INFERNO — monsters stop chasing and shimmy in place, rainbow spotlights sweep the arena, and DISCO INFERNO flashes in giant rainbow letters." }
+  { "version": 7, "name": "Ben", "description": "A disco ball hangs from the ceiling! Every 15 seconds: DISCO INFERNO — monsters stop chasing and shimmy in place, rainbow spotlights sweep the arena, and DISCO INFERNO flashes in giant rainbow letters." },
+  { "version": 8, "name": "Nathan", "description": "Rocks appear in the arena! Climb on one and monsters can't touch you — but they'll chomp through it! Each rock survives 4 bites before crumbling. Cracks show how much is left." }
 ]
