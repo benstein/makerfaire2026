@@ -4,7 +4,8 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, healPlayer } from './game/player.js';
+import { resetHeartDrops, spawnHeartDrop, updateHeartDrops, drawHeartDrops } from './game/heartDrops.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, clearEnemies } from './game/enemies.js';
 import { resetBoss, shouldSpawnBoss, spawnBoss, getBoss, isBossAlive, updateBoss, damageBoss, drawBoss } from './game/boss.js';
 import { resetFinalSmash, addKill, getKillCount, isFinalSmashActive, updateFinalSmash, drawFinalSmash, KILLS_FOR_SMASH } from './game/finalSmash.js';
@@ -40,6 +41,7 @@ loadChangelog();
 initBuildStatus();
 
 let lastTime = performance.now();
+let lastHeartSpawn = 0;
 
 function gameLoop(now) {
   try {
@@ -67,6 +69,8 @@ function gameLoop(now) {
         resetFinalSmash();
         resetBoss();
         resetLandmines();
+        resetHeartDrops();
+        lastHeartSpawn = 0;
       } else if (input.start) {
         goToTitle();
       }
@@ -81,6 +85,16 @@ function gameLoop(now) {
       if (shouldSpawnBoss(getTimeRemaining())) spawnBoss(width, height);
       updateBoss(dt, getPlayerPos());
       updateEnemies(dt, getPlayerPos(), now, width, height);
+
+      // Spawn a heart every 8 seconds at a random arena position
+      if (now - lastHeartSpawn > 8000) {
+        lastHeartSpawn = now;
+        spawnHeartDrop(
+          80 + Math.random() * (width  - 160),
+          80 + Math.random() * (height - 160)
+        );
+      }
+      updateHeartDrops(getPlayerBounds(), healPlayer, now);
 
       // Firing
       if (input.fire || input.fireHeld) {
@@ -165,6 +179,7 @@ function gameLoop(now) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
       drawForestBackground(ctx, width, height);
+      drawHeartDrops(ctx, now);
       drawLandmines(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
