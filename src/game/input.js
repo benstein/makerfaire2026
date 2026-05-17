@@ -5,6 +5,7 @@ const state = {
   stickX: 0,
   stickY: 0,
   fire: false,
+  fireKb: false,  // keyboard Space only — used for restart so gamepad A doesn't accidentally restart
   start: false,
   fireHeld: false,
   startHeld: false,
@@ -48,7 +49,8 @@ export function pollInput() {
   state.stickY = gpY !== 0 ? gpY : kbY;
 
   const fireNow = gpFire || kbFire;
-  state.fire = fireNow && !prevFire;
+  state.fire    = fireNow && !prevFire;
+  state.fireKb  = kbFire  && !prevFire;
   state.fireHeld = fireNow;
   prevFire = fireNow;
 

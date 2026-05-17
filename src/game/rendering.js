@@ -61,7 +61,7 @@ export function drawTitleScreen() {
   ctx.globalAlpha = 0.7 + 0.3 * Math.sin(now / 400);
   ctx.font = 'bold 20px monospace';
   ctx.fillStyle = '#5d6d7e';
-  ctx.fillText('Press Start / A to play', cx, pressY);
+  ctx.fillText('Press Start to play', cx, pressY);
   ctx.globalAlpha = 0.45;
   ctx.font = '14px monospace';
   ctx.fillText('(or Return on keyboard)', cx, pressY + 24);
@@ -159,7 +159,7 @@ export function drawVictoryScreen() {
   ctx.font = 'bold 24px monospace';
   ctx.fillStyle = '#2c3e50';
   ctx.globalAlpha = 0.6 + Math.sin(now * 2) * 0.4;
-  ctx.fillText('PRESS START / A TO PLAY AGAIN', cx, cy + 40);
+  ctx.fillText('PRESS START TO PLAY AGAIN', cx, cy + 40);
   ctx.globalAlpha = 1;
 
   // Star bursts in corners
@@ -224,7 +224,7 @@ export function drawGameOverScreen() {
   ctx.globalAlpha = 0.7 + 0.3 * Math.sin(now / 400);
   ctx.font = 'bold 18px monospace';
   ctx.fillStyle = '#5d6d7e';
-  ctx.fillText('Press Start / A to try again', cx, textY + 36);
+  ctx.fillText('Press Start to try again', cx, textY + 36);
   ctx.globalAlpha = 0.4;
   ctx.font = '14px monospace';
   ctx.fillText('(or Return on keyboard)', cx, textY + 58);
