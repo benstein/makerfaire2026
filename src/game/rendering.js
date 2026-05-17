@@ -25,17 +25,8 @@ export function getCanvasSize() {
 const _logo = new Image();
 _logo.src = '/assets/logo.jpg';
 
-export function clearCanvas(now = 0) {
-  // Slowly shifting diagonal gradient between pink and blue
-  const t = (now / 4000) % 1;
-  const angle = t * Math.PI * 2;
-  const cx = canvas.width / 2 + Math.cos(angle) * canvas.width * 0.4;
-  const cy = canvas.height / 2 + Math.sin(angle) * canvas.height * 0.4;
-  const grad = ctx.createRadialGradient(cx, cy, 0, canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.8);
-  grad.addColorStop(0, '#ffb6c1');   // pink
-  grad.addColorStop(0.5, '#c8d8f8'); // soft blue
-  grad.addColorStop(1, '#b0c4ff');   // deeper blue
-  ctx.fillStyle = grad;
+export function clearCanvas() {
+  ctx.fillStyle = CONFIG.arenaBackground;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
