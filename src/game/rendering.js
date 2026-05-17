@@ -26,8 +26,29 @@ const _logo = new Image();
 _logo.src = '/assets/logo.jpg';
 
 export function clearCanvas() {
-  ctx.fillStyle = CONFIG.arenaBackground;
+  // LEGO green baseplate
+  ctx.fillStyle = '#237a22';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const spacing = 22;
+  const r = 4.5;
+  const offX = (canvas.width  % spacing) / 2;
+  const offY = (canvas.height % spacing) / 2;
+  const cols = Math.ceil(canvas.width  / spacing) + 1;
+  const rows = Math.ceil(canvas.height / spacing) + 1;
+
+  for (let col = 0; col <= cols; col++) {
+    for (let row = 0; row <= rows; row++) {
+      const sx = offX + col * spacing;
+      const sy = offY + row * spacing;
+      ctx.fillStyle = '#1a5c1a';
+      ctx.beginPath(); ctx.arc(sx + 1, sy + 1, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#237a22';
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.beginPath(); ctx.arc(sx - 1, sy - 1, r * 0.45, 0, Math.PI * 2); ctx.fill();
+    }
+  }
 }
 
 export function drawTitleScreen() {
