@@ -4,15 +4,15 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, teleportPlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, drawEnemyBullets, getEnemies, getEnemyBullets, removeEnemy, removeEnemyBullet, damageEnemy } from './game/enemies.js';
 import { resetPanda, updatePanda, drawPanda } from './game/panda.js';
-import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle, } from './game/turtle.js';
+import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle, isBowserMode, transformToBowser, getFireballs, removeFireball } from './game/turtle.js';
 import { resetNuke, canNuke, triggerNuke, updateNuke, drawNuke, drawNukeHUD, isBlasting } from './game/nuke.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawMarioBackground, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
-import { resetPortal, updatePortal, drawPortal, isMarioMode } from './game/portal.js';
+import { resetPortal, updatePortal, drawPortal, isMarioMode, checkPipeWarps, addGoombaKill, getGoombaKills } from './game/portal.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -79,6 +79,11 @@ function gameLoop(now) {
       updateTimer(dt);
       updatePlayer(dt, input, width, height, now);
       updatePortal(getPlayerBounds());
+
+      // Pipe warp
+      const warpDest = checkPipeWarps(getPlayerPos(), width, height, now);
+      if (warpDest) teleportPlayer(warpDest.x, warpDest.y);
+
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
       // Panda follows and slowly chomps enemies
@@ -109,14 +114,29 @@ function gameLoop(now) {
       // Projectile-enemy collisions
       const projList = getProjectiles();
 
-      // vs turtle
+      // vs turtle / Bowser
       if (isTurtleAlive()) {
         for (let i = projList.length - 1; i >= 0; i--) {
           if (aabb(projList[i], getTurtle())) {
             removeProjectile(i);
-            damageTurtle();
+            if (damageTurtle() && isBowserMode()) endGame(true);
             break;
           }
+        }
+      }
+
+      // Bowser body contact
+      if (isTurtleAlive() && isBowserMode() && aabb(getPlayerBounds(), getTurtle())) {
+        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+      }
+
+      // Fireball-player collision
+      const fbs2 = getFireballs();
+      const pb = getPlayerBounds();
+      for (let i = fbs2.length - 1; i >= 0; i--) {
+        if (aabb(pb, fbs2[i])) {
+          removeFireball(i);
+          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
         }
       }
 
@@ -126,7 +146,21 @@ function gameLoop(now) {
         for (let j = enemyList.length - 1; j >= 0; j--) {
           if (aabb(projList[i], enemyList[j])) {
             removeProjectile(i);
-            damageEnemy(j);
+            if (damageEnemy(j) && addGoombaKill()) {
+              transformToBowser();
+            }
+            break;
+          }
+        }
+      }
+
+      // vs Bowser fireballs
+      const fbs = getFireballs();
+      for (let i = projList.length - 1; i >= 0; i--) {
+        for (let j = fbs.length - 1; j >= 0; j--) {
+          if (aabb(projList[i], fbs[j])) {
+            removeProjectile(i);
+            removeFireball(j);
             break;
           }
         }
@@ -173,6 +207,16 @@ function gameLoop(now) {
       drawNuke(ctx, width, height, now);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
       drawNukeHUD(ctx, width, height);
+      if (isMarioMode() && !isBowserMode()) {
+        const gk = getGoombaKills();
+        ctx.font = 'bold 15px monospace';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+        ctx.strokeText(`GOOMBAS: ${gk}/10`, width / 2, height - 18);
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText(`GOOMBAS: ${gk}/10`, width / 2, height - 18);
+        ctx.textAlign = 'left';
+      }
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();
     } else if (state === STATES.GAMEOVER) {

@@ -8,11 +8,46 @@ const PORTAL_H = 88;
 
 let portal = null;
 let _marioMode = false;
+let goombaKills = 0;
+let lastWarpTime = -9999;
 
-export function isMarioMode() { return _marioMode; }
+export function isMarioMode()    { return _marioMode; }
+export function getGoombaKills() { return goombaKills; }
+
+// Returns true if this kill triggered Bowser (10 kills reached).
+export function addGoombaKill() {
+  if (!_marioMode) return false;
+  goombaKills++;
+  return goombaKills >= 10;
+}
+
+// Pipe geometry mirrors rendering.js drawMarioBackground exactly.
+function pipeWarpZones(aw, ah) {
+  const gH = 58;
+  const capY = ah - gH - gH * 0.6 - 14; // top of pipe cap
+  return [
+    { cx: aw * 0.14, cy: capY + 10, exitX: aw * 0.86, exitY: capY - 32 },
+    { cx: aw * 0.86, cy: capY + 10, exitX: aw * 0.14, exitY: capY - 32 },
+  ];
+}
+
+// Returns { x, y } to teleport the player to, or null.
+export function checkPipeWarps(playerPos, aw, ah, now) {
+  if (!_marioMode || now - lastWarpTime < 1400) return null;
+  const zones = pipeWarpZones(aw, ah);
+  for (const z of zones) {
+    if (Math.abs(playerPos.x - z.cx) < 38 && Math.abs(playerPos.y - z.cy) < 28) {
+      lastWarpTime = now;
+      return { x: z.exitX, y: z.exitY };
+    }
+  }
+  return null;
+}
 
 export function resetPortal(arenaWidth, arenaHeight) {
   _marioMode = false;
+  goombaKills = 0;
+  lastWarpTime = -9999;
   portal = {
     x: arenaWidth  * 0.72 - PORTAL_W / 2,
     y: arenaHeight * 0.50 - PORTAL_H / 2,

@@ -7,5 +7,6 @@
   { "version": 6, "name": "Griffin", "description": "Enemies now take 3 hits to kill — watch the green health pips drain above each one!" },
   { "version": 7, "name": "Nora", "description": "Castle arena! Stone floor tiles, battlements, corner towers, and flickering torches on the walls" },
   { "version": 8, "name": "Zephyr", "description": "Step through the swirling portal and the whole world transforms into Super Mario Bros — blue sky, clouds, pipes, ? blocks, Goombas, and Mario himself!" },
-  { "version": 9, "name": "Daniel", "description": "Bad guys shoot back! Swirling rainbow bullets every 3 seconds — but their aim is absolutely terrible" }
+  { "version": 9, "name": "Daniel", "description": "Bad guys shoot back! Swirling rainbow bullets every 3 seconds — but their aim is absolutely terrible" },
+  { "version": 10, "name": "Griffin", "description": "Mario world: warp between the pipes! Kill 10 Goombas and the turtle TRANSFORMS into Bowser — crown, spikes, and fireballs. Kill him to win!" }
 ]

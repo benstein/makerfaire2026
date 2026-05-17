@@ -232,7 +232,8 @@ export function drawMarioBackground(fctx, width, height, now) {
     }
   }
 
-  // Green pipes
+  // Green pipes + warp glow
+  const warpPulse = 0.55 + Math.sin(now / 320) * 0.35;
   for (const px2 of [width * 0.14, width * 0.86]) {
     const pw = 50;
     fctx.fillStyle = '#00a800';
@@ -241,6 +242,14 @@ export function drawMarioBackground(fctx, width, height, now) {
     fctx.fillRect(px2 - pw / 2 - 5, gY - gH * 0.6 - 14, pw + 10, 20);
     fctx.fillStyle = 'rgba(255,255,255,0.18)';
     fctx.fillRect(px2 - pw / 2 + 5, gY - gH * 0.6 + 4, 8, gH * 0.6 + gH - 8);
+    // Warp glow at pipe opening
+    fctx.save();
+    fctx.globalAlpha = warpPulse * 0.7;
+    fctx.fillStyle = '#80ffaa';
+    fctx.beginPath();
+    fctx.ellipse(px2, gY - gH * 0.6 - 4, pw * 0.45, 8, 0, 0, Math.PI * 2);
+    fctx.fill();
+    fctx.restore();
   }
 }
 

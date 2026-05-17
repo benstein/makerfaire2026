@@ -127,6 +127,11 @@ export function isPlayerInvincible(now) {
   return now < invincibleUntil;
 }
 
+export function teleportPlayer(nx, ny) {
+  x = nx;
+  y = ny;
+}
+
 export function damagePlayer(now) {
   if (now < invincibleUntil) return false;
   health -= 1;
