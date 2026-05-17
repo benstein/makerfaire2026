@@ -5,7 +5,7 @@ import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, damageEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, drawEnemyBullets, getEnemies, getEnemyBullets, removeEnemy, removeEnemyBullet, damageEnemy } from './game/enemies.js';
 import { resetPanda, updatePanda, drawPanda } from './game/panda.js';
 import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle, } from './game/turtle.js';
 import { resetNuke, canNuke, triggerNuke, updateNuke, drawNuke, drawNukeHUD, isBlasting } from './game/nuke.js';
@@ -139,10 +139,19 @@ function gameLoop(now) {
         if (aabb(playerBounds, enemies[i])) {
           if (damagePlayer(now)) {
             removeEnemy(i);
-            if (getPlayerHealth() <= 0) {
-              endGame(false);
-            }
+            if (getPlayerHealth() <= 0) endGame(false);
           }
+        }
+      }
+
+      // Enemy bullet-player collisions
+      const eBullets = getEnemyBullets();
+      for (let i = eBullets.length - 1; i >= 0; i--) {
+        const b = eBullets[i];
+        const bBounds = { x: b.x - 7, y: b.y - 7, w: 14, h: 14 };
+        if (aabb(playerBounds, bBounds)) {
+          removeEnemyBullet(i);
+          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
         }
       }
     }
@@ -159,6 +168,7 @@ function gameLoop(now) {
       drawPanda(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
+      drawEnemyBullets(ctx);
       drawProjectiles(ctx);
       drawNuke(ctx, width, height, now);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);

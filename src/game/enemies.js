@@ -6,10 +6,16 @@ import { isMarioMode } from './portal.js';
 
 let enemies = [];
 let lastSpawnTime = 0;
+let enemyBullets = [];
+
+const SHOOT_INTERVAL = 3000;  // ms between shots per enemy
+const BULLET_SPEED   = 2.8;   // slower than player torpedos
+const BAD_AIM_SPREAD = 0.95;  // radians — ~55 degrees of random wobble
 
 export function resetEnemies() {
   enemies = [];
   lastSpawnTime = 0;
+  enemyBullets = [];
 }
 
 export function spawnEnemy(arenaWidth, arenaHeight) {
@@ -23,7 +29,9 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, hp: 3, maxHp: 3, hitFlash: 0 });
+  // Stagger shoot timers so enemies don't all fire at once
+  const shootOffset = Math.random() * SHOOT_INTERVAL;
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, hp: 3, maxHp: 3, hitFlash: 0, lastShot: -shootOffset });
 }
 
 function getCurrentSpawnInterval() {
@@ -51,6 +59,37 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
       enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
     }
     if (enemy.hitFlash > 0) enemy.hitFlash = Math.max(0, enemy.hitFlash - dt / 120);
+
+    // Shoot at the player with terrible aim
+    if (now - (enemy.lastShot || 0) > SHOOT_INTERVAL && dist > 0) {
+      enemy.lastShot = now;
+      const baseAngle = Math.atan2(dy, dx);
+      const wobble = (Math.random() - 0.5) * 2 * BAD_AIM_SPREAD;
+      const angle = baseAngle + wobble;
+      const cx = enemy.x + enemy.w / 2;
+      const cy = enemy.y + enemy.h / 2;
+      enemyBullets.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle) * BULLET_SPEED,
+        vy: Math.sin(angle) * BULLET_SPEED,
+        hue: Math.random() * 360,
+        spin: Math.random() * Math.PI * 2,
+        born: now,
+      });
+    }
+  }
+
+  // Move enemy bullets
+  const scale = dt / 16.67;
+  for (let i = enemyBullets.length - 1; i >= 0; i--) {
+    const b = enemyBullets[i];
+    b.x += b.vx * scale;
+    b.y += b.vy * scale;
+    b.spin += 0.18 * scale;
+    b.hue  = (b.hue + 2 * scale) % 360;
+    if (b.x < -60 || b.x > arenaWidth + 60 || b.y < -60 || b.y > arenaHeight + 60) {
+      enemyBullets.splice(i, 1);
+    }
   }
 }
 
@@ -131,8 +170,34 @@ function drawGoomba(ctx, enemy) {
   drawHpPips(ctx, enemy);
 }
 
-export function getEnemies() {
-  return enemies;
+export function getEnemies() { return enemies; }
+export function getEnemyBullets() { return enemyBullets; }
+export function removeEnemyBullet(i) { enemyBullets.splice(i, 1); }
+
+export function drawEnemyBullets(ctx) {
+  const r = 7;
+  for (const b of enemyBullets) {
+    ctx.save();
+    ctx.translate(Math.round(b.x), Math.round(b.y));
+    ctx.rotate(b.spin);
+
+    // Three swirling rainbow rings
+    for (let ring = 0; ring < 3; ring++) {
+      const hue = (b.hue + ring * 120) % 360;
+      const angle = (ring / 3) * Math.PI * 2 + b.spin * (ring % 2 === 0 ? 1 : -1);
+      const ox = Math.cos(angle) * r * 0.5;
+      const oy = Math.sin(angle) * r * 0.5;
+      ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+      ctx.beginPath();
+      ctx.arc(ox, oy, r * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Bright white center
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+  }
 }
 
 export function removeEnemy(index) {
