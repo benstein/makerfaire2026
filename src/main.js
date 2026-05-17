@@ -21,6 +21,7 @@ import { resetPowerup, updatePowerup, drawPowerup, getStarBeams, removeStarBeam 
 import { resetDeathStar, updateDeathStar, drawDeathStar, damageDeathStar, isDeathStarAlive, getDeathStarBounds, isInBeam } from './game/deathstar.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
+import { initLeaderboard } from './game/leaderboard.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
 import { drawBuildScreen } from './ui/buildScreen.js';
 import { drawErrorBadge } from './ui/errorBadge.js';
@@ -45,6 +46,7 @@ const canvas = document.getElementById('game-canvas');
 const ctx = initRendering(canvas);
 loadChangelog();
 initBuildStatus();
+initLeaderboard();
 
 let lastTime = performance.now();
 

@@ -1,6 +1,7 @@
 // src/game/rendering.js
 
 import { CONFIG } from './config.js';
+import { getLeaderboard, fmtScore } from './leaderboard.js';
 
 let canvas, ctx;
 
@@ -94,6 +95,7 @@ export function drawTitleScreen() {
   ctx.fillText('(or Return on keyboard)', cx, pressY + 24);
   ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
+  drawLeaderboardPanel();
 }
 
 const VICTORY_COLORS = ['#ff6b6b', '#ffa500', '#ffd700', '#2ecc71', '#3498db', '#9b59b6', '#e91e63'];
@@ -256,6 +258,84 @@ export function drawGameOverScreen() {
   ctx.font = '14px monospace';
   ctx.fillText('(or Return on keyboard)', cx, textY + 58);
   ctx.globalAlpha = 1;
+  ctx.textAlign = 'left';
+  drawLeaderboardPanel();
+}
+
+function drawLeaderboardPanel() {
+  const entries = getLeaderboard();
+  if (!entries.length) return;
+
+  const W = canvas.width, H = canvas.height;
+  const pw = Math.round(Math.min(300, W * 0.28));
+  const ph = Math.round(H * 0.86);
+  const px = W - pw - Math.round(W * 0.02);
+  const py = Math.round(H * 0.07);
+
+  // Panel background
+  ctx.fillStyle = 'rgba(5,8,22,0.88)';
+  ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 10); ctx.fill();
+  ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 10); ctx.stroke();
+
+  // Header
+  ctx.fillStyle = '#ffd700';
+  ctx.font = `bold ${Math.round(pw * 0.075)}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('LEADERBOARD', px + pw / 2, py + Math.round(pw * 0.088));
+  ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(px + 12, py + Math.round(pw * 0.105));
+  ctx.lineTo(px + pw - 12, py + Math.round(pw * 0.105));
+  ctx.stroke();
+
+  // Rows
+  const headerH = Math.round(pw * 0.12);
+  const rowsH   = ph - headerH - 8;
+  const shown   = entries.slice(0, Math.min(14, entries.length));
+  const rowH    = Math.floor(rowsH / shown.length);
+  const fontSize = Math.max(10, Math.min(14, Math.floor(rowH * 0.52)));
+
+  ctx.font = `${fontSize}px monospace`;
+
+  for (let i = 0; i < shown.length; i++) {
+    const e   = shown[i];
+    const ry  = py + headerH + i * rowH;
+    const isElle = e.name === 'Elle';
+
+    // Row bg for Elle
+    if (isElle) {
+      ctx.fillStyle = 'rgba(255,215,0,0.14)';
+      ctx.fillRect(px + 4, ry + 1, pw - 8, rowH - 2);
+    } else if (i % 2 === 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(px + 4, ry + 1, pw - 8, rowH - 2);
+    }
+
+    const textY = ry + rowH * 0.68;
+
+    // Rank
+    ctx.fillStyle = isElle ? '#ffd700' : '#aaaaaa';
+    ctx.textAlign = 'right';
+    ctx.fillText(`#${e.rank}`, px + Math.round(pw * 0.20), textY);
+
+    // Name
+    ctx.fillStyle = isElle ? '#ffd700' : (i % 2 === 0 ? '#ffffff' : '#dddddd');
+    ctx.textAlign = 'left';
+    const maxNameW = pw * 0.50;
+    let name = e.name;
+    while (name.length > 2 && ctx.measureText(name).width > maxNameW) name = name.slice(0, -1);
+    if (name !== e.name) name += '…';
+    ctx.fillText(name, px + Math.round(pw * 0.23), textY);
+
+    // Score
+    ctx.fillStyle = isElle ? '#ffd700' : '#88ccff';
+    ctx.textAlign = 'right';
+    ctx.font = isElle ? `bold ${fontSize}px monospace` : `${fontSize}px monospace`;
+    ctx.fillText(fmtScore(e.score), px + pw - 8, textY);
+    ctx.font = `${fontSize}px monospace`;
+  }
+
   ctx.textAlign = 'left';
 }
 
