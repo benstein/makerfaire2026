@@ -3,6 +3,10 @@
 import { CONFIG } from './config.js';
 import { getGameProgress } from './gameState.js';
 
+// Three generations: big → medium → small → gone
+const SIZES  = [52, 30, 16];
+const SPEEDS = [1.0, 1.4, 1.9]; // smaller pieces move faster
+
 let enemies = [];
 let lastSpawnTime = 0;
 
@@ -13,16 +17,17 @@ export function resetEnemies() {
 
 export function spawnEnemy(arenaWidth, arenaHeight) {
   const edge = Math.floor(Math.random() * 4);
+  const s = SIZES[0];
   let ex, ey;
 
   switch (edge) {
-    case 0: ex = Math.random() * arenaWidth; ey = -CONFIG.enemySize; break;
-    case 1: ex = arenaWidth + CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
-    case 2: ex = Math.random() * arenaWidth; ey = arenaHeight + CONFIG.enemySize; break;
-    case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
+    case 0: ex = Math.random() * arenaWidth; ey = -s; break;
+    case 1: ex = arenaWidth + s;             ey = Math.random() * arenaHeight; break;
+    case 2: ex = Math.random() * arenaWidth; ey = arenaHeight + s; break;
+    case 3: ex = -s;                         ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, hue: Math.random() * 360 });
+  enemies.push({ x: ex, y: ey, w: s, h: s, hue: Math.random() * 360, generation: 0 });
 }
 
 function getCurrentSpawnInterval() {
@@ -46,8 +51,9 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     if (dist > 0) {
       const scale = dt / 16.67;
-      enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
-      enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
+      const spd = CONFIG.enemySpeed * SPEEDS[enemy.generation ?? 0];
+      enemy.x += (dx / dist) * spd * scale;
+      enemy.y += (dy / dist) * spd * scale;
     }
   }
 }
@@ -129,4 +135,35 @@ export function getEnemies() {
 
 export function removeEnemy(index) {
   enemies.splice(index, 1);
+}
+
+// Splits the enemy into two smaller ones, or kills it if already smallest.
+export function hitEnemy(index) {
+  const e = enemies[index];
+  if (!e) return;
+
+  const gen = e.generation ?? 0;
+  if (gen >= 2) {
+    enemies.splice(index, 1);
+    return;
+  }
+
+  const nextGen  = gen + 1;
+  const nextSize = SIZES[nextGen];
+  const cx = e.x + e.w / 2;
+  const cy = e.y + e.h / 2;
+  const angle = Math.random() * Math.PI * 2;
+  const spread = nextSize * 0.9;
+
+  enemies.splice(index, 1);
+
+  for (const dir of [angle, angle + Math.PI]) {
+    enemies.push({
+      x: cx + Math.cos(dir) * spread - nextSize / 2,
+      y: cy + Math.sin(dir) * spread - nextSize / 2,
+      w: nextSize, h: nextSize,
+      hue: ((e.hue ?? 0) + 130) % 360,
+      generation: nextGen,
+    });
+  }
 }
