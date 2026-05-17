@@ -6,14 +6,14 @@ export const CONFIG = {
   // Player
   playerSpeed: 4,
   playerSize: 28,
-  playerColor: '#ff1493',
+  playerColor: '#2c3e50',
   playerMaxHealth: 3,
   invincibilityDuration: 1000, // ms
 
   // Enemies
   enemySpeed: 2,
-  enemySize: 72,
-  enemyColor: '#1565c0',
+  enemySize: 22,
+  enemyColor: '#e74c3c',
   enemySpawnIntervalStart: 2000, // ms at game start
   enemySpawnIntervalEnd: 400,    // ms at game end (ramps down)
 
