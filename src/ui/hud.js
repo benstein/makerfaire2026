@@ -5,19 +5,24 @@ import { CONFIG } from '../game/config.js';
 export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
   const padding = 20;
 
-  // Hearts (top-left)
-  const heartSize = 28;
-  const heartGap = 8;
+  // Hearts (top-left) — sized and styled to match the timer
+  const heartSize = Math.round(CONFIG.hudFontSize * 0.85);
+  const heartGap  = Math.round(heartSize * 0.2);
   for (let i = 0; i < CONFIG.playerMaxHealth; i++) {
     const hx = padding + i * (heartSize + heartGap);
     const hy = padding;
+    const r  = heartSize * 0.5;
 
-    if (i < health) {
-      ctx.fillStyle = CONFIG.heartColor;
-    } else {
-      ctx.fillStyle = '#333';
-    }
-    drawHeart(ctx, hx + heartSize / 2, hy + heartSize / 2, heartSize * 0.5);
+    // Dark outline stroke (matches timer style)
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 5;
+    ctx.lineJoin = 'round';
+    drawHeart(ctx, hx + r, hy + r, r);
+    ctx.stroke();
+
+    ctx.fillStyle = i < health ? CONFIG.heartColor : '#444';
+    drawHeart(ctx, hx + r, hy + r, r);
+    ctx.fill();
   }
 
   // Timer (top-right)
@@ -40,5 +45,5 @@ function drawHeart(ctx, cx, cy, size) {
   ctx.moveTo(cx, cy + size * 0.3);
   ctx.bezierCurveTo(cx - size, cy - size * 0.3, cx - size, cy - size, cx, cy - size * 0.5);
   ctx.bezierCurveTo(cx + size, cy - size, cx + size, cy - size * 0.3, cx, cy + size * 0.3);
-  ctx.fill();
+  ctx.closePath();
 }
