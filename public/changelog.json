@@ -1,4 +1,6 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Paul", "description": "Everything is triangles — the Maker, enemies, and bullets — and mobs explode exponentially faster as time runs out" }
+  { "version": 2, "name": "Paul", "description": "Everything is triangles — the Maker, enemies, and bullets — and mobs explode exponentially faster as time runs out" },
+  { "version": 3, "name": "Gabi", "description": "Character is now bright hot pink!" },
+  { "version": 4, "name": "Zeke", "description": "Enemies are triangles! At 30 seconds, ALL clear — then 100 triangles storm in from every edge!" }
 ]

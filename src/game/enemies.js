@@ -1,14 +1,16 @@
 // src/game/enemies.js
 
 import { CONFIG } from './config.js';
-import { getGameProgress } from './gameState.js';
+import { getGameProgress, getElapsedMs } from './gameState.js';
 
 let enemies = [];
 let lastSpawnTime = 0;
+let mobWaveTriggered = false;
 
 export function resetEnemies() {
   enemies = [];
   lastSpawnTime = 0;
+  mobWaveTriggered = false;
 }
 
 export function spawnEnemy(arenaWidth, arenaHeight) {
@@ -25,6 +27,24 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
   enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, angle: Math.random() * Math.PI * 2 });
 }
 
+function spawnMobWave(arenaWidth, arenaHeight) {
+  enemies = [];
+  const perEdge = 25; // 25 × 4 edges = 100
+  const s = CONFIG.enemySize;
+
+  for (let i = 0; i < perEdge; i++) {
+    const t = (i + 0.5) / perEdge;
+    // Top
+    enemies.push({ x: t * arenaWidth - s / 2, y: -s, w: s, h: s });
+    // Bottom
+    enemies.push({ x: t * arenaWidth - s / 2, y: arenaHeight + s, w: s, h: s });
+    // Left
+    enemies.push({ x: -s, y: t * arenaHeight - s / 2, w: s, h: s });
+    // Right
+    enemies.push({ x: arenaWidth + s, y: t * arenaHeight - s / 2, w: s, h: s });
+  }
+}
+
 function getCurrentSpawnInterval() {
   const progress = getGameProgress();
   // Exponential decay: starts slow, accelerates hard toward the end
@@ -36,10 +56,18 @@ function getCurrentSpawnInterval() {
 }
 
 export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
-  const interval = getCurrentSpawnInterval();
-  if (now - lastSpawnTime > interval) {
-    spawnEnemy(arenaWidth, arenaHeight);
-    lastSpawnTime = now;
+  // 30-second mob wave: wipe existing enemies and flood with 100
+  if (!mobWaveTriggered && getElapsedMs() >= 30000) {
+    mobWaveTriggered = true;
+    spawnMobWave(arenaWidth, arenaHeight);
+  }
+
+  if (!mobWaveTriggered) {
+    const interval = getCurrentSpawnInterval();
+    if (now - lastSpawnTime > interval) {
+      spawnEnemy(arenaWidth, arenaHeight);
+      lastSpawnTime = now;
+    }
   }
 
   for (const enemy of enemies) {
