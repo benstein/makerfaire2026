@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maker Faire 2026</title>
+  <title>Say it! Play it!</title>
   <link rel="icon" href="/favicon.ico">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a1a; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #c8d0d8; }
     #game-container {
       display: flex;
       width: 100vw;
@@ -17,60 +17,81 @@
       flex: 3;
       min-width: 0;
       display: block;
-      background: #1a1a2e;
+      background: #eaf2f8;
     }
     #changelog-panel {
       flex: 1;
-      background: #0f0f23;
+      background: #dde4ea;
       padding: 20px;
-      font-family: 'Courier New', monospace;
-      color: #ccc;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #2c3e50;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
     #changelog-entries { flex: 1; overflow-y: auto; min-height: 0; }
+    #game-logo {
+      height: 44px;
+      width: 44px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px rgba(255, 200, 0, 0.3);
+    }
+    .build-logo {
+      width: 150px;
+      height: 150px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      box-shadow: 0 0 30px rgba(255, 200, 0, 0.55), 0 4px 16px rgba(0,0,0,0.3);
+      animation: build-logo-float 2.8s ease-in-out infinite;
+    }
+    @keyframes build-logo-float {
+      0%, 100% { transform: translateY(0)   scale(1.00); }
+      50%       { transform: translateY(-6px) scale(1.03); }
+    }
     #controls-help {
       flex-shrink: 0;
-      border-top: 1px solid #333;
+      border-top: 1px solid #b0b8c0;
       padding-top: 16px;
       margin-top: 16px;
-      font-size: 13px;
-      color: #888;
-      line-height: 1.8;
+      font-size: 16px;
+      color: #3a4a5a;
+      line-height: 2;
     }
     #controls-help h3 {
-      color: #f1c40f;
-      font-size: 14px;
+      color: #d35400;
+      font-size: 17px;
       text-transform: uppercase;
       letter-spacing: 2px;
       margin-bottom: 8px;
+      font-weight: bold;
     }
     #controls-help .control-row {
       display: flex;
       justify-content: space-between;
     }
     #controls-help .control-key {
-      color: #ccc;
+      color: #2c3e50;
       font-weight: bold;
     }
     #changelog-panel h2 {
-      color: #f1c40f;
-      font-size: 18px;
+      color: #d35400;
+      font-size: 22px;
       text-transform: uppercase;
       letter-spacing: 2px;
+      font-weight: bold;
     }
-    #fullscreen-btn:hover { color: #f1c40f; border-color: #f1c40f; }
+    #fullscreen-btn:hover { color: #d35400; border-color: #d35400; }
     .changelog-entry {
-      border-left: 3px solid #555;
-      padding-left: 10px;
-      margin-bottom: 12px;
-      font-size: 14px;
-      line-height: 1.5;
+      border-left: 4px solid #95a5a6;
+      padding-left: 12px;
+      margin-bottom: 16px;
+      font-size: 17px;
+      line-height: 1.6;
     }
-    .changelog-entry .version { color: #f1c40f; font-weight: bold; }
-    .changelog-entry .name { color: #888; }
-    .changelog-entry .desc { color: #ccc; }
+    .changelog-entry .version { color: #d35400; font-weight: bold; }
+    .changelog-entry .name { color: #d35400; font-weight: bold; }
+    .changelog-entry .desc { color: #1a2a3a; }
   </style>
 </head>
 <body>
@@ -78,8 +99,11 @@
     <canvas id="game-canvas"></canvas>
     <div id="changelog-panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h2 style="margin-bottom:0">Changelog</h2>
-        <button id="fullscreen-btn" title="Toggle fullscreen" style="background:none;border:1px solid #333;border-radius:4px;padding:4px 6px;cursor:pointer;color:#888;display:flex;align-items:center;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <img id="game-logo" src="/assets/logo.jpg" alt="Say it! Play it!">
+          <h2 style="margin-bottom:0">Changelog</h2>
+        </div>
+        <button id="fullscreen-btn" title="Toggle fullscreen" style="background:none;border:1px solid #95a5a6;border-radius:4px;padding:4px 6px;cursor:pointer;color:#5d6d7e;display:flex;align-items:center;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
           </svg>
@@ -97,19 +121,22 @@
   <script type="module" src="/src/main.js"></script>
 
   <script>
-    document.getElementById('fullscreen-btn').addEventListener('click', function() {
+    function toggleFullscreen() {
       if (document.fullscreenElement) {
         document.exitFullscreen();
       } else {
         document.documentElement.requestFullscreen();
       }
-    });
+    }
+    document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+    document.getElementById('game-canvas').addEventListener('dblclick', toggleFullscreen);
   </script>
 
   <!-- Build overlay: independent of Vite modules, survives HMR and syntax errors -->
   <div id="build-overlay" style="display:none">
     <div class="build-bg"></div>
     <div class="build-content">
+      <img class="build-logo" src="/assets/logo.jpg" alt="Say it! Play it!">
       <div id="build-name" class="build-title"></div>
       <div id="build-desc" class="build-desc"></div>
       <div class="build-gear-wrap"><div class="build-gear"></div></div>
@@ -338,15 +365,15 @@
             var isActive = !isDone && (i === 0 || data.steps[i-1].done);
             if (isDone) doneCount++;
             var cls = isDone ? 'done' : (isActive ? 'active' : 'pending');
-            var icon = isDone ? '\u2714' : (isActive ? '\u25CF' : '\u25CB');
-            html += '<div class="build-step ' + cls + '"><span class="step-icon">' + icon + '</span>' + step.text + '</div>';
+            var icon = isDone ? '✔' : (isActive ? '●' : '○');
+            html += '<div class="build-step ' + cls + '"><span class="step-icon">' + icon + '</span>' + (step.label || step.text || step.title || step.name || '...') + '</div>';
           }
           stepsEl.innerHTML = html;
           var pct = Math.round((doneCount / data.steps.length) * 100);
           barEl.style.width = pct + '%';
           pctEl.textContent = pct + '%';
         } else {
-          stepsEl.innerHTML = '<div class="build-step active"><span class="step-icon">\u25CF</span>Building...</div>';
+          stepsEl.innerHTML = '<div class="build-step active"><span class="step-icon">●</span>Thinking hard about changes...</div>';
           barEl.style.width = '0%';
           pctEl.textContent = '';
         }

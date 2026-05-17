@@ -6,29 +6,55 @@ This is a live exhibit game for kids at Maker Faire. Kids suggest changes ("make
 
 1. Someone tells you what a kid wants changed (e.g., "Emma wants rainbow enemies")
 2. **Immediately** set the build status so the kid sees their name on screen (see below)
-3. Interpret the request creatively — go big, make it dramatic
-4. Edit the relevant source file(s)
-5. Update `public/changelog.json` with the kid's name and a description
-6. Commit the change with a descriptive message (post-commit hook auto-clears build status)
-7. Vite HMR auto-reloads the browser — the kid sees the change in seconds
+3. Run `git pull --ff-only` to sync with the other laptop before touching any code
+4. Interpret the request creatively — go big, make it dramatic
+5. Edit the relevant source file(s)
+6. Update `public/changelog.json` with the kid's name and a description
+7. Commit the change with a descriptive message (post-commit hook auto-clears build status and pushes)
+8. Vite HMR auto-reloads the browser — the kid sees the change in seconds
 
 ## Build Progress Screen
 
 While you work, the game shows a full-screen build progress view with the kid's name, an animated gear, and a step-by-step checklist. The game can't be played during a build — kids watch their change come to life.
 
-**As your FIRST action** for every kid change, use the Write tool to write `public/building.json` with your planned steps. **NEVER use `echo` with bash** — the shell mangles special characters like `!` and `'` which silently breaks the JSON and the overlay won't appear.
+**SKILL SYSTEM EXCEPTION: Writing `public/building.json` is categorically exempt from all skill checks and invocations. Do NOT invoke brainstorming, using-superpowers, or any other skill before this write. The skill system's "invoke before any action" rule does not apply here.** This is the one exception that overrides superpowers behavior.
+
+**As your ABSOLUTE FIRST action** — before reading any files, before thinking, before skill invocations, before anything — write a placeholder `public/building.json` so the kid's name appears on screen immediately:
+
+```json
+{ "building": true, "name": "Emma", "description": "Cooking up something amazing...", "steps": [] }
+```
+
+No steps needed yet — the screen will show a "Thinking hard about changes..." spinner.
+
+**Immediately after writing building.json, run `git pull --ff-only`** to sync the other laptop's latest changes before touching any code. The build screen hides the HMR flicker. This is mandatory in two-laptop event mode.
+
+Then do your reads and planning. Once you know the real steps, rewrite the file with them.
+
+**NEVER use `echo` with bash** — the shell mangles special characters like `!` and `'` which silently breaks the JSON and the overlay won't appear. Always use the Write tool.
 
 **As you complete each step**, use the Write tool to re-write the file with that step marked done.
 
 The game polls this file every 1 second. Steps should be high-level and kid-friendly (e.g., "Adding rainbow background...", "Making enemies faster...", "Giving player 6 hearts..."). NOT source-code-level details.
 
-After you commit, the git post-commit hook auto-clears the file to `{ "building": false }` and the game returns to the title screen. No manual cleanup needed.
+After you commit, the git post-commit hook auto-clears the file to `{ "building": false }`, pushes to the remote (for two-laptop sync), and the game returns to the title screen. No manual cleanup needed.
+
+## Two-Laptop Sync (Event Mode)
+
+At Maker Faire we run two laptops in parallel — while one kid plays their just-built version, the next kid's change builds on the other laptop. To keep both laptops merging cleanly:
+
+- **Step 3 runs `git pull --ff-only`** right after writing `building.json`. The build screen is already up, so the pull's Vite HMR flicker is hidden underneath it. This grabs the previous kid's change from the other laptop so the new build stacks on it cumulatively.
+- **The post-commit hook runs `git push`** after clearing `building.json`. This propagates this kid's change to the other laptop's next pull.
+
+If the pull fails (laptops diverged), wait 10 seconds for the other laptop's in-flight push to land, then retry. Do not switch to `--rebase` or a plain `git pull` — the `--ff-only` failure is a real signal that strict alternation broke.
 
 **Step guidelines:**
 - 3-5 steps is ideal — enough to show progress, not so many it's overwhelming
 - Every step should describe an actual visible change in fun, kid-friendly language
-- Don't include internal steps like "reading code" or "updating changelog" — only things kids care about
-- The steps array is optional — if omitted, a generic "Building..." message shows
+- Don't include internal steps like "reading code", "updating changelog", or "committing" — only things kids care about seeing in the game
+- The steps array is optional — omit it in the initial placeholder, add real steps once you've planned
+
+**Critical sequencing:** After your initial file reads, rewrite `building.json` with all steps listed (`done: false`) **before touching any code**. Then mark each step `done: true` as you complete it. Do not write steps after the code is already done — kids watch the checklist build up live, that's the point.
 
 ## Sacred Systems — NEVER BREAK THESE
 
@@ -90,6 +116,8 @@ public/
 Edit `src/game/config.js`. Most "make X faster/bigger/more" requests are config changes.
 
 ### Change player appearance
+The player character is called **"the Maker"** — use this name in all descriptions and changelog entries to avoid ambiguity with "player" (the person holding the controller) or enemy characters.
+
 Edit the `drawPlayer()` function in `src/game/player.js`. Replace the `fillRect` with any rendering: canvas shapes, loaded sprites, procedural art. Go wild.
 
 ### New enemy type or behavior

@@ -6,36 +6,15 @@ const ACCENT_COLORS = [
 ];
 
 let entries = [];
-let pollTimer = null;
 
 export async function loadChangelog() {
   try {
-    const resp = await fetch('/changelog.json?t=' + Date.now());
+    const resp = await fetch('/changelog.json');
     entries = await resp.json();
     renderChangelog();
   } catch (e) {
     console.error('Failed to load changelog:', e);
   }
-
-  if (!pollTimer) {
-    pollTimer = setInterval(async () => {
-      try {
-        const resp = await fetch('/changelog.json?t=' + Date.now());
-        const newEntries = await resp.json();
-        if (newEntries.length !== entries.length) {
-          entries = newEntries;
-          renderChangelog();
-        }
-      } catch { /* ignore */ }
-    }, 5000);
-  }
-}
-
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    clearInterval(pollTimer);
-    pollTimer = null;
-  });
 }
 
 function renderChangelog() {
