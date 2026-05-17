@@ -15,6 +15,8 @@ import { resetCube, updateCube, drawCube, getCube, isCubeAlive, damageCube } fro
 import { resetHammer, updateHammer, drawHammer, getHammerBlocks } from './game/hammer.js';
 import { resetAd, updateAd, drawAd } from './game/ad.js';
 import { resetPortals, updatePortals, drawPortals } from './game/portals.js';
+import { resetFebreze, updateFebreze, drawFebreze } from './game/febreze.js';
+import { resetDeathStar, updateDeathStar, drawDeathStar, damageDeathStar, isDeathStarAlive, getDeathStarBounds, isInBeam } from './game/deathstar.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -96,6 +98,8 @@ function gameLoop(now) {
         resetAd(now);
         resetPortals(width, height);
         resetDonuts(now);
+        resetFebreze(now);
+        resetDeathStar();
         deathAnimStart = -1;
         deathParticles = [];
         resetVictoryEffects();
@@ -135,6 +139,8 @@ function gameLoop(now) {
       updateProjectiles(dt, width, height);
       updateLightning(now, width, height);
       updateCube(dt, getPlayerPos());
+      updateFebreze(now);
+      updateDeathStar(dt, now, getPlayerPos(), width, height);
       updateDonuts(now, width, height);
 
       // Donut-player collisions
@@ -156,6 +162,26 @@ function gameLoop(now) {
 
       // Projectile collisions
       const projList = getProjectiles();
+
+      // vs Death Star
+      if (isDeathStarAlive()) {
+        const dsb = getDeathStarBounds();
+        for (let i = projList.length - 1; i >= 0; i--) {
+          if (aabb(projList[i], dsb)) {
+            removeProjectile(i);
+            damageDeathStar(now);
+            break;
+          }
+        }
+        // Superlaser beam hits player
+        if (isInBeam(getPlayerBounds())) {
+          if (damagePlayer(now) && getPlayerHealth() <= 0) triggerDeathAnim(now);
+        }
+        // Death Star body contact
+        if (aabb(getPlayerBounds(), dsb)) {
+          if (damagePlayer(now) && getPlayerHealth() <= 0) triggerDeathAnim(now);
+        }
+      }
 
       // vs cube
       if (isCubeAlive()) {
@@ -243,6 +269,7 @@ function gameLoop(now) {
       drawPortals(ctx, width, height, now);
       drawHammer(ctx, width, height, now);
       drawCube(ctx, now);
+      drawDeathStar(ctx, now);
       drawDonuts(ctx, now);
       drawFireballs(ctx, now);
       if (deathAnimStart === -1) drawPlayer(ctx, now);
@@ -267,6 +294,7 @@ function gameLoop(now) {
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getPlayerMaxHealth());
       if (isExploding()) drawDonutExplosion(ctx, ...Object.values(getPlayerPos()), width, height, now);
       drawAd(ctx, width, height, now);
+      drawFebreze(ctx, width, height, now);
       drawTicker(now);
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();
