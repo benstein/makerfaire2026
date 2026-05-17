@@ -94,9 +94,10 @@ function gameLoop(now) {
       }
       updateHammer(now, width, height);
       updateAd(now);
-      // Nether portal warp
-      const portalDest = updatePortals(getPlayerBounds(), now);
-      if (portalDest) setPlayerPos(portalDest.x, portalDest.y);
+      // Nether portal warp / TNT explosion
+      const portalResult = updatePortals(getPlayerBounds(), now);
+      if (portalResult.explode) { endGame(false); }
+      else if (portalResult.dest) setPlayerPos(portalResult.dest.x, portalResult.dest.y);
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
       // Firing
