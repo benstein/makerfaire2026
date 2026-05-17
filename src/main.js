@@ -48,6 +48,11 @@ function gameLoop(now) {
     const state = getState();
     const { width, height } = getCanvasSize();
 
+    // Re-enter fullscreen on any button press if we lost it (e.g. after Vite HMR reload)
+    if ((input.fire || input.start) && !document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+
     // --- State transitions ---
     if (state !== STATES.BUILDING) {
       if ((input.start || input.fire) && (state === STATES.TITLE || state === STATES.GAMEOVER || state === STATES.VICTORY)) {
