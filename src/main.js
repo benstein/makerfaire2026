@@ -6,6 +6,7 @@ import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle } from './game/turtle.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
@@ -61,6 +62,7 @@ function gameLoop(now) {
         resetEnemies();
         resetWeapons();
         resetVictoryEffects();
+        resetTurtle(width, height);
       } else if (input.start) {
         goToTitle();
       }
@@ -72,6 +74,11 @@ function gameLoop(now) {
       updatePlayer(dt, input, width, height, now);
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
+      // Turtle wanders and chomps
+      if (updateTurtle(dt, getPlayerPos(), now, width, height)) {
+        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+      }
+
       // Firing
       if (input.fire || input.fireHeld) {
         tryFire(getPlayerPos(), getPlayerFacing(), now);
@@ -80,6 +87,19 @@ function gameLoop(now) {
 
       // Projectile-enemy collisions
       const projList = getProjectiles();
+
+      // vs turtle
+      if (isTurtleAlive()) {
+        for (let i = projList.length - 1; i >= 0; i--) {
+          if (aabb(projList[i], getTurtle())) {
+            removeProjectile(i);
+            damageTurtle();
+            break;
+          }
+        }
+      }
+
+      // vs regular enemies
       const enemyList = getEnemies();
       for (let i = projList.length - 1; i >= 0; i--) {
         for (let j = enemyList.length - 1; j >= 0; j--) {
@@ -112,6 +132,7 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
+      drawTurtle(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);
