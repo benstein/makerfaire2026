@@ -6,5 +6,6 @@
   { "version": 5, "name": "Ezra", "description": "A giant hammer smashes down every 5 seconds! Red crosshair warns you where it'll land. Each impact leaves a solid white block — the Maker can't walk through them. Up to 6 blocks accumulate!" },
   { "version": 6, "name": "Elle", "description": "Monsters now have big googly eyes with drifting pupils, wild pink spiky hair, and rosy cheeks. They randomly yell Italian Brainrot phrases in speech bubbles: Tralalero Tralala! Bombardino Coccodrillo! Cappuccino Assassino!" },
   { "version": 7, "name": "Bennet", "description": "We interrupt this game for a Safeway ad! Every 15 seconds a full Safeway advertisement appears for 3 seconds — four deals, the red logo, a SALE starburst, and fine print. SKIP AD (unavailable)." },
-  { "version": 8, "name": "Akil and Jonah", "description": "Bullets are now flying swords — silver blade, gold crossguard with ruby gems, wrapped handle, and pommel. Enemy fireballs are now spinning basketballs — orange with black seams, specular highlight, and a shadow." }
+  { "version": 8, "name": "Akil and Jonah", "description": "Bullets are now flying swords — silver blade, gold crossguard with ruby gems, wrapped handle, and pommel. Enemy fireballs are now spinning basketballs — orange with black seams, specular highlight, and a shadow." },
+  { "version": 9, "name": "Ashok and Cyrus", "description": "5 Nether portals scattered around the arena! Walk into one and you instantly warp to a random other portal — purple flash, 1.6s cooldown before you can warp again." }
 ]

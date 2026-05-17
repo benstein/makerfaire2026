@@ -13,6 +13,7 @@ import { resetLightning, updateLightning, drawLightning } from './game/lightning
 import { resetCube, updateCube, drawCube, getCube, isCubeAlive, damageCube } from './game/cube.js';
 import { resetHammer, updateHammer, drawHammer, getHammerBlocks } from './game/hammer.js';
 import { resetAd, updateAd, drawAd } from './game/ad.js';
+import { resetPortals, updatePortals, drawPortals } from './game/portals.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -68,6 +69,7 @@ function gameLoop(now) {
         resetCube(width, height);
         resetHammer(now);
         resetAd(now);
+        resetPortals(width, height);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -92,6 +94,9 @@ function gameLoop(now) {
       }
       updateHammer(now, width, height);
       updateAd(now);
+      // Nether portal warp
+      const portalDest = updatePortals(getPlayerBounds(), now);
+      if (portalDest) setPlayerPos(portalDest.x, portalDest.y);
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
       // Firing
@@ -164,6 +169,7 @@ function gameLoop(now) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
       drawLightning(ctx, width, height, now);
+      drawPortals(ctx, width, height, now);
       drawHammer(ctx, width, height, now);
       drawCube(ctx, now);
       drawFireballs(ctx, now);
