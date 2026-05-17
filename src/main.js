@@ -6,6 +6,7 @@ import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { resetPanda, updatePanda, drawPanda } from './game/panda.js';
 import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle, } from './game/turtle.js';
 import { resetNuke, canNuke, triggerNuke, updateNuke, drawNuke, drawNukeHUD, isBlasting } from './game/nuke.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
@@ -65,6 +66,7 @@ function gameLoop(now) {
         resetVictoryEffects();
         resetTurtle(width, height);
         resetNuke();
+        resetPanda(width, height);
       } else if (input.start) {
         goToTitle();
       }
@@ -75,6 +77,10 @@ function gameLoop(now) {
       updateTimer(dt);
       updatePlayer(dt, input, width, height, now);
       updateEnemies(dt, getPlayerPos(), now, width, height);
+
+      // Panda follows and slowly chomps enemies
+      const pandaKill = updatePanda(dt, getPlayerPos(), getEnemies(), now);
+      if (pandaKill !== -1) removeEnemy(pandaKill);
 
       // Turtle wanders and chomps
       if (updateTurtle(dt, getPlayerPos(), now, width, height)) {
@@ -145,6 +151,7 @@ function gameLoop(now) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
       drawTurtle(ctx, now);
+      drawPanda(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);
