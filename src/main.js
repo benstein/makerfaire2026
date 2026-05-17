@@ -44,6 +44,30 @@ initBuildStatus();
 
 let lastTime = performance.now();
 
+// Rainbow death burst
+const DEATH_DURATION = 1400;
+let deathAnimStart = -1;
+let deathPos = null;
+let deathParticles = [];
+
+function triggerDeathAnim(now) {
+  if (deathAnimStart !== -1) return;
+  deathAnimStart = now;
+  deathPos = getPlayerPos();
+  deathParticles = [];
+  for (let i = 0; i < 90; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 8;
+    deathParticles.push({
+      x: deathPos.x, y: deathPos.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      hue: Math.random() * 360,
+      r: 3 + Math.random() * 9,
+    });
+  }
+}
+
 function gameLoop(now) {
   try {
     const dt = now - lastTime;
@@ -72,6 +96,8 @@ function gameLoop(now) {
         resetAd(now);
         resetPortals(width, height);
         resetDonuts(now);
+        deathAnimStart = -1;
+        deathParticles = [];
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -99,7 +125,7 @@ function gameLoop(now) {
       // Nether portal warp / TNT explosion
       const portalResult = updatePortals(getPlayerBounds(), now);
       if (portalResult.explode) { endGame(false); }
-      else if (portalResult.dest) setPlayerPos(portalResult.dest.x, portalResult.dest.y);
+      // No warp on entry — TNT still arms (per Cyrus/Ezra/Akil)
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
       // Firing
@@ -168,7 +194,7 @@ function gameLoop(now) {
 
       // Cube-player collision
       if (isCubeAlive() && aabb(getPlayerBounds(), getCube())) {
-        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+        if (damagePlayer(now) && getPlayerHealth() <= 0) triggerDeathAnim(now);
       }
 
       // Enemy-player collisions
@@ -178,9 +204,7 @@ function gameLoop(now) {
         if (aabb(playerBounds, enemies[i])) {
           if (damagePlayer(now)) {
             removeEnemy(i);
-            if (getPlayerHealth() <= 0) {
-              endGame(false);
-            }
+            if (getPlayerHealth() <= 0) triggerDeathAnim(now);
           }
         }
       }
@@ -190,7 +214,21 @@ function gameLoop(now) {
       for (let i = fbs.length - 1; i >= 0; i--) {
         if (aabb(playerBounds, fbs[i])) {
           removeFireball(i);
-          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+          if (damagePlayer(now) && getPlayerHealth() <= 0) triggerDeathAnim(now);
+        }
+      }
+
+      // Death animation — advance particles, then end game
+      if (deathAnimStart !== -1) {
+        const scale = dt / 16.67;
+        for (const p of deathParticles) {
+          p.x += p.vx * scale;
+          p.y += p.vy * scale;
+          p.vy += 0.04 * scale;
+        }
+        if (now - deathAnimStart >= DEATH_DURATION) {
+          deathAnimStart = -1;
+          endGame(false);
         }
       }
     }
@@ -207,7 +245,23 @@ function gameLoop(now) {
       drawCube(ctx, now);
       drawDonuts(ctx, now);
       drawFireballs(ctx, now);
-      drawPlayer(ctx, now);
+      if (deathAnimStart === -1) drawPlayer(ctx, now);
+      // Rainbow death burst particles
+      if (deathAnimStart !== -1) {
+        const elapsed = now - deathAnimStart;
+        const fade = Math.max(0, 1 - elapsed / DEATH_DURATION);
+        for (const p of deathParticles) {
+          ctx.save();
+          ctx.globalAlpha = fade;
+          ctx.shadowBlur  = 10;
+          ctx.shadowColor = `hsl(${p.hue}, 100%, 65%)`;
+          ctx.fillStyle   = `hsl(${p.hue}, 100%, 65%)`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * (0.4 + fade * 0.6), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
       drawEnemies(ctx, now);
       drawProjectiles(ctx);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getPlayerMaxHealth());
