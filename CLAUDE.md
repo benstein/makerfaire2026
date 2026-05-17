@@ -112,6 +112,8 @@ public/
 Edit `src/game/config.js`. Most "make X faster/bigger/more" requests are config changes.
 
 ### Change player appearance
+The player character is called **"the Maker"** — use this name in all descriptions and changelog entries to avoid ambiguity with "player" (the person holding the controller) or enemy characters.
+
 Edit the `drawPlayer()` function in `src/game/player.js`. Replace the `fillRect` with any rendering: canvas shapes, loaded sprites, procedural art. Go wild.
 
 ### New enemy type or behavior
