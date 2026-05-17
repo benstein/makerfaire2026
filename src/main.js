@@ -4,13 +4,14 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, getFireballs, removeFireball, drawFireballs } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { resetLightning, updateLightning, drawLightning } from './game/lightning.js';
 import { resetCube, updateCube, drawCube, getCube, isCubeAlive, damageCube } from './game/cube.js';
+import { resetHammer, updateHammer, drawHammer, getHammerBlocks } from './game/hammer.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -64,6 +65,7 @@ function gameLoop(now) {
         resetWeapons();
         resetLightning(now);
         resetCube(width, height);
+        resetHammer(now);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -73,7 +75,20 @@ function gameLoop(now) {
     // --- Update ---
     if (state === STATES.PLAYING) {
       updateTimer(dt);
+      const prevPos = getPlayerPos();
       updatePlayer(dt, input, width, height, now);
+      // Solid block collision — axis-separation push-back
+      const newPos = getPlayerPos();
+      for (const block of getHammerBlocks()) {
+        if (!aabb(getPlayerBounds(), block)) continue;
+        setPlayerPos(newPos.x, prevPos.y);
+        if (!aabb(getPlayerBounds(), block)) break;
+        setPlayerPos(prevPos.x, newPos.y);
+        if (!aabb(getPlayerBounds(), block)) break;
+        setPlayerPos(prevPos.x, prevPos.y);
+        break;
+      }
+      updateHammer(now, width, height);
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
       // Firing
@@ -146,6 +161,7 @@ function gameLoop(now) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
       drawLightning(ctx, width, height, now);
+      drawHammer(ctx, width, height, now);
       drawCube(ctx, now);
       drawFireballs(ctx, now);
       drawPlayer(ctx, now);

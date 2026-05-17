@@ -55,6 +55,11 @@ export function getPlayerPos() {
   return { x, y };
 }
 
+export function setPlayerPos(nx, ny) {
+  x = nx;
+  y = ny;
+}
+
 export function getPlayerFacing() {
   return { x: facingX, y: facingY };
 }
