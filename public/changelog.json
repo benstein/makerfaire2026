@@ -1,5 +1,3 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Ezra", "description": "LEGO world! Minifig player, brick enemies in 7 colors, stud bullets, green baseplate arena" },
-  { "version": 3, "name": "Ben", "description": "Baddies are now 4 mini LEGO bricks in a 2x2 cluster, each a different color!" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" }
 ]

@@ -38,20 +38,11 @@ export function updateProjectiles(dt, arenaWidth, arenaHeight) {
 }
 
 export function drawProjectiles(ctx) {
+  ctx.fillStyle = CONFIG.projectileColor;
   for (const p of projectiles) {
-    const cx = p.x + p.w / 2, cy = p.y + p.h / 2, r = p.w / 2;
-    // Shadow
-    ctx.fillStyle = '#996600';
-    ctx.beginPath(); ctx.arc(cx + 1, cy + 1, r, 0, Math.PI * 2); ctx.fill();
-    // Stud body
-    ctx.fillStyle = '#ffd700';
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-    // Inner ring
-    ctx.strokeStyle = '#cc9900'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(cx, cy, r * 0.55, 0, Math.PI * 2); ctx.stroke();
-    // Highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.beginPath(); ctx.arc(cx - r * 0.3, cy - r * 0.3, r * 0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
