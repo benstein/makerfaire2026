@@ -1,4 +1,5 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Gabi", "description": "The Maker is now hot pink" }
+  { "version": 2, "name": "Gabi", "description": "The Maker is now hot pink" },
+  { "version": 3, "name": "Zeke", "description": "The mob is now giant and deep blue" }
 ]
