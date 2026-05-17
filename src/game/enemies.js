@@ -278,52 +278,66 @@ export function removeFireball(i) { fireballs.splice(i, 1); }
 export function drawFireballs(ctx, now) {
   const t = now / 1000;
   for (const f of fireballs) {
-    const cx = f.x + FIREBALL_R;
-    const cy = f.y + FIREBALL_R;
-    const spin = t * 3.5 + f.born * 0.001;
-    const hue2 = (f.hue + 25) % 360;
-
-    ctx.save();
-    ctx.translate(cx, cy);
-
-    // Outer soft glow
-    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, FIREBALL_R * 2.4);
-    glow.addColorStop(0,   `hsla(${f.hue}, 100%, 65%, 0.45)`);
-    glow.addColorStop(1,   `hsla(${f.hue}, 100%, 50%, 0)`);
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(0, 0, FIREBALL_R * 2.4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Rotating flame petals
-    ctx.rotate(spin);
-    const numPetals = 6;
-    for (let p = 0; p < numPetals; p++) {
-      const angle = (p / numPetals) * Math.PI * 2;
-      const px = Math.cos(angle) * FIREBALL_R * 0.75;
-      const py = Math.sin(angle) * FIREBALL_R * 0.75;
-      const petalGrad = ctx.createRadialGradient(px, py, 0, px, py, FIREBALL_R * 0.7);
-      petalGrad.addColorStop(0,   `hsla(${hue2}, 100%, 72%, 0.9)`);
-      petalGrad.addColorStop(1,   `hsla(${f.hue}, 100%, 50%, 0)`);
-      ctx.fillStyle = petalGrad;
-      ctx.beginPath();
-      ctx.arc(px, py, FIREBALL_R * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.rotate(-spin); // undo petal rotation before core
-
-    // Hot core (doesn't rotate)
-    const core = ctx.createRadialGradient(0, 0, 0, 0, 0, FIREBALL_R * 0.62);
-    core.addColorStop(0,   '#ffffff');
-    core.addColorStop(0.3, `hsl(${f.hue}, 100%, 82%)`);
-    core.addColorStop(1,   `hsl(${f.hue}, 100%, 52%)`);
-    ctx.fillStyle = core;
-    ctx.shadowBlur  = 14;
-    ctx.shadowColor = `hsl(${f.hue}, 100%, 60%)`;
-    ctx.beginPath();
-    ctx.arc(0, 0, FIREBALL_R * 0.62, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
+    drawBasketball(ctx, f.x + FIREBALL_R, f.y + FIREBALL_R, FIREBALL_R, t + f.born * 0.0005);
   }
+}
+
+function drawBasketball(ctx, cx, cy, r, t) {
+  const spin = t * 2.8; // spin angle based on time
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // Shadow beneath
+  ctx.fillStyle = 'rgba(0,0,0,0.20)';
+  ctx.beginPath();
+  ctx.ellipse(2, r * 0.85, r * 0.7, r * 0.22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Main ball (orange gradient with shading)
+  const ballGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, 0, 0, r);
+  ballGrad.addColorStop(0,   '#ff9933');
+  ballGrad.addColorStop(0.5, '#e86010');
+  ballGrad.addColorStop(1,   '#a03800');
+  ctx.fillStyle = ballGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Seam lines (clip to circle, rotate with spin)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, r - 0.5, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.rotate(spin);
+
+  ctx.strokeStyle = '#1a0800';
+  ctx.lineWidth = r * 0.13;
+  ctx.lineCap = 'round';
+
+  // Vertical seam
+  ctx.beginPath();
+  ctx.moveTo(0, -r);
+  ctx.lineTo(0,  r);
+  ctx.stroke();
+
+  // Horizontal seam (slight curve both ways)
+  ctx.beginPath();
+  ctx.moveTo(-r, 0);
+  ctx.bezierCurveTo(-r * 0.5, -r * 0.45, r * 0.5, -r * 0.45, r, 0);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-r, 0);
+  ctx.bezierCurveTo(-r * 0.5,  r * 0.45, r * 0.5,  r * 0.45, r, 0);
+  ctx.stroke();
+
+  ctx.restore(); // unclip
+
+  // Specular highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.28, -r * 0.32, r * 0.28, r * 0.18, -0.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
 }
