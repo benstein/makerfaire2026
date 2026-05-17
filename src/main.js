@@ -13,6 +13,7 @@ import { resetLava, updateLava, drawLava, getLavaBounds } from './game/lava.js';
 import { resetDisco, updateDisco, drawDisco } from './game/disco.js';
 import { resetRocks, updateRocks, drawRocks, getRocks, chompRock, isPlayerOnRock } from './game/rocks.js';
 import { resetAsteroids, updateAsteroids, drawAsteroids, getAsteroids, removeAsteroid, getAsteroidBounds } from './game/asteroids.js';
+import { resetTower, updateTower, drawTower, getMissiles, removeMissile } from './game/tower.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -68,6 +69,7 @@ function gameLoop(now) {
         resetDisco(now);
         resetRocks(now);
         resetAsteroids();
+        resetTower(width, now);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -89,6 +91,7 @@ function gameLoop(now) {
       updateDisco(now);
       updateRocks(now, width, height);
       updateAsteroids(dt, now, width, height);
+      updateTower(dt, now, width, height, getEnemies());
 
       // Lava — instant death, no invincibility
       if (getPlayerHealth() > 0 && aabb(getPlayerBounds(), getLavaBounds(width, height))) {
@@ -102,6 +105,18 @@ function gameLoop(now) {
         for (let j = enemyList.length - 1; j >= 0; j--) {
           if (aabb(projList[i], enemyList[j])) {
             removeProjectile(i);
+            hitEnemy(j);
+            break;
+          }
+        }
+      }
+
+      // Tower missile-enemy collisions
+      const missileList = getMissiles();
+      for (let i = missileList.length - 1; i >= 0; i--) {
+        for (let j = enemyList.length - 1; j >= 0; j--) {
+          if (aabb(missileList[i], enemyList[j])) {
+            removeMissile(i);
             hitEnemy(j);
             break;
           }
@@ -162,6 +177,7 @@ function gameLoop(now) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
       drawLava(ctx, width, height, now);
+      drawTower(ctx, now, width, height);
       drawDisco(ctx, width, height, now);
       drawRocks(ctx, now);
       drawAsteroids(ctx, now);
