@@ -2,7 +2,7 @@
 
 import { CONFIG } from '../game/config.js';
 
-export function drawHUD(ctx, health, timeRemaining, canvasWidth, killCount = 0, killsForSmash = 10) {
+export function drawHUD(ctx, health, timeRemaining, canvasWidth, killCount = 0, killsForSmash = 10, mineCount = 0, maxMines = 3) {
   const padding = 20;
 
   // Hearts (top-left)
@@ -65,6 +65,33 @@ export function drawHUD(ctx, health, timeRemaining, canvasWidth, killCount = 0, 
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'left';
   ctx.fillText(`FINAL SMASH  ${killCount}/${killsForSmash}`, meterX, meterY - 5);
+
+  // Landmine slots (below smash meter)
+  const slotY = meterY + meterH + 22;
+  ctx.font = 'bold 12px monospace';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('MINES', meterX, slotY - 5);
+  const slotSize = 18;
+  const slotGap = 6;
+  for (let i = 0; i < maxMines; i++) {
+    const sx = meterX + i * (slotSize + slotGap);
+    const sy = slotY;
+    const filled = i < (maxMines - mineCount);
+    ctx.fillStyle = filled ? '#3a3a3a' : 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.arc(sx + slotSize / 2, sy + slotSize / 2, slotSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+    if (filled) {
+      ctx.strokeStyle = '#ffcc00';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      const cx2 = sx + slotSize / 2, cy2 = sy + slotSize / 2, cr = slotSize * 0.28;
+      ctx.beginPath();
+      ctx.moveTo(cx2 - cr, cy2 - cr); ctx.lineTo(cx2 + cr, cy2 + cr);
+      ctx.moveTo(cx2 + cr, cy2 - cr); ctx.lineTo(cx2 - cr, cy2 + cr);
+      ctx.stroke();
+    }
+  }
 }
 
 function drawHeart(ctx, cx, cy, size) {

@@ -8,10 +8,12 @@ const state = {
   start: false,
   fireHeld: false,
   startHeld: false,
+  layMine: false,
 };
 
 let prevFire = false;
 let prevStart = false;
+let prevLayMine = false;
 
 const DEADZONE = 0.2;
 
@@ -29,9 +31,10 @@ export function pollInput() {
   const kbY = (keys['s'] || keys['ArrowDown'] ? 1 : 0) - (keys['w'] || keys['ArrowUp'] ? 1 : 0);
   const kbFire = keys[' '] || false;
   const kbStart = keys['Enter'] || false;
+  const kbLayMine = keys['e'] || false;
 
   // Gamepad
-  let gpX = 0, gpY = 0, gpFire = false, gpStart = false;
+  let gpX = 0, gpY = 0, gpFire = false, gpStart = false, gpLayMine = false;
   if (gp) {
     const rawX = gp.axes[0];
     const rawY = gp.axes[1];
@@ -41,6 +44,7 @@ export function pollInput() {
     gpY = dpadY !== 0 ? dpadY : (Math.abs(rawY) > DEADZONE ? rawY : 0);
     gpFire = gp.buttons[0]?.pressed ?? false;
     gpStart = gp.buttons[9]?.pressed ?? false;
+    gpLayMine = gp.buttons[1]?.pressed ?? false;
   }
 
   // Gamepad takes priority for stick; either source works for buttons
@@ -56,6 +60,10 @@ export function pollInput() {
   state.start = startNow && !prevStart;
   state.startHeld = startNow;
   prevStart = startNow;
+
+  const layMineNow = gpLayMine || kbLayMine;
+  state.layMine = layMineNow && !prevLayMine;
+  prevLayMine = layMineNow;
 
   return state;
 }

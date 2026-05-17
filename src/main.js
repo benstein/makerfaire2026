@@ -9,6 +9,7 @@ import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, clea
 import { resetBoss, shouldSpawnBoss, spawnBoss, getBoss, isBossAlive, updateBoss, damageBoss, drawBoss } from './game/boss.js';
 import { resetFinalSmash, addKill, getKillCount, isFinalSmashActive, updateFinalSmash, drawFinalSmash, KILLS_FOR_SMASH } from './game/finalSmash.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
+import { resetLandmines, tryLayMine, getMines, getMineCount, explodeMine, updateLandmines, drawLandmines, MAX_MINES } from './game/landmines.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawForestBackground, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
@@ -65,6 +66,7 @@ function gameLoop(now) {
         resetVictoryEffects();
         resetFinalSmash();
         resetBoss();
+        resetLandmines();
       } else if (input.start) {
         goToTitle();
       }
@@ -84,6 +86,9 @@ function gameLoop(now) {
       if (input.fire || input.fireHeld) {
         tryFire(getPlayerPos(), getPlayerFacing(), now);
       }
+
+      // Lay landmine
+      if (input.layMine) tryLayMine(getPlayerPos(), now);
       updateProjectiles(dt, width, height);
 
       // Projectile collisions
@@ -114,6 +119,27 @@ function gameLoop(now) {
         }
       }
 
+      // Mine collisions
+      const mineList = getMines();
+      for (let i = mineList.length - 1; i >= 0; i--) {
+        let detonated = false;
+        const curEnemies = getEnemies();
+        for (let j = curEnemies.length - 1; j >= 0; j--) {
+          if (aabb(mineList[i], curEnemies[j])) {
+            removeEnemy(j);
+            if (addKill(now)) clearEnemies();
+            explodeMine(i, now);
+            detonated = true;
+            break;
+          }
+        }
+        if (!detonated && isBossAlive() && getBoss() && aabb(mineList[i], getBoss())) {
+          if (damageBoss()) endGame(true);
+          explodeMine(i, now);
+        }
+      }
+      updateLandmines(now);
+
       updateFinalSmash(now);
 
       // Enemy/boss–player collisions
@@ -139,12 +165,13 @@ function gameLoop(now) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
       drawForestBackground(ctx, width, height);
+      drawLandmines(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawBoss(ctx, now);
       drawProjectiles(ctx);
       drawFinalSmash(ctx, getPlayerPos(), width, height, now);
-      drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getKillCount(), KILLS_FOR_SMASH);
+      drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getKillCount(), KILLS_FOR_SMASH, getMineCount(), MAX_MINES);
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();
     } else if (state === STATES.GAMEOVER) {
