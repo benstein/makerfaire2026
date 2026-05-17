@@ -11,7 +11,8 @@ import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damage
 import { resetNuke, canNuke, triggerNuke, updateNuke, drawNuke, drawNukeHUD, isBlasting } from './game/nuke.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
-import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { initRendering, getCanvasSize, clearCanvas, drawMarioBackground, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { resetPortal, updatePortal, drawPortal, isMarioMode } from './game/portal.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -67,6 +68,7 @@ function gameLoop(now) {
         resetTurtle(width, height);
         resetNuke();
         resetPanda(width, height);
+        resetPortal(width, height);
       } else if (input.start) {
         goToTitle();
       }
@@ -76,6 +78,7 @@ function gameLoop(now) {
     if (state === STATES.PLAYING) {
       updateTimer(dt);
       updatePlayer(dt, input, width, height, now);
+      updatePortal(getPlayerBounds());
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
       // Panda follows and slowly chomps enemies
@@ -150,6 +153,8 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
+      if (isMarioMode()) drawMarioBackground(ctx, width, height, now);
+      drawPortal(ctx, now);
       drawTurtle(ctx, now);
       drawPanda(ctx, now);
       drawPlayer(ctx, now);

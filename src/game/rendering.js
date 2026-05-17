@@ -165,6 +165,85 @@ export function clearCanvas() {
   drawTorch(w - wall + 4, Math.round(h * 0.67));
 }
 
+export function drawMarioBackground(fctx, width, height, now) {
+  const t = now / 1000;
+
+  // Sky
+  fctx.fillStyle = '#5c94fc';
+  fctx.fillRect(0, 0, width, height);
+
+  // Clouds
+  for (const [cx2, cy2, sz] of [
+    [width * 0.12, height * 0.11, 88],
+    [width * 0.47, height * 0.07, 108],
+    [width * 0.78, height * 0.17, 72],
+  ]) {
+    fctx.fillStyle = '#fff';
+    fctx.beginPath();
+    fctx.arc(cx2, cy2, sz * 0.38, 0, Math.PI * 2);
+    fctx.arc(cx2 + sz * 0.33, cy2 + sz * 0.08, sz * 0.28, 0, Math.PI * 2);
+    fctx.arc(cx2 - sz * 0.28, cy2 + sz * 0.1,  sz * 0.24, 0, Math.PI * 2);
+    fctx.fill();
+    fctx.fillRect(cx2 - sz * 0.52, cy2 + sz * 0.1, sz * 1.05, sz * 0.28);
+  }
+
+  // Floating ? blocks
+  const blink = Math.floor(t * 2) % 2;
+  for (const [bx, by] of [
+    [width * 0.22, height * 0.42],
+    [width * 0.50, height * 0.32],
+    [width * 0.72, height * 0.47],
+  ]) {
+    const bs = 34;
+    fctx.fillStyle = '#e8a000';
+    fctx.fillRect(bx - bs / 2, by - bs / 2, bs, bs);
+    fctx.strokeStyle = '#703000';
+    fctx.lineWidth = 2;
+    fctx.strokeRect(bx - bs / 2, by - bs / 2, bs, bs);
+    // Inner border highlight
+    fctx.strokeStyle = '#ffd060';
+    fctx.lineWidth = 1.5;
+    fctx.strokeRect(bx - bs / 2 + 3, by - bs / 2 + 3, bs - 6, bs - 6);
+    fctx.fillStyle = blink ? '#ffffff' : '#ffe060';
+    fctx.font = `bold ${Math.round(bs * 0.72)}px monospace`;
+    fctx.textAlign = 'center';
+    fctx.fillText('?', bx, by + bs * 0.25);
+    fctx.textAlign = 'left';
+  }
+
+  // Ground strip
+  const gH = 58;
+  const gY = height - gH;
+  fctx.fillStyle = '#00a800';
+  fctx.fillRect(0, gY, width, 14);
+  fctx.fillStyle = '#c84c0c';
+  fctx.fillRect(0, gY + 14, width, gH - 14);
+
+  // Brick grid on dirt
+  const brickW = 42, brickH = Math.round((gH - 14) / 2);
+  fctx.strokeStyle = '#a03800';
+  fctx.lineWidth = 1.5;
+  for (let row = 0; row < 2; row++) {
+    const ry = gY + 14 + row * brickH;
+    fctx.beginPath(); fctx.moveTo(0, ry); fctx.lineTo(width, ry); fctx.stroke();
+    const offset = row % 2 === 0 ? 0 : brickW / 2;
+    for (let bx2 = offset; bx2 < width; bx2 += brickW) {
+      fctx.beginPath(); fctx.moveTo(bx2, ry); fctx.lineTo(bx2, ry + brickH); fctx.stroke();
+    }
+  }
+
+  // Green pipes
+  for (const px2 of [width * 0.14, width * 0.86]) {
+    const pw = 50;
+    fctx.fillStyle = '#00a800';
+    fctx.fillRect(px2 - pw / 2, gY - gH * 0.6, pw, gH * 0.6 + gH);
+    fctx.fillStyle = '#00c800';
+    fctx.fillRect(px2 - pw / 2 - 5, gY - gH * 0.6 - 14, pw + 10, 20);
+    fctx.fillStyle = 'rgba(255,255,255,0.18)';
+    fctx.fillRect(px2 - pw / 2 + 5, gY - gH * 0.6 + 4, 8, gH * 0.6 + gH - 8);
+  }
+}
+
 export function drawTitleScreen() {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
