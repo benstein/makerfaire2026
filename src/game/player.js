@@ -46,23 +46,9 @@ export function drawPlayer(ctx, now) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
 
-  const r = CONFIG.playerSize / 2;
-  ctx.save();
-  ctx.translate(Math.round(x), Math.round(y));
-  ctx.rotate(Math.atan2(facingY, facingX) + Math.PI / 2);
-
-  ctx.beginPath();
-  ctx.moveTo(0, -r);                        // tip (facing direction)
-  ctx.lineTo(-r * 0.85, r * 0.75);          // bottom-left
-  ctx.lineTo( r * 0.85, r * 0.75);          // bottom-right
-  ctx.closePath();
+  const half = CONFIG.playerSize / 2;
   ctx.fillStyle = CONFIG.playerColor;
-  ctx.fill();
-  ctx.strokeStyle = '#7f8c8d';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.restore();
+  ctx.fillRect(x - half, y - half, CONFIG.playerSize, CONFIG.playerSize);
 }
 
 export function getPlayerPos() {
