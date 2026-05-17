@@ -4,5 +4,6 @@
   { "version": 3, "name": "Tao", "description": "A Giant Turtle roams the arena — get too close and he CHOMPS you! Shoot him 5 times to take him down." },
   { "version": 4, "name": "Daniel", "description": "Torpedos fly straight. Press B (or N) to NUKE — wipes the whole screen. Once per game!" },
   { "version": 5, "name": "Tao", "description": "You have a pet panda! It follows you and slowly chomps nearby enemies" },
-  { "version": 6, "name": "Griffin", "description": "Enemies now take 3 hits to kill — watch the green health pips drain above each one!" }
+  { "version": 6, "name": "Griffin", "description": "Enemies now take 3 hits to kill — watch the green health pips drain above each one!" },
+  { "version": 7, "name": "Nora", "description": "Castle arena! Stone floor tiles, battlements, corner towers, and flickering torches on the walls" }
 ]

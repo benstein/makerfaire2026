@@ -26,8 +26,143 @@ const _logo = new Image();
 _logo.src = '/assets/logo.jpg';
 
 export function clearCanvas() {
-  ctx.fillStyle = CONFIG.arenaBackground;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const w = canvas.width, h = canvas.height;
+  const now = performance.now();
+  const wall = Math.round(Math.min(w, h) * 0.09); // wall thickness
+
+  // --- Sky beyond the walls ---
+  ctx.fillStyle = '#6a8fa8';
+  ctx.fillRect(0, 0, w, h);
+
+  // --- Stone floor tiles inside the walls ---
+  const tileSize = 52;
+  const floorX = wall, floorY = wall, floorW = w - wall * 2, floorH = h - wall * 2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(floorX, floorY, floorW, floorH);
+  ctx.clip();
+  for (let row = 0; row * tileSize < floorH + tileSize; row++) {
+    for (let col = 0; col * tileSize < floorW + tileSize; col++) {
+      const tx = floorX + col * tileSize;
+      const ty = floorY + row * tileSize;
+      const shade = ((row + col) % 2 === 0) ? '#c4b49a' : '#bfad94';
+      ctx.fillStyle = shade;
+      ctx.fillRect(tx + 1, ty + 1, tileSize - 2, tileSize - 2);
+    }
+  }
+  // Grout lines
+  ctx.strokeStyle = '#a8966e';
+  ctx.lineWidth = 1;
+  for (let row = 0; row * tileSize <= floorH; row++) {
+    ctx.beginPath(); ctx.moveTo(floorX, floorY + row * tileSize); ctx.lineTo(floorX + floorW, floorY + row * tileSize); ctx.stroke();
+  }
+  for (let col = 0; col * tileSize <= floorW; col++) {
+    ctx.beginPath(); ctx.moveTo(floorX + col * tileSize, floorY); ctx.lineTo(floorX + col * tileSize, floorY + floorH); ctx.stroke();
+  }
+  ctx.restore();
+
+  // --- Stone walls (4 sides) ---
+  const stoneColors = ['#8b8075', '#7d7268', '#877c70'];
+  function drawStoneWall(x, y, bw, bh) {
+    const blockW = 36, blockH = 22;
+    for (let row = 0; row * blockH < bh; row++) {
+      for (let col = 0; col * blockW < bw + blockW; col++) {
+        const offset = (row % 2) * (blockW / 2);
+        const bx = x + col * blockW - offset;
+        const by = y + row * blockH;
+        const c = stoneColors[(row * 3 + col) % stoneColors.length];
+        ctx.fillStyle = c;
+        ctx.fillRect(bx + 1, by + 1, blockW - 2, blockH - 2);
+      }
+    }
+    ctx.strokeStyle = '#5a5148';
+    ctx.lineWidth = 1;
+    for (let row = 0; row * blockH <= bh; row++) {
+      ctx.beginPath(); ctx.moveTo(x, y + row * blockH); ctx.lineTo(x + bw, y + row * blockH); ctx.stroke();
+    }
+    for (let col = 0; col * blockW <= bw + blockW; col++) {
+      const offset = 0;
+      ctx.beginPath(); ctx.moveTo(x + col * blockW, y); ctx.lineTo(x + col * blockW, y + bh); ctx.stroke();
+    }
+  }
+  drawStoneWall(0,       0,       w,    wall); // top
+  drawStoneWall(0,       h-wall,  w,    wall); // bottom
+  drawStoneWall(0,       wall,    wall, h - wall * 2); // left
+  drawStoneWall(w-wall,  wall,    wall, h - wall * 2); // right
+
+  // --- Battlements (crenellations) on top of walls ---
+  const mW = Math.round(wall * 0.6), mH = Math.round(wall * 0.45);
+  ctx.fillStyle = '#6b6058';
+  const mCount = Math.floor(w / (mW * 2));
+  for (let i = 0; i < mCount; i++) {
+    ctx.fillRect(i * mW * 2,        0,    mW, mH); // top
+    ctx.fillRect(i * mW * 2,        h - mH, mW, mH); // bottom
+  }
+  const mCountV = Math.floor(h / (mW * 2));
+  for (let i = 0; i < mCountV; i++) {
+    ctx.fillRect(0,       i * mW * 2, mH, mW); // left
+    ctx.fillRect(w - mH,  i * mW * 2, mH, mW); // right
+  }
+
+  // --- Corner towers ---
+  function drawTower(tx, ty) {
+    const tr = wall * 1.1;
+    ctx.fillStyle = '#7a6f65';
+    ctx.beginPath(); ctx.arc(tx, ty, tr, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#5a5148'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(tx, ty, tr, 0, Math.PI * 2); ctx.stroke();
+    // Tower battlements (ring of merlons)
+    ctx.fillStyle = '#625850';
+    for (let a = 0; a < 8; a++) {
+      const angle = (a / 8) * Math.PI * 2;
+      const mx = tx + Math.cos(angle) * tr * 0.82;
+      const my = ty + Math.sin(angle) * tr * 0.82;
+      ctx.beginPath(); ctx.arc(mx, my, tr * 0.18, 0, Math.PI * 2); ctx.fill();
+    }
+    // Inner circle
+    ctx.fillStyle = '#8a7e72';
+    ctx.beginPath(); ctx.arc(tx, ty, tr * 0.55, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#5a5148';
+    ctx.beginPath(); ctx.arc(tx, ty, tr * 0.55, 0, Math.PI * 2); ctx.stroke();
+  }
+  drawTower(wall * 0.5, wall * 0.5);
+  drawTower(w - wall * 0.5, wall * 0.5);
+  drawTower(wall * 0.5, h - wall * 0.5);
+  drawTower(w - wall * 0.5, h - wall * 0.5);
+
+  // --- Flickering torches on the walls ---
+  function drawTorch(tx, ty) {
+    const flicker = 0.7 + 0.3 * Math.sin(now / 80 + tx * 0.1);
+    // Bracket
+    ctx.fillStyle = '#444';
+    ctx.fillRect(tx - 3, ty, 6, 8);
+    // Flame glow
+    ctx.save();
+    ctx.globalAlpha = 0.35 * flicker;
+    ctx.fillStyle = '#ff8800';
+    ctx.beginPath(); ctx.arc(tx, ty - 8, 12 * flicker, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Flame
+    ctx.fillStyle = `hsl(${30 + flicker * 15}, 100%, ${50 + flicker * 10}%)`;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty - 16 * flicker);
+    ctx.quadraticCurveTo(tx + 5, ty - 6, tx, ty);
+    ctx.quadraticCurveTo(tx - 5, ty - 6, tx, ty - 16 * flicker);
+    ctx.fill();
+    // Bright core
+    ctx.fillStyle = '#fff9c0';
+    ctx.beginPath(); ctx.arc(tx, ty - 4, 3 * flicker, 0, Math.PI * 2); ctx.fill();
+  }
+  // Top and bottom wall torches
+  drawTorch(Math.round(w * 0.25), wall - 4);
+  drawTorch(Math.round(w * 0.75), wall - 4);
+  drawTorch(Math.round(w * 0.25), h - wall + 4);
+  drawTorch(Math.round(w * 0.75), h - wall + 4);
+  // Left and right wall torches
+  drawTorch(wall - 4, Math.round(h * 0.33));
+  drawTorch(wall - 4, Math.round(h * 0.67));
+  drawTorch(w - wall + 4, Math.round(h * 0.33));
+  drawTorch(w - wall + 4, Math.round(h * 0.67));
 }
 
 export function drawTitleScreen() {
