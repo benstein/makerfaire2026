@@ -1,4 +1,5 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Kevin", "description": "Bad guys are now rampaging yetis — fluffy white fur, red eyes, fangs, and reaching claws" }
+  { "version": 2, "name": "Kevin", "description": "Bad guys are now rampaging yetis — fluffy white fur, red eyes, fangs, and reaching claws" },
+  { "version": 3, "name": "Reed", "description": "Black background so the yetis really stand out" }
 ]

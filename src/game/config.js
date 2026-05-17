@@ -25,7 +25,7 @@ export const CONFIG = {
 
   // Game
   gameDuration: 60, // seconds
-  arenaBackground: '#eaf2f8',
+  arenaBackground: '#000000',
 
   // HUD
   heartColor: '#e74c3c',
