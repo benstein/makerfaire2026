@@ -26,7 +26,14 @@ const _logo = new Image();
 _logo.src = '/assets/logo.jpg';
 
 export function clearCanvas() {
-  ctx.fillStyle = CONFIG.arenaBackground;
+  const now = performance.now() / 1000;
+  // Slowly cycling full-spectrum rainbow — hue rotates around the colour wheel
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i <= 6; i++) {
+    const hue = ((i / 6) * 360 + now * 30) % 360;
+    grad.addColorStop(i / 6, `hsl(${hue}, 85%, 78%)`);
+  }
+  ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
