@@ -12,6 +12,7 @@ import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictory
 import { resetLava, updateLava, drawLava, getLavaBounds } from './game/lava.js';
 import { resetDisco, updateDisco, drawDisco } from './game/disco.js';
 import { resetRocks, updateRocks, drawRocks, getRocks, chompRock, isPlayerOnRock } from './game/rocks.js';
+import { resetAsteroids, updateAsteroids, drawAsteroids, getAsteroids, removeAsteroid, getAsteroidBounds } from './game/asteroids.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -66,6 +67,7 @@ function gameLoop(now) {
         resetLava();
         resetDisco(now);
         resetRocks(now);
+        resetAsteroids();
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -86,6 +88,7 @@ function gameLoop(now) {
       updateLava(width);
       updateDisco(now);
       updateRocks(now, width, height);
+      updateAsteroids(dt, now, width, height);
 
       // Lava — instant death, no invincibility
       if (getPlayerHealth() > 0 && aabb(getPlayerBounds(), getLavaBounds(width, height))) {
@@ -100,6 +103,26 @@ function gameLoop(now) {
           if (aabb(projList[i], enemyList[j])) {
             removeProjectile(i);
             hitEnemy(j);
+            break;
+          }
+        }
+      }
+
+      // Asteroid collisions
+      const asteroidList = getAsteroids();
+      for (let i = asteroidList.length - 1; i >= 0; i--) {
+        const ab = getAsteroidBounds(asteroidList[i]);
+        // vs player — damage and destroy asteroid
+        if (aabb(getPlayerBounds(), ab)) {
+          removeAsteroid(i);
+          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+          continue;
+        }
+        // vs projectiles — shoot them down
+        for (let j = getProjectiles().length - 1; j >= 0; j--) {
+          if (aabb(getProjectiles()[j], ab)) {
+            removeProjectile(j);
+            removeAsteroid(i);
             break;
           }
         }
@@ -141,6 +164,7 @@ function gameLoop(now) {
       drawLava(ctx, width, height, now);
       drawDisco(ctx, width, height, now);
       drawRocks(ctx, now);
+      drawAsteroids(ctx, now);
       drawGooTrails(ctx);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
