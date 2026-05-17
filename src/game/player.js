@@ -1,6 +1,7 @@
 // src/game/player.js
 
 import { CONFIG } from './config.js';
+import { getMarioTier } from './powerup.js';
 
 let x, y;
 let facingX = 0;
@@ -60,7 +61,12 @@ export function drawPlayer(ctx, now) {
   if (now < invincibleUntil) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
-  drawLink(ctx, effectiveSize());
+  const tier = getMarioTier();
+  if (tier >= 1) {
+    drawMario(ctx, effectiveSize(), now, tier >= 2);
+  } else {
+    drawLink(ctx, effectiveSize());
+  }
 }
 
 function drawLink(ctx, s) {
@@ -141,6 +147,75 @@ function drawLink(ctx, s) {
   // Hat brim band
   ctx.fillStyle = '#1d7021';
   ctx.fillRect(-s*0.24, -s*0.20, s*0.48, s*0.08);
+
+  ctx.restore();
+}
+
+function drawMario(ctx, s, now, starPower) {
+  const angle = Math.atan2(facingX, -facingY);
+  const t = now / 1000;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  // Star power rainbow glow
+  if (starPower) {
+    const hue = (t * 180) % 360;
+    ctx.shadowBlur = 22; ctx.shadowColor = `hsl(${hue}, 100%, 65%)`;
+  }
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath(); ctx.ellipse(2, s*0.22, s*0.36, s*0.11, 0, 0, Math.PI*2); ctx.fill();
+
+  // Brown boots
+  ctx.fillStyle = '#6b3510';
+  ctx.beginPath(); ctx.ellipse(-s*0.12, s*0.40, s*0.12, s*0.09, -0.2, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*0.12, s*0.40, s*0.12, s*0.09,  0.2, 0, Math.PI*2); ctx.fill();
+
+  // Blue overalls
+  ctx.fillStyle = '#1a4acc';
+  ctx.beginPath(); ctx.ellipse(0, s*0.14, s*0.30, s*0.32, 0, 0, Math.PI*2); ctx.fill();
+  // Overalls straps
+  ctx.fillStyle = '#1a4acc';
+  ctx.fillRect(-s*0.1, -s*0.05, s*0.08, s*0.22);
+  ctx.fillRect( s*0.02, -s*0.05, s*0.08, s*0.22);
+
+  // Red shirt sleeves
+  ctx.fillStyle = '#cc1100';
+  ctx.beginPath(); ctx.ellipse(-s*0.34, s*0.08, s*0.10, s*0.09, 0.4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*0.34, s*0.08, s*0.10, s*0.09, -0.4, 0, Math.PI*2); ctx.fill();
+
+  // Skin face
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#fdbcb4';
+  ctx.beginPath(); ctx.ellipse(0, -s*0.10, s*0.17, s*0.15, 0, 0, Math.PI*2); ctx.fill();
+
+  // Brown mustache
+  ctx.fillStyle = '#5a2d00';
+  ctx.beginPath(); ctx.ellipse(-s*0.08, -s*0.04, s*0.10, s*0.07, 0.3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*0.08, -s*0.04, s*0.10, s*0.07, -0.3, 0, Math.PI*2); ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(-s*0.07, -s*0.14, s*0.03, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*0.07, -s*0.14, s*0.03, 0, Math.PI*2); ctx.fill();
+
+  // Red cap brim
+  ctx.fillStyle = '#cc1100';
+  if (starPower) ctx.fillStyle = `hsl(${(t*120)%360}, 100%, 45%)`;
+  ctx.fillRect(-s*0.24, -s*0.22, s*0.48, s*0.10);
+  // Cap top
+  ctx.fillRect(-s*0.20, -s*0.40, s*0.40, s*0.20);
+  // White M circle on cap
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(0, -s*0.31, s*0.10, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#cc1100';
+  ctx.font = `bold ${s*0.14}px monospace`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('M', 0, -s*0.30);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
 
   ctx.restore();
 }

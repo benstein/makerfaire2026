@@ -16,6 +16,7 @@ import { resetHammer, updateHammer, drawHammer, getHammerBlocks } from './game/h
 import { resetAd, updateAd, drawAd } from './game/ad.js';
 import { resetPortals, updatePortals, drawPortals } from './game/portals.js';
 import { resetFebreze, updateFebreze, drawFebreze } from './game/febreze.js';
+import { resetPowerup, updatePowerup, drawPowerup, getStarBeams, removeStarBeam } from './game/powerup.js';
 import { resetDeathStar, updateDeathStar, drawDeathStar, damageDeathStar, isDeathStarAlive, getDeathStarBounds, isInBeam } from './game/deathstar.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
@@ -100,6 +101,7 @@ function gameLoop(now) {
         resetDonuts(now);
         resetFebreze(now);
         resetDeathStar();
+        resetPowerup(now, width, height);
         deathAnimStart = -1;
         deathParticles = [];
         resetVictoryEffects();
@@ -140,6 +142,7 @@ function gameLoop(now) {
       updateLightning(now, width, height);
       updateCube(dt, getPlayerPos());
       updateFebreze(now);
+      updatePowerup(getPlayerBounds(), now);
       updateDeathStar(dt, now, getPlayerPos(), width, height);
       updateDonuts(now, width, height);
 
@@ -191,6 +194,16 @@ function gameLoop(now) {
             damageCube();
             break;
           }
+        }
+      }
+
+      // Star beams vs enemies (kill on contact)
+      const beams = getStarBeams();
+      for (let bi = beams.length - 1; bi >= 0; bi--) {
+        const bb = { x: beams[bi].x - 9, y: beams[bi].y - 9, w: 18, h: 18 };
+        const el2 = getEnemies();
+        for (let j = el2.length - 1; j >= 0; j--) {
+          if (aabb(bb, el2[j])) { removeEnemy(j); removeStarBeam(bi); break; }
         }
       }
 
@@ -272,6 +285,7 @@ function gameLoop(now) {
       drawDeathStar(ctx, now);
       drawDonuts(ctx, now);
       drawFireballs(ctx, now);
+      drawPowerup(ctx, now);
       if (deathAnimStart === -1) drawPlayer(ctx, now);
       // Rainbow death burst particles
       if (deathAnimStart !== -1) {
