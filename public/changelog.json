@@ -1,3 +1,4 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  { "version": 2, "name": "Ezra", "description": "Bullets are now yeti-seeking torpedos — they lock on, steer toward the nearest yeti, and leave an orange exhaust trail" }
 ]
