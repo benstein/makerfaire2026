@@ -21,10 +21,17 @@ export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
   }
 
   // Timer (top-right)
-  ctx.fillStyle = CONFIG.timerColor;
+  const timerText = `${Math.ceil(timeRemaining)}s`;
+  const tx = canvasWidth - padding;
+  const ty = padding + CONFIG.hudFontSize;
   ctx.font = `bold ${CONFIG.hudFontSize}px monospace`;
   ctx.textAlign = 'right';
-  ctx.fillText(`${Math.ceil(timeRemaining)}s`, canvasWidth - padding, padding + CONFIG.hudFontSize);
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#2c3e50';
+  ctx.lineJoin = 'round';
+  ctx.strokeText(timerText, tx, ty);
+  ctx.fillStyle = CONFIG.timerColor;
+  ctx.fillText(timerText, tx, ty);
   ctx.textAlign = 'left'; // reset
 }
 

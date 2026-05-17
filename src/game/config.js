@@ -30,5 +30,5 @@ export const CONFIG = {
   // HUD
   heartColor: '#e74c3c',
   timerColor: '#d35400',
-  hudFontSize: 24,
+  hudFontSize: 56,
 };
