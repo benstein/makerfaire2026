@@ -57,6 +57,6 @@ export function updateTimer(dt) {
   timeRemaining -= dt / 1000;
   if (timeRemaining <= 0) {
     timeRemaining = 0;
-    endGame(false); // time's up without killing the boss → loss
+    endGame(true);
   }
 }

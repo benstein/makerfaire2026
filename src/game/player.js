@@ -72,10 +72,6 @@ export function isPlayerInvincible(now) {
   return now < invincibleUntil;
 }
 
-export function healPlayer(amount = 1) {
-  health = Math.min(CONFIG.playerMaxHealth, health + amount);
-}
-
 export function damagePlayer(now) {
   if (now < invincibleUntil) return false;
   health -= 1;

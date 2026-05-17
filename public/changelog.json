@@ -1,14 +1,3 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Kevin", "description": "Bad guys are now rampaging yetis — fluffy white fur, red eyes, fangs, and reaching claws" },
-  { "version": 3, "name": "Reed", "description": "Black background so the yetis really stand out" },
-  { "version": 4, "name": "Reed", "description": "The Maker has 6 hearts and moves nearly twice as fast" },
-  { "version": 5, "name": "Gabi", "description": "Forest theme with dark tree canopies. Kill 10 yetis and FINAL SMASH wipes the whole screen!" },
-  { "version": 6, "name": "Shelley", "description": "Bright pink Maker and big hot-pink bullets" },
-  { "version": 7, "name": "Sayer", "description": "The Maker now shoots spinning glowing stars!" },
-  { "version": 8, "name": "Ethan", "description": "BOSS YETI arrives at 20s! Giant, stomping, red-eyed — take 10 shots to bring it down and win!" },
-  { "version": 9, "name": "Jeff", "description": "Press B to plant a landmine! Up to 3 active — any yeti that steps on one gets blown up!" },
-  { "version": 10, "name": "Ethan", "description": "Hearts appear every 8 seconds — walk over them to restore a heart!" },
-  { "version": 11, "name": "Gabi", "description": "A button fires only — use the Start button to restart (keyboard unchanged)" },
-  { "version": 12, "name": "Henry", "description": "30-second boss rush! The Boss Yeti charges in immediately — kill it to win, or time runs out and you lose!" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" }
 ]
