@@ -6,7 +6,7 @@ export const CONFIG = {
   // Player
   playerSpeed: 7,
   playerSize: 28,
-  playerColor: '#2c3e50',
+  playerColor: '#ff1493',
   playerMaxHealth: 6,
   invincibilityDuration: 1000, // ms
 
@@ -19,8 +19,8 @@ export const CONFIG = {
 
   // Weapons
   projectileSpeed: 7,
-  projectileSize: 6,
-  projectileColor: '#1f3a5f',
+  projectileSize: 14,
+  projectileColor: '#ff69b4',
   fireRateCooldown: 250, // ms between shots
 
   // Game

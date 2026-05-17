@@ -3,5 +3,6 @@
   { "version": 2, "name": "Kevin", "description": "Bad guys are now rampaging yetis — fluffy white fur, red eyes, fangs, and reaching claws" },
   { "version": 3, "name": "Reed", "description": "Black background so the yetis really stand out" },
   { "version": 4, "name": "Reed", "description": "The Maker has 6 hearts and moves nearly twice as fast" },
-  { "version": 5, "name": "Gabi", "description": "Forest theme with dark tree canopies. Kill 10 yetis and FINAL SMASH wipes the whole screen!" }
+  { "version": 5, "name": "Gabi", "description": "Forest theme with dark tree canopies. Kill 10 yetis and FINAL SMASH wipes the whole screen!" },
+  { "version": 6, "name": "Shelley", "description": "Bright pink Maker and big hot-pink bullets" }
 ]
