@@ -9,6 +9,7 @@ import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, hitE
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { resetLava, updateLava, drawLava, getLavaBounds } from './game/lava.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -60,6 +61,7 @@ function gameLoop(now) {
         resetPlayer(width, height);
         resetEnemies();
         resetWeapons();
+        resetLava();
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -77,6 +79,12 @@ function gameLoop(now) {
         tryFire(getPlayerPos(), getPlayerFacing(), now);
       }
       updateProjectiles(dt, width, height);
+      updateLava(width);
+
+      // Lava — instant death, no invincibility
+      if (getPlayerHealth() > 0 && aabb(getPlayerBounds(), getLavaBounds(width, height))) {
+        endGame(false);
+      }
 
       // Projectile-enemy collisions
       const projList = getProjectiles();
@@ -112,6 +120,7 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
+      drawLava(ctx, width, height, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);
