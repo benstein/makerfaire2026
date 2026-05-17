@@ -9,6 +9,7 @@ import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } fro
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { resetLightning, updateLightning, drawLightning } from './game/lightning.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -60,6 +61,7 @@ function gameLoop(now) {
         resetPlayer(width, height);
         resetEnemies();
         resetWeapons();
+        resetLightning(now);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -77,6 +79,7 @@ function gameLoop(now) {
         tryFire(getPlayerPos(), getPlayerFacing(), now);
       }
       updateProjectiles(dt, width, height);
+      updateLightning(now, width, height);
 
       // Projectile-enemy collisions
       const projList = getProjectiles();
@@ -112,6 +115,7 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
+      drawLightning(ctx, width, height, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);

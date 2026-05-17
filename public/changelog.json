@@ -1,3 +1,4 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  { "version": 2, "name": "Liam", "description": "Night sky! 180 twinkling stars fill the darkness. Every second or two, a random rainbow lightning bolt cracks down from the top — jagged, glowing, screen-flashing. Totally safe. Totally awesome." }
 ]

@@ -25,9 +25,36 @@ export function getCanvasSize() {
 const _logo = new Image();
 _logo.src = '/assets/logo.jpg';
 
+// Pre-generate stable star field
+const STAR_COUNT = 180;
+const stars = Array.from({ length: STAR_COUNT }, () => ({
+  x: Math.random(),   // fraction of width
+  y: Math.random(),   // fraction of height
+  r: 0.4 + Math.random() * 1.4,
+  twinkleOffset: Math.random() * Math.PI * 2,
+  twinkleSpeed: 0.8 + Math.random() * 1.6,
+}));
+
 export function clearCanvas() {
-  ctx.fillStyle = CONFIG.arenaBackground;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const w = canvas.width, h = canvas.height;
+  const now = performance.now() / 1000;
+
+  // Deep night gradient
+  const sky = ctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0,   '#01030a');
+  sky.addColorStop(0.6, '#05080f');
+  sky.addColorStop(1,   '#0a0d18');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, h);
+
+  // Stars — twinkle by varying opacity
+  for (const s of stars) {
+    const alpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(now * s.twinkleSpeed + s.twinkleOffset));
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 export function drawTitleScreen() {

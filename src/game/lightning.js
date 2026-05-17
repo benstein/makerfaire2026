@@ -1,168 +1,101 @@
-// src/game/lightning.js
-// Lightning strikes from the sky. Each strike telegraphs with a glowing
-// target on the ground, then a jagged bolt cracks down. Standing in the
-// strike radius when the bolt lands hurts the player.
+// src/game/lightning.js — decorative rainbow lightning; purely visual, never hurts the player
 
-let strikes = [];
+const INTERVAL_MIN  = 1100;  // ms between strikes
+const INTERVAL_MAX  = 2800;
+const BOLT_LIFE     = 260;   // ms bolt stays bright
+const GLOW_LIFE     = 550;   // ms total (includes fade)
+const FLASH_LIFE    = 110;   // ms screen-flash at moment of strike
+
+let bolts = [];
 let nextStrikeAt = 0;
-let flashUntil = 0;
 
-const STRIKE_INTERVAL_MIN = 2200;  // ms
-const STRIKE_INTERVAL_MAX = 4500;  // ms
-const WARNING_DURATION   = 850;    // ms — telegraph before bolt actually hits
-const STRIKE_DURATION    = 180;    // ms — bolt is visible & dangerous
-const FADE_DURATION      = 450;    // ms — residual scorch (no damage)
-const STRIKE_RADIUS      = 52;     // pixels — inside this when bolt lands = ZAP
-
-export function resetLightning() {
-  strikes = [];
-  // Small grace period before first strike so kids can orient
-  nextStrikeAt = performance.now() + 1800 + Math.random() * 1500;
-  flashUntil = 0;
+export function resetLightning(now) {
+  bolts = [];
+  nextStrikeAt = now + 900;
 }
 
-function makeBoltSegments() {
-  const segs = [];
-  for (let i = 0; i < 14; i++) segs.push((Math.random() - 0.5) * 34);
-  return segs;
+// Recursive midpoint displacement — builds a jagged zigzag branch
+function branch(x1, y1, x2, y2, depth) {
+  if (depth === 0 || Math.abs(y2 - y1) < 8) return [{ x1, y1, x2, y2 }];
+  const spread = Math.abs(y2 - y1) * 0.55;
+  const mx = (x1 + x2) / 2 + (Math.random() - 0.5) * spread;
+  const my = (y1 + y2) / 2;
+  return [...branch(x1, y1, mx, my, depth - 1), ...branch(mx, my, x2, y2, depth - 1)];
 }
 
-export function updateLightning(dt, now, arenaWidth, arenaHeight, playerPos, damageFn) {
-  // Schedule a new strike
+export function updateLightning(now, arenaWidth, arenaHeight) {
   if (now >= nextStrikeAt) {
-    const margin = 70;
-    strikes.push({
-      x: margin + Math.random() * (arenaWidth - margin * 2),
-      y: margin + Math.random() * (arenaHeight - margin * 2),
-      bornAt: now,
-      warnedUntil: now + WARNING_DURATION,
-      struckUntil: now + WARNING_DURATION + STRIKE_DURATION,
-      doneAt:      now + WARNING_DURATION + STRIKE_DURATION + FADE_DURATION,
-      segments: makeBoltSegments(),
-      damaged: false,
-      flashed: false,
+    const x   = 30 + Math.random() * (arenaWidth - 60);
+    const endY = arenaHeight * (0.25 + Math.random() * 0.55);
+    bolts.push({
+      segs: branch(x, 0, x + (Math.random() - 0.5) * 120, endY, 5),
+      hue:  Math.random() * 360,
+      born: now,
+      x,
     });
-    nextStrikeAt = now + STRIKE_INTERVAL_MIN + Math.random() * (STRIKE_INTERVAL_MAX - STRIKE_INTERVAL_MIN);
+    nextStrikeAt = now + INTERVAL_MIN + Math.random() * (INTERVAL_MAX - INTERVAL_MIN);
   }
-
-  for (let i = strikes.length - 1; i >= 0; i--) {
-    const s = strikes[i];
-
-    // Damage check happens once, the moment the bolt actually lands
-    if (!s.damaged && now >= s.warnedUntil && now < s.struckUntil) {
-      const dx = playerPos.x - s.x;
-      const dy = playerPos.y - s.y;
-      if (dx * dx + dy * dy < STRIKE_RADIUS * STRIKE_RADIUS) {
-        damageFn(now);
-        s.damaged = true; // mark either way — single damage event per strike
-      }
-    }
-
-    // Trigger a one-shot screen flash on impact
-    if (!s.flashed && now >= s.warnedUntil) {
-      flashUntil = Math.max(flashUntil, s.warnedUntil + 100);
-      s.flashed = true;
-    }
-
-    if (now > s.doneAt) strikes.splice(i, 1);
+  for (let i = bolts.length - 1; i >= 0; i--) {
+    if (now - bolts[i].born > GLOW_LIFE) bolts.splice(i, 1);
   }
 }
 
 export function drawLightning(ctx, canvasW, canvasH, now) {
-  for (const s of strikes) {
-    if (now < s.warnedUntil) {
-      // --- WARNING: glowing target on the ground ---
-      const pulse = 0.4 + 0.6 * Math.abs(Math.sin(now / 70));
-      const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, STRIKE_RADIUS);
-      grad.addColorStop(0, `rgba(255,250,180,${0.30 * pulse})`);
-      grad.addColorStop(1, 'rgba(255,250,180,0)');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, STRIKE_RADIUS, 0, Math.PI * 2);
-      ctx.fill();
+  for (const bolt of bolts) {
+    const age  = now - bolt.born;
+    const hue  = bolt.hue;
+    const hue2 = (hue + 50) % 360;
 
-      ctx.strokeStyle = `rgba(255,240,120,${0.65 * pulse})`;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, STRIKE_RADIUS, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Crosshair sparks
-      ctx.strokeStyle = `rgba(255,255,180,${0.45 * pulse})`;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(s.x - STRIKE_RADIUS * 0.6, s.y); ctx.lineTo(s.x + STRIKE_RADIUS * 0.6, s.y);
-      ctx.moveTo(s.x, s.y - STRIKE_RADIUS * 0.6); ctx.lineTo(s.x, s.y + STRIKE_RADIUS * 0.6);
-      ctx.stroke();
-    } else if (now < s.struckUntil) {
-      // --- STRIKE: jagged zigzag bolt from sky to ground ---
-      const segs = s.segments;
-      const stepH = s.y / (segs.length);
-
-      // Outer glow
-      ctx.strokeStyle = 'rgba(180,210,255,0.6)';
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(s.x + segs[0], 0);
-      for (let i = 1; i < segs.length; i++) {
-        ctx.lineTo(s.x + segs[i], i * stepH);
-      }
-      ctx.lineTo(s.x, s.y);
-      ctx.stroke();
-
-      // Bright core
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(s.x + segs[0], 0);
-      for (let i = 1; i < segs.length; i++) {
-        ctx.lineTo(s.x + segs[i], i * stepH);
-      }
-      ctx.lineTo(s.x, s.y);
-      ctx.stroke();
-
-      // Impact burst at the ground
-      const burst = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, STRIKE_RADIUS * 1.5);
-      burst.addColorStop(0, 'rgba(255,255,255,0.95)');
-      burst.addColorStop(0.5, 'rgba(200,220,255,0.55)');
-      burst.addColorStop(1, 'rgba(120,170,255,0)');
-      ctx.fillStyle = burst;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, STRIKE_RADIUS * 1.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Radiating sparks
-      ctx.strokeStyle = 'rgba(220,230,255,0.85)';
-      ctx.lineWidth = 2;
-      for (let k = 0; k < 8; k++) {
-        const a = (k / 8) * Math.PI * 2 + Math.random() * 0.3;
-        const len = STRIKE_RADIUS * (0.7 + Math.random() * 0.8);
-        ctx.beginPath();
-        ctx.moveTo(s.x, s.y);
-        ctx.lineTo(s.x + Math.cos(a) * len, s.y + Math.sin(a) * len);
-        ctx.stroke();
-      }
-    } else {
-      // --- FADE: scorch mark on the ground ---
-      const t = (now - s.struckUntil) / FADE_DURATION;
-      const a = 1 - t;
-      ctx.fillStyle = `rgba(35,25,18,${0.6 * a})`;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, STRIKE_RADIUS * 0.78, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = `rgba(160,200,255,${0.55 * a})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, STRIKE_RADIUS * 0.78, 0, Math.PI * 2);
-      ctx.stroke();
+    // Whole-screen tint flash at the instant of strike
+    if (age < FLASH_LIFE) {
+      const fa = (1 - age / FLASH_LIFE) * 0.20;
+      ctx.fillStyle = `hsla(${hue}, 100%, 88%, ${fa})`;
+      ctx.fillRect(0, 0, canvasW, canvasH);
     }
-  }
 
-  // Full-screen impact flash
-  if (now < flashUntil) {
-    const remaining = (flashUntil - now) / 100;
-    ctx.fillStyle = `rgba(255,255,255,${0.32 * remaining})`;
-    ctx.fillRect(0, 0, canvasW, canvasH);
+    // Alpha: full during BOLT_LIFE, then fade out
+    const alpha = age < BOLT_LIFE
+      ? 1
+      : 1 - (age - BOLT_LIFE) / (GLOW_LIFE - BOLT_LIFE);
+    if (alpha <= 0) continue;
+
+    // Draw the bolt three times: fat glow → medium → bright white core
+    const passes = [
+      { width: 14, color: `hsla(${hue},  100%, 70%, ${0.28 * alpha})`, blur: 28 },
+      { width: 5,  color: `hsla(${hue2}, 100%, 82%, ${0.70 * alpha})`, blur: 14 },
+      { width: 1.6, color: `rgba(255,255,255,${alpha})`,                blur: 6  },
+    ];
+
+    for (const pass of passes) {
+      ctx.save();
+      ctx.strokeStyle  = pass.color;
+      ctx.lineWidth    = pass.width;
+      ctx.lineCap      = 'round';
+      ctx.lineJoin     = 'round';
+      ctx.shadowBlur   = pass.blur;
+      ctx.shadowColor  = `hsl(${hue}, 100%, 75%)`;
+      ctx.beginPath();
+      for (let i = 0; i < bolt.segs.length; i++) {
+        const s = bolt.segs[i];
+        if (i === 0) ctx.moveTo(s.x1, s.y1);
+        ctx.lineTo(s.x2, s.y2);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Bright flare dot at the origin (top)
+    if (age < FLASH_LIFE * 2) {
+      const fa2 = alpha * (1 - age / (FLASH_LIFE * 2));
+      ctx.save();
+      ctx.fillStyle   = '#ffffff';
+      ctx.shadowBlur  = 22;
+      ctx.shadowColor = `hsl(${hue}, 100%, 90%)`;
+      ctx.globalAlpha = fa2;
+      ctx.beginPath();
+      ctx.arc(bolt.segs[0].x1, 0, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
   }
 }
