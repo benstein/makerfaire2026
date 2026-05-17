@@ -60,7 +60,7 @@ function gameLoop(now) {
 
     // --- State transitions ---
     if (state !== STATES.BUILDING) {
-      if ((input.start || input.fire) && (state === STATES.TITLE || state === STATES.GAMEOVER || state === STATES.VICTORY)) {
+      if ((input.start || input.fireKb) && (state === STATES.TITLE || state === STATES.GAMEOVER || state === STATES.VICTORY)) {
         startGame();
         resetPlayer(width, height);
         resetEnemies();

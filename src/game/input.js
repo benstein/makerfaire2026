@@ -5,6 +5,7 @@ const state = {
   stickX: 0,
   stickY: 0,
   fire: false,
+  fireKb: false,  // keyboard-only fire — for restart without triggering on gamepad A
   start: false,
   fireHeld: false,
   startHeld: false,
@@ -53,6 +54,7 @@ export function pollInput() {
 
   const fireNow = gpFire || kbFire;
   state.fire = fireNow && !prevFire;
+  state.fireKb = kbFire && !prevFire;  // space bar only, no gamepad A
   state.fireHeld = fireNow;
   prevFire = fireNow;
 
