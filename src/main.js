@@ -12,6 +12,7 @@ import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictory
 import { resetLightning, updateLightning, drawLightning } from './game/lightning.js';
 import { resetCube, updateCube, drawCube, getCube, isCubeAlive, damageCube } from './game/cube.js';
 import { resetHammer, updateHammer, drawHammer, getHammerBlocks } from './game/hammer.js';
+import { resetAd, updateAd, drawAd } from './game/ad.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -66,6 +67,7 @@ function gameLoop(now) {
         resetLightning(now);
         resetCube(width, height);
         resetHammer(now);
+        resetAd(now);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -89,6 +91,7 @@ function gameLoop(now) {
         break;
       }
       updateHammer(now, width, height);
+      updateAd(now);
       updateEnemies(dt, getPlayerPos(), now, width, height);
 
       // Firing
@@ -168,6 +171,7 @@ function gameLoop(now) {
       drawEnemies(ctx, now);
       drawProjectiles(ctx);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+      drawAd(ctx, width, height, now);
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();
     } else if (state === STATES.GAMEOVER) {
