@@ -9,5 +9,6 @@
   { "version": 8, "name": "Zephyr", "description": "Step through the swirling portal and the whole world transforms into Super Mario Bros — blue sky, clouds, pipes, ? blocks, Goombas, and Mario himself!" },
   { "version": 9, "name": "Daniel", "description": "Bad guys shoot back! Swirling rainbow bullets every 3 seconds — but their aim is absolutely terrible" },
   { "version": 10, "name": "Griffin", "description": "Mario world: warp between the pipes! Kill 10 Goombas and the turtle TRANSFORMS into Bowser — crown, spikes, and fireballs. Kill him to win!" },
-  { "version": 11, "name": "Rae and Eli", "description": "The Maker carries a MASSIVE knight shield — red with a gold cross. It actually blocks enemy bullets!" }
+  { "version": 11, "name": "Rae and Eli", "description": "The Maker carries a MASSIVE knight shield — red with a gold cross. It actually blocks enemy bullets!" },
+  { "version": 12, "name": "Fitz", "description": "A new turtle crashes in from the edge every 20 seconds — up to 5 at once!" }
 ]

@@ -7,7 +7,7 @@ import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, upda
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, getShieldBounds, damagePlayer, teleportPlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, drawEnemyBullets, getEnemies, getEnemyBullets, removeEnemy, removeEnemyBullet, damageEnemy } from './game/enemies.js';
 import { resetPanda, updatePanda, drawPanda } from './game/panda.js';
-import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle, isBowserMode, transformToBowser, getFireballs, removeFireball } from './game/turtle.js';
+import { resetTurtle, updateTurtle, drawTurtle, getTurtles, isTurtleAlive, damageTurtle, isBowserMode, transformToBowser, getFireballs, removeFireball } from './game/turtle.js';
 import { resetNuke, canNuke, triggerNuke, updateNuke, drawNuke, drawNukeHUD, isBlasting } from './game/nuke.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
@@ -114,20 +114,26 @@ function gameLoop(now) {
       // Projectile-enemy collisions
       const projList = getProjectiles();
 
-      // vs turtle / Bowser
-      if (isTurtleAlive()) {
+      // vs turtles / Bowser
+      const turtleArr = getTurtles();
+      for (let ti = turtleArr.length - 1; ti >= 0; ti--) {
+        const t = turtleArr[ti];
+        if (!t || t.hp <= 0) continue;
         for (let i = projList.length - 1; i >= 0; i--) {
-          if (aabb(projList[i], getTurtle())) {
+          if (aabb(projList[i], t)) {
             removeProjectile(i);
-            if (damageTurtle() && isBowserMode()) endGame(true);
+            if (damageTurtle(ti) && t.isBowser) endGame(true);
             break;
           }
         }
       }
 
       // Bowser body contact
-      if (isTurtleAlive() && isBowserMode() && aabb(getPlayerBounds(), getTurtle())) {
-        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+      if (isBowserMode()) {
+        const bowserT = getTurtles().find(t => t.isBowser && t.hp > 0);
+        if (bowserT && aabb(getPlayerBounds(), bowserT)) {
+          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+        }
       }
 
       // Fireball-player collision

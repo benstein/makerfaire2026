@@ -15,104 +15,142 @@ const FIREBALL_COOLDOWN = 2400;
 const FIREBALL_SPEED    = 3.2;
 const FIREBALL_SIZE     = 20;
 
-let turtle = null;
+const SPAWN_INTERVAL = 20000; // ms between new turtles
+const MAX_TURTLES    = 5;
+
+let turtles = [];
 let bowserMode = false;
 let fireballs  = [];
 let lastFireballTime = 0;
+let nextSpawnTime    = 0;
 
-export function isBowserMode() { return bowserMode; }
-export function getFireballs()  { return fireballs; }
+export function isBowserMode()    { return bowserMode; }
+export function getTurtles()      { return turtles; }
+export function getTurtle()       { return turtles[0] ?? null; }
+export function isTurtleAlive()   { return turtles.some(t => t.hp > 0); }
+export function getFireballs()    { return fireballs; }
 export function removeFireball(i) { fireballs.splice(i, 1); }
+
+function makeTurtle(x, y) {
+  return {
+    x, y, w: TURTLE_SIZE, h: TURTLE_SIZE,
+    hp: TURTLE_HP, maxHp: TURTLE_HP,
+    angle: Math.random() * Math.PI * 2,
+    lastDirChange: 0, lastChomp: -CHOMP_COOLDOWN, chompAnim: 0,
+    isBowser: false,
+  };
+}
+
+function spawnEdgeTurtle(aw, ah) {
+  const edge = Math.floor(Math.random() * 4);
+  let x, y;
+  switch (edge) {
+    case 0: x = Math.random() * aw;    y = -TURTLE_SIZE; break;
+    case 1: x = aw;                     y = Math.random() * ah; break;
+    case 2: x = Math.random() * aw;    y = ah; break;
+    default: x = -TURTLE_SIZE;          y = Math.random() * ah; break;
+  }
+  return makeTurtle(x, y);
+}
 
 export function resetTurtle(arenaWidth, arenaHeight) {
   bowserMode = false;
   fireballs  = [];
   lastFireballTime = 0;
-  turtle = {
-    x: arenaWidth  * 0.5 - TURTLE_SIZE / 2,
-    y: arenaHeight * 0.3 - TURTLE_SIZE / 2,
-    w: TURTLE_SIZE,
-    h: TURTLE_SIZE,
-    hp: TURTLE_HP,
-    maxHp: TURTLE_HP,
-    angle: Math.random() * Math.PI * 2,
-    lastDirChange: 0,
-    lastChomp: -CHOMP_COOLDOWN,
-    chompAnim: 0,
-  };
+  turtles = [makeTurtle(arenaWidth * 0.5 - TURTLE_SIZE / 2, arenaHeight * 0.3 - TURTLE_SIZE / 2)];
+  nextSpawnTime = performance.now() + SPAWN_INTERVAL;
 }
 
 export function transformToBowser() {
-  if (!turtle) return;
-  const oldCx = turtle.x + turtle.w / 2;
-  const oldCy = turtle.y + turtle.h / 2;
-  bowserMode = true;
-  turtle.w    = BOWSER_SIZE;
-  turtle.h    = BOWSER_SIZE;
-  turtle.hp   = BOWSER_HP;
-  turtle.maxHp = BOWSER_HP;
-  turtle.x    = oldCx - BOWSER_SIZE / 2;
-  turtle.y    = oldCy - BOWSER_SIZE / 2;
-  fireballs   = [];
-  lastFireballTime = 0;
+  if (!turtles.length) return;
+  const t = turtles[0];
+  const oldCx = t.x + t.w / 2;
+  const oldCy = t.y + t.h / 2;
+  bowserMode  = true;
+  t.isBowser  = true;
+  t.w = BOWSER_SIZE; t.h = BOWSER_SIZE;
+  t.hp = BOWSER_HP;  t.maxHp = BOWSER_HP;
+  t.x = oldCx - BOWSER_SIZE / 2;
+  t.y = oldCy - BOWSER_SIZE / 2;
+  fireballs = []; lastFireballTime = 0;
 }
 
-export function getTurtle()     { return turtle; }
-export function isTurtleAlive() { return turtle !== null && turtle.hp > 0; }
-
-export function damageTurtle() {
-  if (!turtle || turtle.hp <= 0) return false;
-  turtle.hp--;
-  return turtle.hp <= 0;
+// Returns true if this turtle died.
+export function damageTurtle(index = 0) {
+  const t = turtles[index];
+  if (!t || t.hp <= 0) return false;
+  t.hp--;
+  if (t.hp <= 0) {
+    if (t.isBowser) bowserMode = false;
+    turtles.splice(index, 1);
+    return true;
+  }
+  return false;
 }
 
-// Returns true if the player was chomped/hit this frame.
+// Returns true if the player was chomped by any turtle this frame.
 export function updateTurtle(dt, playerPos, now, arenaWidth, arenaHeight) {
-  if (!turtle || turtle.hp <= 0) return false;
-
   const scale = dt / 16.67;
-  const size  = turtle.w;
+  let chomped = false;
 
-  if (bowserMode) {
-    // Bowser charges directly at the player
-    const dx = playerPos.x - (turtle.x + size / 2);
-    const dy = playerPos.y - (turtle.y + size / 2);
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > 0) {
-      turtle.x += (dx / dist) * BOWSER_SPEED * scale;
-      turtle.y += (dy / dist) * BOWSER_SPEED * scale;
-      turtle.angle = Math.atan2(dy, dx);
-    }
-    // Clamp to arena
-    turtle.x = Math.max(0, Math.min(arenaWidth  - size, turtle.x));
-    turtle.y = Math.max(0, Math.min(arenaHeight - size, turtle.y));
+  // Spawn a new turtle periodically (not during Bowser fight)
+  if (!bowserMode && turtles.length < MAX_TURTLES && now >= nextSpawnTime) {
+    turtles.push(spawnEdgeTurtle(arenaWidth, arenaHeight));
+    nextSpawnTime = now + SPAWN_INTERVAL;
+  }
 
-    // Shoot fireballs
-    if (now - lastFireballTime > FIREBALL_COOLDOWN && dist > 0) {
-      lastFireballTime = now;
-      const fx = turtle.x + size / 2;
-      const fy = turtle.y + size / 2;
-      fireballs.push({
-        x: fx - FIREBALL_SIZE / 2,
-        y: fy - FIREBALL_SIZE / 2,
-        w: FIREBALL_SIZE, h: FIREBALL_SIZE,
-        vx: (dx / dist) * FIREBALL_SPEED,
-        vy: (dy / dist) * FIREBALL_SPEED,
-      });
-    }
-  } else {
-    // Normal turtle: slow wandering
-    if (now - turtle.lastDirChange > DIR_CHANGE_MS) {
-      turtle.angle += (Math.random() - 0.5) * Math.PI * 1.2;
-      turtle.lastDirChange = now;
-    }
-    turtle.x += Math.cos(turtle.angle) * TURTLE_SPEED * scale;
-    turtle.y += Math.sin(turtle.angle) * TURTLE_SPEED * scale;
+  for (const t of turtles) {
+    if (t.hp <= 0) continue;
+    const size = t.w;
 
-    if (turtle.x < 0)                         { turtle.x = 0;                         turtle.angle = Math.PI - turtle.angle; }
-    if (turtle.x + size > arenaWidth)         { turtle.x = arenaWidth - size;         turtle.angle = Math.PI - turtle.angle; }
-    if (turtle.y < 0)                         { turtle.y = 0;                          turtle.angle = -turtle.angle; }
-    if (turtle.y + size > arenaHeight)        { turtle.y = arenaHeight - size;        turtle.angle = -turtle.angle; }
+    if (t.isBowser) {
+      // Bowser charges at the player
+      const dx = playerPos.x - (t.x + size / 2);
+      const dy = playerPos.y - (t.y + size / 2);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 0) {
+        t.x += (dx / dist) * BOWSER_SPEED * scale;
+        t.y += (dy / dist) * BOWSER_SPEED * scale;
+        t.angle = Math.atan2(dy, dx);
+      }
+      t.x = Math.max(0, Math.min(arenaWidth  - size, t.x));
+      t.y = Math.max(0, Math.min(arenaHeight - size, t.y));
+
+      if (now - lastFireballTime > FIREBALL_COOLDOWN && dist > 0) {
+        lastFireballTime = now;
+        fireballs.push({
+          x: t.x + size / 2 - FIREBALL_SIZE / 2,
+          y: t.y + size / 2 - FIREBALL_SIZE / 2,
+          w: FIREBALL_SIZE, h: FIREBALL_SIZE,
+          vx: (dx / dist) * FIREBALL_SPEED,
+          vy: (dy / dist) * FIREBALL_SPEED,
+        });
+      }
+    } else {
+      // Normal turtle: wander
+      if (now - t.lastDirChange > DIR_CHANGE_MS) {
+        t.angle += (Math.random() - 0.5) * Math.PI * 1.2;
+        t.lastDirChange = now;
+      }
+      t.x += Math.cos(t.angle) * TURTLE_SPEED * scale;
+      t.y += Math.sin(t.angle) * TURTLE_SPEED * scale;
+
+      if (t.x < 0)               { t.x = 0;               t.angle = Math.PI - t.angle; }
+      if (t.x + size > arenaWidth)  { t.x = arenaWidth - size;  t.angle = Math.PI - t.angle; }
+      if (t.y < 0)               { t.y = 0;               t.angle = -t.angle; }
+      if (t.y + size > arenaHeight) { t.y = arenaHeight - size; t.angle = -t.angle; }
+
+      // Proximity chomp
+      t.chompAnim = Math.max(0, t.chompAnim - dt / 350);
+      const dx = playerPos.x - (t.x + size / 2);
+      const dy = playerPos.y - (t.y + size / 2);
+      if (Math.sqrt(dx * dx + dy * dy) < EAT_RANGE && now - t.lastChomp > CHOMP_COOLDOWN) {
+        t.lastChomp = now;
+        t.chompAnim = 1;
+        t.angle = Math.atan2(dy, dx);
+        chomped = true;
+      }
+    }
   }
 
   // Move fireballs
@@ -125,30 +163,19 @@ export function updateTurtle(dt, playerPos, now, arenaWidth, arenaHeight) {
     }
   }
 
-  // Decay chomp animation
-  turtle.chompAnim = Math.max(0, turtle.chompAnim - dt / 350);
-
-  // Proximity chomp (normal mode only — Bowser uses contact collision in main.js)
-  if (!bowserMode) {
-    const cx = turtle.x + size / 2;
-    const cy = turtle.y + size / 2;
-    const dx = playerPos.x - cx;
-    const dy = playerPos.y - cy;
-    if (Math.sqrt(dx * dx + dy * dy) < EAT_RANGE && now - turtle.lastChomp > CHOMP_COOLDOWN) {
-      turtle.lastChomp = now;
-      turtle.chompAnim = 1;
-      turtle.angle = Math.atan2(dy, dx);
-      return true;
-    }
-  }
-
-  return false;
+  return chomped;
 }
 
 export function drawTurtle(ctx, now) {
-  if (!turtle || turtle.hp <= 0) return;
-  if (bowserMode) { drawBowser(ctx, now); return; }
   drawFireballs(ctx, now);
+  for (const t of turtles) {
+    if (t.hp <= 0) continue;
+    if (t.isBowser) { drawBowser(ctx, t, now); continue; }
+    drawOneTurtle(ctx, t, now);
+  }
+}
+
+function drawOneTurtle(ctx, turtle, now) {
 
   const cx = turtle.x + TURTLE_SIZE / 2;
   const cy = turtle.y + TURTLE_SIZE / 2;
@@ -290,8 +317,8 @@ export function drawTurtle(ctx, now) {
 
   // HP pips above turtle
   ctx.save();
-  ctx.translate(cx - (TURTLE_HP - 1) * 6, turtle.y - 14);
-  for (let i = 0; i < TURTLE_HP; i++) {
+  ctx.translate(cx - (turtle.maxHp - 1) * 6, turtle.y - 14);
+  for (let i = 0; i < turtle.maxHp; i++) {
     ctx.fillStyle = i < turtle.hp ? '#2ecc71' : '#444';
     ctx.beginPath();
     ctx.arc(i * 12, 0, 5, 0, Math.PI * 2);
@@ -317,7 +344,7 @@ function drawFireballs(ctx, now) {
   }
 }
 
-function drawBowser(ctx, now) {
+function drawBowser(ctx, turtle, now) {
   drawFireballs(ctx, now);
 
   const cx = turtle.x + turtle.w / 2;
