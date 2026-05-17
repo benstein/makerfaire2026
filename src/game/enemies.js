@@ -8,8 +8,12 @@ import { isDiscoActive } from './disco.js';
 const SIZES  = [52, 30, 16];
 const SPEEDS = [1.0, 1.4, 1.9]; // smaller pieces move faster
 
+const WAVE_SIZE     = 10;
+const WAVE_INTERVAL = 2000; // ms between waves
+
 let enemies = [];
 let lastSpawnTime = 0;
+let lastWaveTime  = 0;
 let gooDrops = [];
 
 const GOO_INTERVAL = 120; // ms between drops per enemy
@@ -18,7 +22,29 @@ const GOO_MAX_AGE  = 3200; // ms until fully faded
 export function resetEnemies() {
   enemies = [];
   lastSpawnTime = 0;
+  lastWaveTime  = 0;
   gooDrops = [];
+}
+
+function spawnWave(arenaWidth, arenaHeight) {
+  const s = SIZES[0];
+  // Spread evenly around the full perimeter so they close in from all sides at once
+  for (let i = 0; i < WAVE_SIZE; i++) {
+    const t = i / WAVE_SIZE;
+    const perim = 2 * (arenaWidth + arenaHeight);
+    const d = t * perim;
+    let ex, ey;
+    if (d < arenaWidth) {
+      ex = d;                                         ey = -s;
+    } else if (d < arenaWidth + arenaHeight) {
+      ex = arenaWidth + s;                            ey = d - arenaWidth;
+    } else if (d < 2 * arenaWidth + arenaHeight) {
+      ex = arenaWidth - (d - arenaWidth - arenaHeight); ey = arenaHeight + s;
+    } else {
+      ex = -s;  ey = arenaHeight - (d - 2 * arenaWidth - arenaHeight);
+    }
+    enemies.push({ x: ex, y: ey, w: s, h: s, hue: Math.random() * 360, generation: 0 });
+  }
 }
 
 export function spawnEnemy(arenaWidth, arenaHeight) {
@@ -44,10 +70,17 @@ function getCurrentSpawnInterval() {
 }
 
 export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
+  // Drip spawn (existing)
   const interval = getCurrentSpawnInterval();
   if (now - lastSpawnTime > interval) {
     spawnEnemy(arenaWidth, arenaHeight);
     lastSpawnTime = now;
+  }
+
+  // Wave spawn — 10 from every border every 2 seconds
+  if (now - lastWaveTime > WAVE_INTERVAL) {
+    spawnWave(arenaWidth, arenaHeight);
+    lastWaveTime = now;
   }
 
   for (const enemy of enemies) {
