@@ -4,15 +4,11 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, getShieldBounds, damagePlayer, teleportPlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, drawEnemyBullets, getEnemies, getEnemyBullets, removeEnemy, removeEnemyBullet, damageEnemy } from './game/enemies.js';
-import { resetPanda, updatePanda, drawPanda } from './game/panda.js';
-import { resetTurtle, updateTurtle, drawTurtle, getTurtles, isTurtleAlive, damageTurtle, isBowserMode, transformToBowser, getFireballs, removeFireball } from './game/turtle.js';
-import { resetNuke, canNuke, triggerNuke, updateNuke, drawNuke, drawNukeHUD, isBlasting } from './game/nuke.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
-import { initRendering, getCanvasSize, clearCanvas, drawMarioBackground, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
-import { resetPortal, updatePortal, drawPortal, isMarioMode, checkPipeWarps, addGoombaKill, getGoombaKills } from './game/portal.js';
+import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -65,10 +61,6 @@ function gameLoop(now) {
         resetEnemies();
         resetWeapons();
         resetVictoryEffects();
-        resetTurtle(width, height);
-        resetNuke();
-        resetPanda(width, height);
-        resetPortal(width, height);
       } else if (input.start) {
         goToTitle();
       }
@@ -78,32 +70,7 @@ function gameLoop(now) {
     if (state === STATES.PLAYING) {
       updateTimer(dt);
       updatePlayer(dt, input, width, height, now);
-      updatePortal(getPlayerBounds());
-
-      // Pipe warp
-      const warpDest = checkPipeWarps(getPlayerPos(), width, height, now);
-      if (warpDest) teleportPlayer(warpDest.x, warpDest.y);
-
       updateEnemies(dt, getPlayerPos(), now, width, height);
-
-      // Panda follows and slowly chomps enemies
-      const pandaKill = updatePanda(dt, getPlayerPos(), getEnemies(), now);
-      if (pandaKill !== -1) removeEnemy(pandaKill);
-
-      // Turtle wanders and chomps
-      if (updateTurtle(dt, getPlayerPos(), now, width, height)) {
-        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
-      }
-
-      // Nuke (B button — once per game)
-      if (input.nuke && canNuke()) {
-        triggerNuke(now);
-        // Wipe all enemies and the turtle
-        const allEnemies = getEnemies();
-        for (let i = allEnemies.length - 1; i >= 0; i--) removeEnemy(i);
-        if (isTurtleAlive()) resetTurtle(width, height);
-      }
-      updateNuke(now);
 
       // Firing
       if (input.fire || input.fireHeld) {
@@ -113,60 +80,12 @@ function gameLoop(now) {
 
       // Projectile-enemy collisions
       const projList = getProjectiles();
-
-      // vs turtles / Bowser
-      const turtleArr = getTurtles();
-      for (let ti = turtleArr.length - 1; ti >= 0; ti--) {
-        const t = turtleArr[ti];
-        if (!t || t.hp <= 0) continue;
-        for (let i = projList.length - 1; i >= 0; i--) {
-          if (aabb(projList[i], t)) {
-            removeProjectile(i);
-            if (damageTurtle(ti) && t.isBowser) endGame(true);
-            break;
-          }
-        }
-      }
-
-      // Bowser body contact
-      if (isBowserMode()) {
-        const bowserT = getTurtles().find(t => t.isBowser && t.hp > 0);
-        if (bowserT && aabb(getPlayerBounds(), bowserT)) {
-          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
-        }
-      }
-
-      // Fireball-player collision
-      const fbs2 = getFireballs();
-      const pb = getPlayerBounds();
-      for (let i = fbs2.length - 1; i >= 0; i--) {
-        if (aabb(pb, fbs2[i])) {
-          removeFireball(i);
-          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
-        }
-      }
-
-      // vs regular enemies
       const enemyList = getEnemies();
       for (let i = projList.length - 1; i >= 0; i--) {
         for (let j = enemyList.length - 1; j >= 0; j--) {
           if (aabb(projList[i], enemyList[j])) {
             removeProjectile(i);
-            if (damageEnemy(j) && addGoombaKill()) {
-              transformToBowser();
-            }
-            break;
-          }
-        }
-      }
-
-      // vs Bowser fireballs
-      const fbs = getFireballs();
-      for (let i = projList.length - 1; i >= 0; i--) {
-        for (let j = fbs.length - 1; j >= 0; j--) {
-          if (aabb(projList[i], fbs[j])) {
-            removeProjectile(i);
-            removeFireball(j);
+            removeEnemy(j);
             break;
           }
         }
@@ -179,22 +98,10 @@ function gameLoop(now) {
         if (aabb(playerBounds, enemies[i])) {
           if (damagePlayer(now)) {
             removeEnemy(i);
-            if (getPlayerHealth() <= 0) endGame(false);
+            if (getPlayerHealth() <= 0) {
+              endGame(false);
+            }
           }
-        }
-      }
-
-      // Enemy bullet collisions — check shield first, then player
-      const shieldBounds = getShieldBounds();
-      const eBullets = getEnemyBullets();
-      for (let i = eBullets.length - 1; i >= 0; i--) {
-        const b = eBullets[i];
-        const bBounds = { x: b.x - 7, y: b.y - 7, w: 14, h: 14 };
-        if (aabb(shieldBounds, bBounds)) {
-          removeEnemyBullet(i); // blocked by shield — no damage!
-        } else if (aabb(playerBounds, bBounds)) {
-          removeEnemyBullet(i);
-          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
         }
       }
     }
@@ -205,27 +112,10 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
-      if (isMarioMode()) drawMarioBackground(ctx, width, height, now);
-      drawPortal(ctx, now);
-      drawTurtle(ctx, now);
-      drawPanda(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
-      drawEnemyBullets(ctx);
       drawProjectiles(ctx);
-      drawNuke(ctx, width, height, now);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
-      drawNukeHUD(ctx, width, height);
-      if (isMarioMode() && !isBowserMode()) {
-        const gk = getGoombaKills();
-        ctx.font = 'bold 15px monospace';
-        ctx.textAlign = 'center';
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
-        ctx.strokeText(`GOOMBAS: ${gk}/10`, width / 2, height - 18);
-        ctx.fillStyle = '#ffd700';
-        ctx.fillText(`GOOMBAS: ${gk}/10`, width / 2, height - 18);
-        ctx.textAlign = 'left';
-      }
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();
     } else if (state === STATES.GAMEOVER) {

@@ -1,14 +1,3 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Ezra", "description": "Bullets are now torpedos with exhaust trails" },
-  { "version": 3, "name": "Tao", "description": "A Giant Turtle roams the arena — get too close and he CHOMPS you! Shoot him 5 times to take him down." },
-  { "version": 4, "name": "Daniel", "description": "Torpedos fly straight. Press B (or N) to NUKE — wipes the whole screen. Once per game!" },
-  { "version": 5, "name": "Tao", "description": "You have a pet panda! It follows you and slowly chomps nearby enemies" },
-  { "version": 6, "name": "Griffin", "description": "Enemies now take 3 hits to kill — watch the green health pips drain above each one!" },
-  { "version": 7, "name": "Nora", "description": "Castle arena! Stone floor tiles, battlements, corner towers, and flickering torches on the walls" },
-  { "version": 8, "name": "Zephyr", "description": "Step through the swirling portal and the whole world transforms into Super Mario Bros — blue sky, clouds, pipes, ? blocks, Goombas, and Mario himself!" },
-  { "version": 9, "name": "Daniel", "description": "Bad guys shoot back! Swirling rainbow bullets every 3 seconds — but their aim is absolutely terrible" },
-  { "version": 10, "name": "Griffin", "description": "Mario world: warp between the pipes! Kill 10 Goombas and the turtle TRANSFORMS into Bowser — crown, spikes, and fireballs. Kill him to win!" },
-  { "version": 11, "name": "Rae and Eli", "description": "The Maker carries a MASSIVE knight shield — red with a gold cross. It actually blocks enemy bullets!" },
-  { "version": 12, "name": "Fitz", "description": "A new turtle crashes in from the edge every 20 seconds — up to 5 at once!" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" }
 ]

@@ -1,135 +1,106 @@
 // src/game/portal.js
-// A swirling portal. Walk through it to warp into the Mario world.
+// One portal per map in a random spot — player-only warp
 
 import { aabb } from './collision.js';
 
-const PORTAL_W = 54;
-const PORTAL_H = 88;
+const PORTAL_SIZE = 30;
 
-let portal = null;
-let _marioMode = false;
-let goombaKills = 0;
-let lastWarpTime = -9999;
-
-export function isMarioMode()    { return _marioMode; }
-export function getGoombaKills() { return goombaKills; }
-
-// Returns true if this kill triggered Bowser (10 kills reached).
-export function addGoombaKill() {
-  if (!_marioMode) return false;
-  goombaKills++;
-  return goombaKills >= 10;
-}
-
-// Pipe geometry mirrors rendering.js drawMarioBackground exactly.
-function pipeWarpZones(aw, ah) {
-  const gH = 58;
-  const capY = ah - gH - gH * 0.6 - 14; // top of pipe cap
-  return [
-    { cx: aw * 0.14, cy: capY + 10, exitX: aw * 0.86, exitY: capY - 32 },
-    { cx: aw * 0.86, cy: capY + 10, exitX: aw * 0.14, exitY: capY - 32 },
-  ];
-}
-
-// Returns { x, y } to teleport the player to, or null.
-export function checkPipeWarps(playerPos, aw, ah, now) {
-  if (!_marioMode || now - lastWarpTime < 1400) return null;
-  const zones = pipeWarpZones(aw, ah);
-  for (const z of zones) {
-    if (Math.abs(playerPos.x - z.cx) < 38 && Math.abs(playerPos.y - z.cy) < 28) {
-      lastWarpTime = now;
-      return { x: z.exitX, y: z.exitY };
-    }
-  }
-  return null;
-}
+let px, py;
 
 export function resetPortal(arenaWidth, arenaHeight) {
-  _marioMode = false;
-  goombaKills = 0;
-  lastWarpTime = -9999;
-  portal = {
-    x: arenaWidth  * 0.72 - PORTAL_W / 2,
-    y: arenaHeight * 0.50 - PORTAL_H / 2,
-    w: PORTAL_W,
-    h: PORTAL_H,
-  };
+  // Place randomly, avoiding edges and center (where player spawns)
+  const margin = 60;
+  for (let tries = 0; tries < 20; tries++) {
+    px = margin + Math.random() * (arenaWidth - margin * 2);
+    py = margin + Math.random() * (arenaHeight - margin * 2);
+    // Avoid center where player spawns
+    const dx = px - arenaWidth / 2;
+    const dy = py - arenaHeight / 2;
+    if (Math.sqrt(dx * dx + dy * dy) > 100) break;
+  }
 }
 
-export function updatePortal(playerBounds) {
-  if (!portal) return;
-  if (aabb(playerBounds, portal)) {
-    _marioMode = true;
-    portal = null;
-  }
+export function getPortalBounds() {
+  return { x: px - PORTAL_SIZE / 2, y: py - PORTAL_SIZE / 2, w: PORTAL_SIZE, h: PORTAL_SIZE };
+}
+
+export function checkPortalCollision(playerBounds) {
+  return aabb(playerBounds, getPortalBounds());
 }
 
 export function drawPortal(ctx, now) {
-  if (!portal) return;
-  const cx = portal.x + portal.w / 2;
-  const cy = portal.y + portal.h / 2;
-  const rx = portal.w / 2;
-  const ry = portal.h / 2;
-  const t  = now / 1000;
+  const time = now / 1000;
+  const cx = px;
+  const cy = py;
+  const r = PORTAL_SIZE / 2;
 
-  ctx.save();
-
-  // Pulsing outer glow
-  const pulse = (Math.sin(t * 2.5) + 1) / 2;
-  ctx.shadowBlur = 24;
-  ctx.shadowColor = '#c040ff';
-
-  // Gradient fill
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
-  grad.addColorStop(0,    `rgba(${Math.round(160 + pulse * 70)}, 20, 255, 0.95)`);
-  grad.addColorStop(0.5,  `rgba(30, 80, 200, 0.8)`);
-  grad.addColorStop(1,    `rgba(50, 0, 110, 0.4)`);
-  ctx.fillStyle = grad;
+  // Outer glow ring — pulsing
+  const glowPulse = 0.15 + Math.sin(time * 3) * 0.08;
+  ctx.fillStyle = `rgba(150, 50, 255, ${glowPulse})`;
   ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r + 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Spinning outer ring
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(time * 2);
+  ctx.strokeStyle = '#9b59b6';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 4, 0, Math.PI * 1.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 4, Math.PI * 1.4, Math.PI * 2.6);
+  ctx.stroke();
+  ctx.restore();
+
+  // Inner swirling void
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-time * 3);
+
+  // Dark center
+  ctx.fillStyle = '#1a0a2e';
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fill();
 
   // Swirl arms
-  ctx.shadowBlur = 0;
-  for (let arm = 0; arm < 6; arm++) {
-    const a = t * 2.4 + (arm / 6) * Math.PI * 2;
-    ctx.strokeStyle = `rgba(255,255,255,${0.25 + 0.25 * Math.sin(t * 3 + arm * 1.1)})`;
-    ctx.lineWidth = 1.5;
+  for (let arm = 0; arm < 3; arm++) {
+    const angle = (arm / 3) * Math.PI * 2;
+    ctx.strokeStyle = `rgba(180, 100, 255, 0.5)`;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(a) * rx * 0.88, cy + Math.sin(a) * ry * 0.88);
+    for (let t = 0; t < 1; t += 0.05) {
+      const spiralR = t * r * 0.9;
+      const spiralAngle = angle + t * Math.PI * 2;
+      const sx = Math.cos(spiralAngle) * spiralR;
+      const sy = Math.sin(spiralAngle) * spiralR;
+      if (t === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
     ctx.stroke();
   }
+  ctx.restore();
 
   // Sparkles orbiting
-  for (let i = 0; i < 6; i++) {
-    const sa = t * 3.5 + (i / 6) * Math.PI * 2;
-    const sr = Math.max(rx, ry) + 6 + Math.sin(t * 5 + i * 2) * 4;
-    ctx.fillStyle = `rgba(210,140,255,${0.4 + Math.sin(t * 7 + i) * 0.3})`;
+  for (let i = 0; i < 5; i++) {
+    const sparkAngle = time * 4 + (i / 5) * Math.PI * 2;
+    const sparkR = r + 6 + Math.sin(time * 5 + i * 3) * 4;
+    const sx = cx + Math.cos(sparkAngle) * sparkR;
+    const sy = cy + Math.sin(sparkAngle) * sparkR;
+    const sparkAlpha = 0.4 + Math.sin(time * 8 + i) * 0.3;
+    ctx.fillStyle = `rgba(200, 150, 255, ${sparkAlpha})`;
     ctx.beginPath();
-    ctx.arc(cx + Math.cos(sa) * sr * (rx / Math.max(rx, ry)),
-            cy + Math.sin(sa) * sr * (ry / Math.max(rx, ry)), 2.5, 0, Math.PI * 2);
+    ctx.arc(sx, sy, 2, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Bright rim
-  ctx.shadowBlur = 14;
-  ctx.shadowColor = '#ffffff';
-  ctx.strokeStyle = '#dda0ff';
-  ctx.lineWidth = 3;
+  // Center bright dot
+  const centerPulse = 0.5 + Math.sin(time * 5) * 0.3;
+  ctx.fillStyle = `rgba(220, 180, 255, ${centerPulse})`;
   ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Blinking ENTER label
-  ctx.shadowBlur = 0;
-  if (Math.floor(t * 2) % 2 === 0) {
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 12px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('ENTER', cx, portal.y + portal.h + 16);
-    ctx.textAlign = 'left';
-  }
-
-  ctx.restore();
+  ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+  ctx.fill();
 }
