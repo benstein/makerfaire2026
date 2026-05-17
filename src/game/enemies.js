@@ -22,14 +22,17 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, angle: Math.random() * Math.PI * 2 });
 }
 
 function getCurrentSpawnInterval() {
   const progress = getGameProgress();
+  // Exponential decay: starts slow, accelerates hard toward the end
+  const t = Math.exp(progress * 3) - 1;   // 0 → ~19 over the game
+  const norm = t / (Math.exp(3) - 1);      // normalise to 0–1
   const start = CONFIG.enemySpawnIntervalStart;
   const end = CONFIG.enemySpawnIntervalEnd;
-  return start + (end - start) * progress;
+  return Math.max(end, start - (start - end) * norm);
 }
 
 export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
@@ -48,14 +51,30 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
       const scale = dt / 16.67;
       enemy.x += (dx / dist) * CONFIG.enemySpeed * scale;
       enemy.y += (dy / dist) * CONFIG.enemySpeed * scale;
+      enemy.angle = Math.atan2(dy, dx) + Math.PI / 2; // point tip toward player
     }
   }
 }
 
 export function drawEnemies(ctx) {
-  ctx.fillStyle = CONFIG.enemyColor;
   for (const enemy of enemies) {
-    ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+    const cx = enemy.x + enemy.w / 2;
+    const cy = enemy.y + enemy.h / 2;
+    const r  = enemy.w / 2;
+    ctx.save();
+    ctx.translate(Math.round(cx), Math.round(cy));
+    ctx.rotate(enemy.angle || 0);
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(-r * 0.85,  r * 0.75);
+    ctx.lineTo( r * 0.85,  r * 0.75);
+    ctx.closePath();
+    ctx.fillStyle = CONFIG.enemyColor;
+    ctx.fill();
+    ctx.strokeStyle = '#922b21';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
   }
 }
 

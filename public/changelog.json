@@ -1,3 +1,4 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  { "version": 2, "name": "Paul", "description": "Everything is triangles — the Maker, enemies, and bullets — and mobs explode exponentially faster as time runs out" }
 ]

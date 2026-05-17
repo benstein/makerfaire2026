@@ -38,11 +38,23 @@ export function updateProjectiles(dt, arenaWidth, arenaHeight) {
 }
 
 export function drawProjectiles(ctx) {
-  ctx.fillStyle = CONFIG.projectileColor;
+  const now = performance.now();
   for (const p of projectiles) {
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h / 2;
+    const r  = p.w / 2;
+    const spin = now / 120;
+    ctx.save();
+    ctx.translate(Math.round(cx), Math.round(cy));
+    ctx.rotate(spin);
     ctx.beginPath();
-    ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
+    ctx.moveTo(0, -r);
+    ctx.lineTo(-r * 0.85,  r * 0.75);
+    ctx.lineTo( r * 0.85,  r * 0.75);
+    ctx.closePath();
+    ctx.fillStyle = CONFIG.projectileColor;
     ctx.fill();
+    ctx.restore();
   }
 }
 
