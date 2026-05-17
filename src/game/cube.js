@@ -146,7 +146,7 @@ export function drawCube(ctx, now) {
   ctx.fillStyle = `rgba(160,220,255,${0.45 + Math.sin(t * 2) * 0.2})`;
   ctx.font = 'bold 16px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('CUBE', cx, cy + 6);
+  ctx.fillText('QUESO', cx, cy + 6);
   ctx.textAlign = 'left';
 
   // ── HP BAR ────────────────────────────────────────────────

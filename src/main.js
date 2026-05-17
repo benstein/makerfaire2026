@@ -8,7 +8,7 @@ import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getP
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, getFireballs, removeFireball, drawFireballs } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
-import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects, drawTicker } from './game/rendering.js';
 import { resetLightning, updateLightning, drawLightning } from './game/lightning.js';
 import { resetCube, updateCube, drawCube, getCube, isCubeAlive, damageCube } from './game/cube.js';
 import { resetHammer, updateHammer, drawHammer, getHammerBlocks } from './game/hammer.js';
@@ -121,6 +121,18 @@ function gameLoop(now) {
         }
       }
 
+      // vs basketballs (swords destroy them)
+      const basketballs = getFireballs();
+      for (let i = projList.length - 1; i >= 0; i--) {
+        for (let j = basketballs.length - 1; j >= 0; j--) {
+          if (aabb(projList[i], basketballs[j])) {
+            removeProjectile(i);
+            removeFireball(j);
+            break;
+          }
+        }
+      }
+
       // vs regular enemies
       const enemyList = getEnemies();
       for (let i = projList.length - 1; i >= 0; i--) {
@@ -178,6 +190,7 @@ function gameLoop(now) {
       drawProjectiles(ctx);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
       drawAd(ctx, width, height, now);
+      drawTicker(now);
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();
     } else if (state === STATES.GAMEOVER) {

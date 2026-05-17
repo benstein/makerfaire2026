@@ -258,3 +258,49 @@ export function drawGameOverScreen() {
   ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
 }
+
+const TICKER_TEXT = '  🍲 Soup is better than Peanut  ★  Soup is better than Peanut  ★  Soup is better than Peanut  ★  ';
+const TICKER_H    = 28;
+const TICKER_SPEED = 80; // px per second
+
+export function drawTicker(now) {
+  const w = canvas.width;
+  const h = canvas.height;
+  const y = h - TICKER_H;
+
+  ctx.save();
+
+  // Bar background
+  ctx.fillStyle = '#cc0000';
+  ctx.fillRect(0, y, w, TICKER_H);
+
+  // "BREAKING" badge on the left
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, y, 110, TICKER_H);
+  ctx.fillStyle = '#cc0000';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('BREAKING', 55, y + 18);
+
+  // Separator line
+  ctx.fillStyle = '#ffdd00';
+  ctx.fillRect(110, y, 3, TICKER_H);
+
+  // Scrolling text (clip to right of badge)
+  ctx.beginPath();
+  ctx.rect(113, y, w - 113, TICKER_H);
+  ctx.clip();
+
+  ctx.font = 'bold 14px monospace';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+
+  const fullW = ctx.measureText(TICKER_TEXT).width;
+  const offset = ((now / 1000) * TICKER_SPEED) % fullW;
+
+  // Draw twice so it loops seamlessly
+  ctx.fillText(TICKER_TEXT, 113 - offset,        y + 19);
+  ctx.fillText(TICKER_TEXT, 113 - offset + fullW, y + 19);
+
+  ctx.restore();
+}
