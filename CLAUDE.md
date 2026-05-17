@@ -25,7 +25,11 @@ While you work, the game shows a full-screen build progress view with the kid's 
 { "building": true, "name": "Emma", "description": "Cooking up something amazing...", "steps": [] }
 ```
 
-No steps needed yet — the screen will show a "Thinking hard about changes..." spinner. Then do your reads and planning. Once you know the real steps, rewrite the file with them.
+No steps needed yet — the screen will show a "Thinking hard about changes..." spinner.
+
+**Immediately after writing building.json, run `git pull --ff-only`** to sync the other laptop's latest changes before touching any code. The build screen hides the HMR flicker. This is mandatory in two-laptop event mode.
+
+Then do your reads and planning. Once you know the real steps, rewrite the file with them.
 
 **NEVER use `echo` with bash** — the shell mangles special characters like `!` and `'` which silently breaks the JSON and the overlay won't appear. Always use the Write tool.
 
