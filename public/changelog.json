@@ -1,5 +1,6 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Ezra", "description": "Bullets are now yeti-seeking torpedos — they lock on, steer toward the nearest yeti, and leave an orange exhaust trail" },
-  { "version": 3, "name": "Tao", "description": "A Giant Turtle roams the arena — get too close and he CHOMPS you! Shoot him 5 times to take him down." }
+  { "version": 2, "name": "Ezra", "description": "Bullets are now torpedos with exhaust trails" },
+  { "version": 3, "name": "Tao", "description": "A Giant Turtle roams the arena — get too close and he CHOMPS you! Shoot him 5 times to take him down." },
+  { "version": 4, "name": "Daniel", "description": "Torpedos fly straight. Press B (or N) to NUKE — wipes the whole screen. Once per game!" }
 ]

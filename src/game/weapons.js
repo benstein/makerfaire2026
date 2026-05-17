@@ -1,13 +1,11 @@
 // src/game/weapons.js
 
 import { CONFIG } from './config.js';
-import { getEnemies } from './enemies.js';
 
 let projectiles = [];
 let lastFireTime = 0;
 
-const TURN_RATE   = 0.10;  // how sharply torpedos steer per frame (radians)
-const TRAIL_LEN   = 10;    // exhaust trail segments per torpedo
+const TRAIL_LEN = 10;
 
 export function resetWeapons() {
   projectiles = [];
@@ -33,45 +31,13 @@ export function tryFire(playerPos, facing, now) {
 
 export function updateProjectiles(dt, arenaWidth, arenaHeight) {
   const scale = dt / 16.67;
-  const enemies = getEnemies();
-
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const p = projectiles[i];
-
-    // --- Homing: steer toward nearest enemy ---
-    if (enemies.length > 0) {
-      const cx = p.x + p.w / 2;
-      const cy = p.y + p.h / 2;
-      let nearDist = Infinity, nearEnemy = null;
-      for (const e of enemies) {
-        const ex = e.x + e.w / 2, ey = e.y + e.h / 2;
-        const d = Math.sqrt((ex - cx) ** 2 + (ey - cy) ** 2);
-        if (d < nearDist) { nearDist = d; nearEnemy = e; }
-      }
-      if (nearEnemy) {
-        const ex = nearEnemy.x + nearEnemy.w / 2;
-        const ey = nearEnemy.y + nearEnemy.h / 2;
-        const targetAngle = Math.atan2(ey - cy, ex - cx);
-        let currentAngle  = Math.atan2(p.vy, p.vx);
-        // Shortest-path angle interpolation
-        let diff = targetAngle - currentAngle;
-        while (diff >  Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        currentAngle += Math.sign(diff) * Math.min(Math.abs(diff), TURN_RATE * scale);
-        const speed = Math.sqrt(p.vx ** 2 + p.vy ** 2);
-        p.vx = Math.cos(currentAngle) * speed;
-        p.vy = Math.sin(currentAngle) * speed;
-      }
-    }
-
-    // Record trail position before moving
     const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
     p.trail.push({ x: cx, y: cy });
     if (p.trail.length > TRAIL_LEN) p.trail.shift();
-
     p.x += p.vx * scale;
     p.y += p.vy * scale;
-
     if (p.x < -80 || p.x > arenaWidth + 80 || p.y < -80 || p.y > arenaHeight + 80) {
       projectiles.splice(i, 1);
     }

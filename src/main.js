@@ -6,7 +6,8 @@ import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
-import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle } from './game/turtle.js';
+import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle, } from './game/turtle.js';
+import { resetNuke, canNuke, triggerNuke, updateNuke, drawNuke, drawNukeHUD, isBlasting } from './game/nuke.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
@@ -63,6 +64,7 @@ function gameLoop(now) {
         resetWeapons();
         resetVictoryEffects();
         resetTurtle(width, height);
+        resetNuke();
       } else if (input.start) {
         goToTitle();
       }
@@ -78,6 +80,16 @@ function gameLoop(now) {
       if (updateTurtle(dt, getPlayerPos(), now, width, height)) {
         if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
       }
+
+      // Nuke (B button — once per game)
+      if (input.nuke && canNuke()) {
+        triggerNuke(now);
+        // Wipe all enemies and the turtle
+        const allEnemies = getEnemies();
+        for (let i = allEnemies.length - 1; i >= 0; i--) removeEnemy(i);
+        if (isTurtleAlive()) resetTurtle(width, height);
+      }
+      updateNuke(now);
 
       // Firing
       if (input.fire || input.fireHeld) {
@@ -136,7 +148,9 @@ function gameLoop(now) {
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);
+      drawNuke(ctx, width, height, now);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+      drawNukeHUD(ctx, width, height);
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();
     } else if (state === STATES.GAMEOVER) {

@@ -6,6 +6,7 @@ const state = {
   stickY: 0,
   fire: false,
   fireKb: false,  // keyboard Space only — used for restart so gamepad A doesn't accidentally restart
+  nuke: false,
   start: false,
   fireHeld: false,
   startHeld: false,
@@ -32,7 +33,7 @@ export function pollInput() {
   const kbStart = keys['Enter'] || false;
 
   // Gamepad
-  let gpX = 0, gpY = 0, gpFire = false, gpStart = false;
+  let gpX = 0, gpY = 0, gpFire = false, gpStart = false, gpNuke = false;
   if (gp) {
     const rawX = gp.axes[0];
     const rawY = gp.axes[1];
@@ -40,7 +41,8 @@ export function pollInput() {
     const dpadY = (gp.buttons[13]?.pressed ? 1 : 0) - (gp.buttons[12]?.pressed ? 1 : 0);
     gpX = dpadX !== 0 ? dpadX : (Math.abs(rawX) > DEADZONE ? rawX : 0);
     gpY = dpadY !== 0 ? dpadY : (Math.abs(rawY) > DEADZONE ? rawY : 0);
-    gpFire = gp.buttons[0]?.pressed ?? false;
+    gpFire  = gp.buttons[0]?.pressed ?? false;
+    gpNuke  = gp.buttons[1]?.pressed ?? false; // B button
     gpStart = gp.buttons[9]?.pressed ?? false;
   }
 
@@ -53,6 +55,8 @@ export function pollInput() {
   state.fireKb  = kbFire  && !prevFire;
   state.fireHeld = fireNow;
   prevFire = fireNow;
+
+  state.nuke = gpNuke || (keys['n'] || false);  // B button or N key (one-shot handled in game logic)
 
   const startNow = gpStart || kbStart;
   state.start = startNow && !prevStart;
