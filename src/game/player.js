@@ -9,6 +9,7 @@ let facingY = -1; // default facing up
 let health;
 let maxHealth;
 let sizeBonus = 0;
+let muscleMode = false;
 let invincibleUntil = 0;
 
 function effectiveSize() { return CONFIG.playerSize + sizeBonus; }
@@ -21,10 +22,18 @@ export function resetPlayer(arenaWidth, arenaHeight) {
   maxHealth = CONFIG.playerMaxHealth;
   health = maxHealth;
   sizeBonus = 0;
+  muscleMode = false;
   invincibleUntil = 0;
 }
 
 export function growPlayer() { sizeBonus += 8; }
+
+export function activateMuscleMode() {
+  muscleMode = true;
+  sizeBonus  = Math.max(sizeBonus, 36); // ensure big hitbox
+  maxHealth += 5;
+  health    += 5;
+}
 
 export function healPlayer(amount) {
   maxHealth += amount;
@@ -60,6 +69,10 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
 export function drawPlayer(ctx, now) {
   if (now < invincibleUntil) {
     if (Math.floor(now / 80) % 2 === 0) return;
+  }
+  if (muscleMode) {
+    drawMuscleMeanie(ctx, effectiveSize(), now);
+    return;
   }
   const tier = getMarioTier();
   if (tier >= 1) {
@@ -217,6 +230,130 @@ function drawMario(ctx, s, now, starPower) {
   ctx.fillText('M', 0, -s*0.30);
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
 
+  ctx.restore();
+}
+
+function drawMuscleMeanie(ctx, s, now) {
+  const t   = now / 1000;
+  const ang = Math.atan2(facingX, -facingY);
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(ang);
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
+  ctx.beginPath(); ctx.ellipse(3, s * 0.45, s * 0.55, s * 0.13, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Legs — thick and stubby
+  ctx.fillStyle = '#2244aa';
+  ctx.beginPath(); ctx.roundRect(-s * 0.30, s * 0.18, s * 0.24, s * 0.40, s * 0.06); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( s * 0.06, s * 0.18, s * 0.24, s * 0.40, s * 0.06); ctx.fill();
+  // Shoes
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.ellipse(-s * 0.18, s * 0.55, s * 0.18, s * 0.09, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s * 0.18, s * 0.55, s * 0.18, s * 0.09, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Torso — wide trapezoid, angry gray tank top
+  ctx.fillStyle = '#e0e0e0';
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.50, s * 0.20);
+  ctx.lineTo( s * 0.50, s * 0.20);
+  ctx.lineTo( s * 0.36, s * 0.52);
+  ctx.lineTo(-s * 0.36, s * 0.52);
+  ctx.closePath(); ctx.fill();
+  // Tank top neck stripe
+  ctx.fillStyle = '#bbbbbb';
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.12, s * 0.20);
+  ctx.lineTo( s * 0.12, s * 0.20);
+  ctx.lineTo( s * 0.08, s * 0.36);
+  ctx.lineTo(-s * 0.08, s * 0.36);
+  ctx.closePath(); ctx.fill();
+  // "MEAN" text on chest
+  ctx.fillStyle = '#c0392b';
+  ctx.font = `bold ${Math.round(s * 0.14)}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('MEAN', 0, s * 0.42);
+
+  // LEFT arm — giant bicep flex
+  ctx.fillStyle = '#d4a27a';
+  // Upper arm
+  ctx.beginPath(); ctx.ellipse(-s * 0.56, s * 0.08, s * 0.20, s * 0.16, -0.5, 0, Math.PI * 2); ctx.fill();
+  // Bicep BULGE
+  const flex = 0.5 + 0.5 * Math.abs(Math.sin(t * 1.8));
+  ctx.beginPath(); ctx.ellipse(-s * 0.58, -s * 0.02, s * 0.18 + flex * s * 0.04, s * 0.18, -0.7, 0, Math.PI * 2); ctx.fill();
+  // Forearm
+  ctx.beginPath(); ctx.ellipse(-s * 0.54, s * 0.22, s * 0.14, s * 0.11, 0.3, 0, Math.PI * 2); ctx.fill();
+  // Fist
+  ctx.fillStyle = '#c0906a';
+  ctx.beginPath(); ctx.ellipse(-s * 0.52, s * 0.34, s * 0.13, s * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+  // Knuckles
+  ctx.fillStyle = '#b07858';
+  for (let k = 0; k < 3; k++) {
+    ctx.beginPath(); ctx.arc(-s * 0.58 + k * s * 0.06, s * 0.32, s * 0.03, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // RIGHT arm — mirror
+  ctx.fillStyle = '#d4a27a';
+  ctx.beginPath(); ctx.ellipse( s * 0.56, s * 0.08, s * 0.20, s * 0.16,  0.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s * 0.58, -s * 0.02, s * 0.18 + flex * s * 0.04, s * 0.18,  0.7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s * 0.54, s * 0.22, s * 0.14, s * 0.11, -0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#c0906a';
+  ctx.beginPath(); ctx.ellipse( s * 0.52, s * 0.34, s * 0.13, s * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#b07858';
+  for (let k = 0; k < 3; k++) {
+    ctx.beginPath(); ctx.arc( s * 0.52 + k * s * 0.06, s * 0.32, s * 0.03, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Neck
+  ctx.fillStyle = '#d4a27a';
+  ctx.beginPath(); ctx.roundRect(-s * 0.10, -s * 0.22, s * 0.20, s * 0.24, s * 0.04); ctx.fill();
+
+  // Head — round, red-faced, angry
+  const headGrad = ctx.createRadialGradient(-s * 0.05, -s * 0.38, 0, 0, -s * 0.34, s * 0.24);
+  headGrad.addColorStop(0, '#e88060');
+  headGrad.addColorStop(1, '#c06040');
+  ctx.fillStyle = headGrad;
+  ctx.beginPath(); ctx.arc(0, -s * 0.34, s * 0.23, 0, Math.PI * 2); ctx.fill();
+
+  // Stubble / jaw shadow
+  ctx.fillStyle = 'rgba(80,40,20,0.22)';
+  ctx.beginPath(); ctx.ellipse(0, -s * 0.22, s * 0.18, s * 0.09, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Angry eyebrows — angled inward
+  ctx.strokeStyle = '#1a0800'; ctx.lineWidth = s * 0.06; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-s * 0.20, -s * 0.44); ctx.lineTo(-s * 0.06, -s * 0.38); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( s * 0.20, -s * 0.44); ctx.lineTo( s * 0.06, -s * 0.38); ctx.stroke();
+
+  // Eyes — squinting scowl
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.ellipse(-s * 0.10, -s * 0.34, s * 0.055, s * 0.038, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s * 0.10, -s * 0.34, s * 0.055, s * 0.038, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Scowling mouth (downturned)
+  ctx.strokeStyle = '#1a0800'; ctx.lineWidth = s * 0.045;
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.10, -s * 0.22);
+  ctx.quadraticCurveTo(0, -s * 0.18, s * 0.10, -s * 0.22);
+  ctx.stroke();
+
+  // Teeth (gritted)
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-s * 0.08, -s * 0.225, s * 0.16, s * 0.035);
+
+  // Short spiky hair
+  ctx.fillStyle = '#3a1800';
+  for (let sp = 0; sp < 5; sp++) {
+    const sx = -s * 0.18 + sp * s * 0.09;
+    ctx.beginPath();
+    ctx.moveTo(sx - s * 0.04, -s * 0.53);
+    ctx.lineTo(sx, -s * 0.62);
+    ctx.lineTo(sx + s * 0.04, -s * 0.53);
+    ctx.closePath(); ctx.fill();
+  }
+
+  ctx.textAlign = 'left';
   ctx.restore();
 }
 

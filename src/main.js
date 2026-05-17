@@ -4,7 +4,8 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerMaxHealth, getPlayerBounds, damagePlayer, growPlayer, healPlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerMaxHealth, getPlayerBounds, damagePlayer, growPlayer, healPlayer, activateMuscleMode } from './game/player.js';
+import { resetDilly, updateDilly, drawDilly, getDillyBounds, isDillyAlive, squishDilly } from './game/dilly.js';
 import { resetDonuts, updateDonuts, drawDonuts, getDonuts, eatDonut, isExploding, explodeDone, drawDonutExplosion } from './game/donuts.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, getFireballs, removeFireball, drawFireballs } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
@@ -101,6 +102,7 @@ function gameLoop(now) {
         resetDonuts(now);
         resetFebreze(now);
         resetDeathStar();
+        resetDilly(width, height);
         resetPowerup(now, width, height);
         deathAnimStart = -1;
         deathParticles = [];
@@ -143,6 +145,16 @@ function gameLoop(now) {
       updateCube(dt, getPlayerPos());
       updateFebreze(now);
       updatePowerup(getPlayerBounds(), now);
+      updateDilly(dt, now, width, height);
+
+      // Step on Dilly → muscle transformation
+      if (isDillyAlive()) {
+        const db = getDillyBounds();
+        if (db && aabb(getPlayerBounds(), db)) {
+          squishDilly();
+          activateMuscleMode();
+        }
+      }
       updateDeathStar(dt, now, getPlayerPos(), width, height);
       updateDonuts(now, width, height);
 
@@ -283,6 +295,7 @@ function gameLoop(now) {
       drawHammer(ctx, width, height, now);
       drawCube(ctx, now);
       drawDeathStar(ctx, now);
+      drawDilly(ctx, now);
       drawDonuts(ctx, now);
       drawFireballs(ctx, now);
       drawPowerup(ctx, now);
