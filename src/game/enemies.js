@@ -6,6 +6,8 @@ import { getGameProgress } from './gameState.js';
 let enemies = [];
 let lastSpawnTime = 0;
 
+const LEGO_COLORS = ['#cc2200','#0055bf','#f5c400','#237a22','#ff7000','#ffffff','#9c0093'];
+
 export function resetEnemies() {
   enemies = [];
   lastSpawnTime = 0;
@@ -22,10 +24,9 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  const LEGO_COLORS = ['#cc2200','#0055bf','#f5c400','#237a22','#ff7000','#ffffff','#9c0093'];
-  const color = LEGO_COLORS[Math.floor(Math.random() * LEGO_COLORS.length)];
-  const dark  = color === '#ffffff' ? '#aaaaaa' : blendDark(color);
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, color, dark });
+  // Each enemy is a 2x2 cluster of mini LEGO bricks, each with its own color
+  const colors = Array.from({ length: 4 }, () => LEGO_COLORS[Math.floor(Math.random() * LEGO_COLORS.length)]);
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, colors });
 }
 
 function getCurrentSpawnInterval() {
@@ -55,43 +56,45 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
   }
 }
 
-export function drawEnemies(ctx) {
-  for (const enemy of enemies) {
-    drawBrick(ctx, enemy);
-  }
-}
-
 function blendDark(hex) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
   return `rgb(${Math.round(r*0.6)},${Math.round(g*0.6)},${Math.round(b*0.6)})`;
 }
 
-function drawBrick(ctx, e) {
-  const { x, y, w, h, color, dark } = e;
+function drawMiniBrick(ctx, x, y, w, h, color) {
+  const dark = color === '#ffffff' ? '#aaaaaa' : blendDark(color);
   const bx = Math.round(x), by = Math.round(y);
 
-  // Brick body
   ctx.fillStyle = color;
   ctx.fillRect(bx, by, w, h);
-  // Top highlight
   ctx.fillStyle = 'rgba(255,255,255,0.22)';
-  ctx.fillRect(bx + 2, by + 2, w - 4, h * 0.35);
-  // Right + bottom shadow
+  ctx.fillRect(bx + 1, by + 1, w - 2, h * 0.35);
   ctx.fillStyle = dark;
-  ctx.fillRect(bx + w - 3, by + 2, 3, h - 2);
-  ctx.fillRect(bx + 2, by + h - 3, w - 2, 3);
+  ctx.fillRect(bx + w - 2, by + 1, 2, h - 1);
+  ctx.fillRect(bx + 1, by + h - 2, w - 1, 2);
 
-  // Two studs
-  const sr = w * 0.17;
+  // One stud per mini-brick
+  const sr = w * 0.18;
+  const sx = bx + w / 2;
   const sy = by + h * 0.38;
-  for (let i = 0; i < 2; i++) {
-    const sx = bx + w * (0.29 + i * 0.42);
-    ctx.fillStyle = dark;
-    ctx.beginPath(); ctx.arc(sx + 1, sy + 1, sr, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.beginPath(); ctx.arc(sx - sr * 0.3, sy - sr * 0.3, sr * 0.42, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.beginPath(); ctx.arc(sx + 1, sy + 1, sr, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.beginPath(); ctx.arc(sx - sr * 0.3, sy - sr * 0.3, sr * 0.42, 0, Math.PI * 2); ctx.fill();
+}
+
+export function drawEnemies(ctx) {
+  const gap = 1;
+  const half = CONFIG.enemySize / 2 - gap / 2;
+
+  for (const enemy of enemies) {
+    const { x, y, colors } = enemy;
+    drawMiniBrick(ctx, x,              y,              half, half, colors[0]);
+    drawMiniBrick(ctx, x + half + gap, y,              half, half, colors[1]);
+    drawMiniBrick(ctx, x,              y + half + gap, half, half, colors[2]);
+    drawMiniBrick(ctx, x + half + gap, y + half + gap, half, half, colors[3]);
   }
 }
 
