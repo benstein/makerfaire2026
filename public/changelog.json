@@ -1,4 +1,5 @@
 [
   { "version": 1, "name": "Baseline", "description": "Initial game" },
-  { "version": 2, "name": "Liam", "description": "Night sky! 180 twinkling stars fill the darkness. Every second or two, a random rainbow lightning bolt cracks down from the top — jagged, glowing, screen-flashing. Totally safe. Totally awesome." }
+  { "version": 2, "name": "Liam", "description": "Night sky! 180 twinkling stars fill the darkness. Every second or two, a random rainbow lightning bolt cracks down from the top — jagged, glowing, screen-flashing. Totally safe. Totally awesome." },
+  { "version": 3, "name": "Bennet", "description": "A GIANT CUBE slowly marches in — 1000 HP, glowing 3-D body with a green-to-red health bar. The Maker now has RAPID FIRE (4x faster bullets, faster too)!" }
 ]

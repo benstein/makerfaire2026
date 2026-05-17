@@ -10,6 +10,7 @@ import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectil
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { resetLightning, updateLightning, drawLightning } from './game/lightning.js';
+import { resetCube, updateCube, drawCube, getCube, isCubeAlive, damageCube } from './game/cube.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -62,6 +63,7 @@ function gameLoop(now) {
         resetEnemies();
         resetWeapons();
         resetLightning(now);
+        resetCube(width, height);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -80,9 +82,23 @@ function gameLoop(now) {
       }
       updateProjectiles(dt, width, height);
       updateLightning(now, width, height);
+      updateCube(dt, getPlayerPos());
 
-      // Projectile-enemy collisions
+      // Projectile collisions
       const projList = getProjectiles();
+
+      // vs cube
+      if (isCubeAlive()) {
+        for (let i = projList.length - 1; i >= 0; i--) {
+          if (aabb(projList[i], getCube())) {
+            removeProjectile(i);
+            damageCube();
+            break;
+          }
+        }
+      }
+
+      // vs regular enemies
       const enemyList = getEnemies();
       for (let i = projList.length - 1; i >= 0; i--) {
         for (let j = enemyList.length - 1; j >= 0; j--) {
@@ -92,6 +108,11 @@ function gameLoop(now) {
             break;
           }
         }
+      }
+
+      // Cube-player collision
+      if (isCubeAlive() && aabb(getPlayerBounds(), getCube())) {
+        if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
       }
 
       // Enemy-player collisions
@@ -116,6 +137,7 @@ function gameLoop(now) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
       drawLightning(ctx, width, height, now);
+      drawCube(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);
