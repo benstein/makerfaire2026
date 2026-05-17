@@ -4,7 +4,7 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer, teleportPlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, getShieldBounds, damagePlayer, teleportPlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, drawEnemyBullets, getEnemies, getEnemyBullets, removeEnemy, removeEnemyBullet, damageEnemy } from './game/enemies.js';
 import { resetPanda, updatePanda, drawPanda } from './game/panda.js';
 import { resetTurtle, updateTurtle, drawTurtle, getTurtle, isTurtleAlive, damageTurtle, isBowserMode, transformToBowser, getFireballs, removeFireball } from './game/turtle.js';
@@ -178,12 +178,15 @@ function gameLoop(now) {
         }
       }
 
-      // Enemy bullet-player collisions
+      // Enemy bullet collisions — check shield first, then player
+      const shieldBounds = getShieldBounds();
       const eBullets = getEnemyBullets();
       for (let i = eBullets.length - 1; i >= 0; i--) {
         const b = eBullets[i];
         const bBounds = { x: b.x - 7, y: b.y - 7, w: 14, h: 14 };
-        if (aabb(playerBounds, bBounds)) {
+        if (aabb(shieldBounds, bBounds)) {
+          removeEnemyBullet(i); // blocked by shield — no damage!
+        } else if (aabb(playerBounds, bBounds)) {
           removeEnemyBullet(i);
           if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
         }

@@ -42,10 +42,33 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   y = Math.max(half, Math.min(arenaHeight - half, y));
 }
 
+// Shield dimensions (oversized!)
+const SHIELD_W        = 54;
+const SHIELD_H        = 76;
+const SHIELD_LEFT     = 32;  // distance to left of facing
+const SHIELD_FORWARD  = 8;   // distance forward
+
+function shieldCenter() {
+  // Left direction = rotate facing 90° clockwise: (facingY, -facingX)
+  return {
+    cx: x + facingY * SHIELD_LEFT  + facingX * SHIELD_FORWARD,
+    cy: y - facingX * SHIELD_LEFT  + facingY * SHIELD_FORWARD,
+  };
+}
+
+export function getShieldBounds() {
+  const { cx, cy } = shieldCenter();
+  const r = Math.max(SHIELD_W, SHIELD_H) / 2;
+  return { x: cx - r, y: cy - r, w: r * 2, h: r * 2 };
+}
+
 export function drawPlayer(ctx, now) {
   if (now < invincibleUntil) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
+
+  // Draw shield behind player (always, even in Mario mode — knights are universal)
+  drawShield(ctx, now);
 
   if (isMarioMode()) {
     drawMario(ctx);
@@ -55,6 +78,84 @@ export function drawPlayer(ctx, now) {
   const half = CONFIG.playerSize / 2;
   ctx.fillStyle = CONFIG.playerColor;
   ctx.fillRect(x - half, y - half, CONFIG.playerSize, CONFIG.playerSize);
+}
+
+function drawShield(ctx, now) {
+  const { cx, cy } = shieldCenter();
+  const angle = Math.atan2(facingY, facingX) + Math.PI / 2;
+  const sw = SHIELD_W / 2, sh = SHIELD_H / 2;
+
+  ctx.save();
+  ctx.translate(Math.round(cx), Math.round(cy));
+  ctx.rotate(angle);
+
+  // Helper: heater shield path
+  function heaterPath(inset = 0) {
+    const w = sw - inset, h = sh - inset;
+    ctx.beginPath();
+    ctx.moveTo(-w, -h);
+    ctx.lineTo( w, -h);
+    ctx.lineTo( w,  h * 0.15);
+    ctx.bezierCurveTo( w, h * 0.65,  w * 0.25, h, 0, h);
+    ctx.bezierCurveTo(-w * 0.25, h, -w, h * 0.65, -w, h * 0.15);
+    ctx.closePath();
+  }
+
+  // Drop shadow
+  ctx.save();
+  ctx.translate(4, 5);
+  ctx.globalAlpha = 0.28;
+  ctx.fillStyle = '#000';
+  heaterPath();
+  ctx.fill();
+  ctx.restore();
+
+  // Red field
+  ctx.fillStyle = '#b71c1c';
+  heaterPath();
+  ctx.fill();
+
+  // Clip heraldry to shield shape
+  ctx.save();
+  heaterPath();
+  ctx.clip();
+
+  // Gold cross
+  ctx.fillStyle = '#ffc107';
+  ctx.fillRect(-sw, -sh * 0.14, sw * 2, sh * 0.28); // horizontal bar
+  ctx.fillRect(-sw * 0.22, -sh, sw * 0.44, sh * 2); // vertical bar
+
+  // Quarter highlights (alternating lighter red/gold tones)
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-sw, -sh, sw, sh * 0.15);
+  ctx.fillRect(0,   -sh, sw, sh * 0.15);
+  ctx.globalAlpha = 1;
+
+  ctx.restore(); // end clip
+
+  // Gold border
+  ctx.strokeStyle = '#ffc107';
+  ctx.lineWidth = 4;
+  ctx.lineJoin = 'round';
+  heaterPath(2);
+  ctx.stroke();
+
+  // Outer dark edge
+  ctx.strokeStyle = '#5a3000';
+  ctx.lineWidth = 1.5;
+  heaterPath();
+  ctx.stroke();
+
+  // Center boss (metal knob)
+  ctx.fillStyle = '#ffc107';
+  ctx.beginPath(); ctx.arc(0, sh * 0.05, sw * 0.18, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#8a6000'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(0, sh * 0.05, sw * 0.18, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = '#ffe082';
+  ctx.beginPath(); ctx.arc(-sw * 0.05, sh * 0.02, sw * 0.08, 0, Math.PI * 2); ctx.fill();
+
+  ctx.restore();
 }
 
 function drawMario(ctx) {
