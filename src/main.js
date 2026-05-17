@@ -10,6 +10,7 @@ import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectil
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { resetLava, updateLava, drawLava, getLavaBounds } from './game/lava.js';
+import { resetDisco, updateDisco, drawDisco } from './game/disco.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -62,6 +63,7 @@ function gameLoop(now) {
         resetEnemies();
         resetWeapons();
         resetLava();
+        resetDisco(now);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -80,6 +82,7 @@ function gameLoop(now) {
       }
       updateProjectiles(dt, width, height);
       updateLava(width);
+      updateDisco(now);
 
       // Lava — instant death, no invincibility
       if (getPlayerHealth() > 0 && aabb(getPlayerBounds(), getLavaBounds(width, height))) {
@@ -121,6 +124,7 @@ function gameLoop(now) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
       drawLava(ctx, width, height, now);
+      drawDisco(ctx, width, height, now);
       drawGooTrails(ctx);
       drawPlayer(ctx, now);
       drawEnemies(ctx);

@@ -2,6 +2,7 @@
 
 import { CONFIG } from './config.js';
 import { getGameProgress } from './gameState.js';
+import { isDiscoActive } from './disco.js';
 
 // Three generations: big → medium → small → gone
 const SIZES  = [52, 30, 16];
@@ -56,9 +57,16 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
 
     if (dist > 0) {
       const scale = dt / 16.67;
-      const spd = CONFIG.enemySpeed * SPEEDS[enemy.generation ?? 0];
-      enemy.x += (dx / dist) * spd * scale;
-      enemy.y += (dy / dist) * spd * scale;
+      if (isDiscoActive()) {
+        // DANCE! Shimmy in place instead of chasing
+        const t2 = now / 1000;
+        enemy.x += Math.sin(t2 * 9 + (enemy.hue || 0) * 0.1) * 2.2 * scale;
+        enemy.y += Math.cos(t2 * 7 + (enemy.hue || 0) * 0.2) * 1.8 * scale;
+      } else {
+        const spd = CONFIG.enemySpeed * SPEEDS[enemy.generation ?? 0];
+        enemy.x += (dx / dist) * spd * scale;
+        enemy.y += (dy / dist) * spd * scale;
+      }
 
       // Drop goo trail
       if (!enemy.lastGooTime || now - enemy.lastGooTime > GOO_INTERVAL) {
