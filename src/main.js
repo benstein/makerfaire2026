@@ -4,7 +4,8 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, setPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerMaxHealth, getPlayerBounds, damagePlayer, growPlayer, healPlayer } from './game/player.js';
+import { resetDonuts, updateDonuts, drawDonuts, getDonuts, eatDonut, isExploding, explodeDone, drawDonutExplosion } from './game/donuts.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, getFireballs, removeFireball, drawFireballs } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
@@ -70,6 +71,7 @@ function gameLoop(now) {
         resetHammer(now);
         resetAd(now);
         resetPortals(width, height);
+        resetDonuts(now);
         resetVictoryEffects();
       } else if (input.start) {
         goToTitle();
@@ -107,6 +109,24 @@ function gameLoop(now) {
       updateProjectiles(dt, width, height);
       updateLightning(now, width, height);
       updateCube(dt, getPlayerPos());
+      updateDonuts(now, width, height);
+
+      // Donut-player collisions
+      if (!isExploding()) {
+        const donutList = getDonuts();
+        const pb = getPlayerBounds();
+        for (let i = donutList.length - 1; i >= 0; i--) {
+          const d = donutList[i];
+          const dist = Math.hypot(pb.x + pb.w / 2 - d.x, pb.y + pb.h / 2 - d.y);
+          if (dist < d.r + pb.w / 2) {
+            const count = eatDonut(i, now);
+            if (count < 5) { growPlayer(); healPlayer(1); }
+          }
+        }
+      }
+
+      // Donut explosion — draw and then game over
+      if (explodeDone(now)) endGame(false);
 
       // Projectile collisions
       const projList = getProjectiles();
@@ -185,11 +205,13 @@ function gameLoop(now) {
       drawPortals(ctx, width, height, now);
       drawHammer(ctx, width, height, now);
       drawCube(ctx, now);
+      drawDonuts(ctx, now);
       drawFireballs(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx, now);
       drawProjectiles(ctx);
-      drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
+      drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width, getPlayerMaxHealth());
+      if (isExploding()) drawDonutExplosion(ctx, ...Object.values(getPlayerPos()), width, height, now);
       drawAd(ctx, width, height, now);
       drawTicker(now);
     } else if (state === STATES.VICTORY) {

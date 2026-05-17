@@ -6,16 +6,31 @@ let x, y;
 let facingX = 0;
 let facingY = -1; // default facing up
 let health;
+let maxHealth;
+let sizeBonus = 0;
 let invincibleUntil = 0;
+
+function effectiveSize() { return CONFIG.playerSize + sizeBonus; }
 
 export function resetPlayer(arenaWidth, arenaHeight) {
   x = arenaWidth / 2;
   y = arenaHeight / 2;
   facingX = 0;
   facingY = -1;
-  health = CONFIG.playerMaxHealth;
+  maxHealth = CONFIG.playerMaxHealth;
+  health = maxHealth;
+  sizeBonus = 0;
   invincibleUntil = 0;
 }
+
+export function growPlayer() { sizeBonus += 8; }
+
+export function healPlayer(amount) {
+  maxHealth += amount;
+  health += amount;
+}
+
+export function getPlayerMaxHealth() { return maxHealth; }
 
 export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   const scale = dt / 16.67;
@@ -36,7 +51,7 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
     facingY = input.stickY / mag;
   }
 
-  const half = CONFIG.playerSize / 2;
+  const half = effectiveSize() / 2;
   x = Math.max(half, Math.min(arenaWidth - half, x));
   y = Math.max(half, Math.min(arenaHeight - half, y));
 }
@@ -46,9 +61,10 @@ export function drawPlayer(ctx, now) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
 
-  const half = CONFIG.playerSize / 2;
+  const sz   = effectiveSize();
+  const half = sz / 2;
   ctx.fillStyle = CONFIG.playerColor;
-  ctx.fillRect(x - half, y - half, CONFIG.playerSize, CONFIG.playerSize);
+  ctx.fillRect(x - half, y - half, sz, sz);
 }
 
 export function getPlayerPos() {
@@ -69,8 +85,9 @@ export function getPlayerHealth() {
 }
 
 export function getPlayerBounds() {
-  const half = CONFIG.playerSize / 2;
-  return { x: x - half, y: y - half, w: CONFIG.playerSize, h: CONFIG.playerSize };
+  const sz   = effectiveSize();
+  const half = sz / 2;
+  return { x: x - half, y: y - half, w: sz, h: sz };
 }
 
 export function isPlayerInvincible(now) {
