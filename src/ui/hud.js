@@ -20,6 +20,11 @@ export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
     drawHeart(ctx, hx + heartSize / 2, hy + heartSize / 2, heartSize * 0.5);
   }
 
+  // Timer (top-right)
+  ctx.fillStyle = CONFIG.timerColor;
+  ctx.font = `bold ${CONFIG.hudFontSize}px monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText(`${Math.ceil(timeRemaining)}s`, canvasWidth - padding, padding + CONFIG.hudFontSize);
   ctx.textAlign = 'left'; // reset
 }
 

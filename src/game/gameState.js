@@ -6,10 +6,8 @@ import { CONFIG } from './config.js';
 export const STATES = {
   TITLE: 'title',
   PLAYING: 'playing',
-  BOSS_FIGHT: 'boss_fight',
   VICTORY: 'victory',
   GAMEOVER: 'gameover',
-  BUILDING: 'building',
 };
 
 let currentState = STATES.TITLE;
@@ -48,16 +46,12 @@ export function goToTitle() {
   elapsedMs = 0;
 }
 
-export function goToBuilding() {
-  currentState = STATES.BUILDING;
-}
-
 export function updateTimer(dt) {
   if (currentState !== STATES.PLAYING) return;
   elapsedMs += dt;
-  // No time limit — boss spawns when all bears are penned
-}
-
-export function startBossFight() {
-  currentState = STATES.BOSS_FIGHT;
+  timeRemaining -= dt / 1000;
+  if (timeRemaining <= 0) {
+    timeRemaining = 0;
+    endGame(true);
+  }
 }

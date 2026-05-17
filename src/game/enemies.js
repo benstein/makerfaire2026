@@ -3,8 +3,6 @@
 import { CONFIG } from './config.js';
 import { getGameProgress } from './gameState.js';
 
-const CARTWHEEL_DURATION = 700;
-
 let enemies = [];
 let lastSpawnTime = 0;
 
@@ -24,7 +22,7 @@ export function spawnEnemy(arenaWidth, arenaHeight) {
     case 3: ex = -CONFIG.enemySize; ey = Math.random() * arenaHeight; break;
   }
 
-  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize, cartwheelUntil: 0 });
+  enemies.push({ x: ex, y: ey, w: CONFIG.enemySize, h: CONFIG.enemySize });
 }
 
 function getCurrentSpawnInterval() {
@@ -54,54 +52,12 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
   }
 }
 
-function drawBear(ctx, cx, cy, size) {
-  const r = size / 2;
-
-  // Ears
-  ctx.fillStyle = '#6B3A2A';
-  ctx.beginPath(); ctx.arc(cx - r * 0.6, cy - r * 0.75, r * 0.38, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + r * 0.6, cy - r * 0.75, r * 0.38, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#C47A5A';
-  ctx.beginPath(); ctx.arc(cx - r * 0.6, cy - r * 0.75, r * 0.2, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + r * 0.6, cy - r * 0.75, r * 0.2, 0, Math.PI * 2); ctx.fill();
-
-  // Body
-  ctx.fillStyle = '#8B4513';
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-
-  // Snout
-  ctx.fillStyle = '#C47A5A';
-  ctx.beginPath(); ctx.ellipse(cx, cy + r * 0.25, r * 0.38, r * 0.28, 0, 0, Math.PI * 2); ctx.fill();
-
-  // Nose
-  ctx.fillStyle = '#1a0a00';
-  ctx.beginPath(); ctx.ellipse(cx, cy + r * 0.12, r * 0.14, r * 0.1, 0, 0, Math.PI * 2); ctx.fill();
-
-  // Eyes
-  ctx.fillStyle = '#1a0a00';
-  ctx.beginPath(); ctx.arc(cx - r * 0.32, cy - r * 0.12, r * 0.1, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + r * 0.32, cy - r * 0.12, r * 0.1, 0, Math.PI * 2); ctx.fill();
-}
-
-export function drawEnemies(ctx, now) {
-  const t = now ?? performance.now();
+export function drawEnemies(ctx) {
+  ctx.fillStyle = CONFIG.enemyColor;
   for (const enemy of enemies) {
-    const cx = enemy.x + enemy.w / 2;
-    const cy = enemy.y + enemy.h / 2;
-    const spinning = enemy.cartwheelUntil && t < enemy.cartwheelUntil;
-    if (spinning) {
-      const progress = (t - (enemy.cartwheelUntil - CARTWHEEL_DURATION)) / CARTWHEEL_DURATION;
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(progress * Math.PI * 2);
-      ctx.translate(-cx, -cy);
-    }
-    drawBear(ctx, cx, cy, enemy.w);
-    if (spinning) ctx.restore();
+    ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
   }
 }
-
-export { drawBear };
 
 export function getEnemies() {
   return enemies;
@@ -109,17 +65,4 @@ export function getEnemies() {
 
 export function removeEnemy(index) {
   enemies.splice(index, 1);
-}
-
-export function triggerBearCartwheel(playerPos, now) {
-  for (const e of enemies) {
-    const cx = e.x + e.w / 2;
-    const cy = e.y + e.h / 2;
-    const dx = playerPos.x - cx;
-    const dy = playerPos.y - cy;
-    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    e.x += (dx / dist) * 65;
-    e.y += (dy / dist) * 65;
-    e.cartwheelUntil = now + CARTWHEEL_DURATION;
-  }
 }

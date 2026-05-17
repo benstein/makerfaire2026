@@ -10,8 +10,8 @@ export function resetWeapons() {
   lastFireTime = 0;
 }
 
-export function tryFire(playerPos, facing, now, cooldownMultiplier = 1) {
-  if (now - lastFireTime < CONFIG.fireRateCooldown * cooldownMultiplier) return;
+export function tryFire(playerPos, facing, now) {
+  if (now - lastFireTime < CONFIG.fireRateCooldown) return;
   lastFireTime = now;
 
   projectiles.push({

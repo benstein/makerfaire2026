@@ -6,29 +6,29 @@ export const CONFIG = {
   // Player
   playerSpeed: 4,
   playerSize: 28,
-  playerColor: '#2c3e50',
+  playerColor: '#ffffff',
   playerMaxHealth: 3,
   invincibilityDuration: 1000, // ms
 
   // Enemies
-  enemySpeed: 0.9,
-  enemySize: 110,
+  enemySpeed: 2,
+  enemySize: 22,
   enemyColor: '#e74c3c',
   enemySpawnIntervalStart: 2000, // ms at game start
   enemySpawnIntervalEnd: 400,    // ms at game end (ramps down)
 
   // Weapons
   projectileSpeed: 7,
-  projectileSize: 14,
-  projectileColor: '#1f3a5f',
-  fireRateCooldown: 500, // ms between shots
+  projectileSize: 6,
+  projectileColor: '#ffffff',
+  fireRateCooldown: 250, // ms between shots
 
   // Game
-  gameDuration: 15, // seconds
-  arenaBackground: '#eaf2f8',
+  gameDuration: 60, // seconds
+  arenaBackground: '#1a1a2e',
 
   // HUD
   heartColor: '#e74c3c',
-  timerColor: '#d35400',
-  hudFontSize: 56,
+  timerColor: '#f1c40f',
+  hudFontSize: 24,
 };
