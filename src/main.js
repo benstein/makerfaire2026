@@ -5,7 +5,7 @@ import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
 import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
-import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
+import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy, getFireballs, removeFireball, drawFireballs } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
 import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
@@ -128,6 +128,15 @@ function gameLoop(now) {
           }
         }
       }
+
+      // Fireball-player collisions
+      const fbs = getFireballs();
+      for (let i = fbs.length - 1; i >= 0; i--) {
+        if (aabb(playerBounds, fbs[i])) {
+          removeFireball(i);
+          if (damagePlayer(now) && getPlayerHealth() <= 0) endGame(false);
+        }
+      }
     }
 
     // --- Render ---
@@ -138,6 +147,7 @@ function gameLoop(now) {
     } else if (state === STATES.PLAYING) {
       drawLightning(ctx, width, height, now);
       drawCube(ctx, now);
+      drawFireballs(ctx, now);
       drawPlayer(ctx, now);
       drawEnemies(ctx);
       drawProjectiles(ctx);
