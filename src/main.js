@@ -102,7 +102,7 @@ function gameLoop(now) {
     }
 
     // --- Render ---
-    clearCanvas();
+    clearCanvas(now);
 
     if (state === STATES.TITLE) {
       drawTitleScreen();
