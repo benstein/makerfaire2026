@@ -9,10 +9,15 @@ const SPEEDS = [1.0, 1.4, 1.9]; // smaller pieces move faster
 
 let enemies = [];
 let lastSpawnTime = 0;
+let gooDrops = [];
+
+const GOO_INTERVAL = 120; // ms between drops per enemy
+const GOO_MAX_AGE  = 3200; // ms until fully faded
 
 export function resetEnemies() {
   enemies = [];
   lastSpawnTime = 0;
+  gooDrops = [];
 }
 
 export function spawnEnemy(arenaWidth, arenaHeight) {
@@ -54,7 +59,69 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
       const spd = CONFIG.enemySpeed * SPEEDS[enemy.generation ?? 0];
       enemy.x += (dx / dist) * spd * scale;
       enemy.y += (dy / dist) * spd * scale;
+
+      // Drop goo trail
+      if (!enemy.lastGooTime || now - enemy.lastGooTime > GOO_INTERVAL) {
+        gooDrops.push({
+          x: enemy.x + enemy.w / 2,
+          y: enemy.y + enemy.h / 2,
+          r: (enemy.w / 2) * (0.55 + Math.random() * 0.3),
+          hue: (enemy.hue ?? 0),
+          born: now,
+        });
+        enemy.lastGooTime = now;
+      }
     }
+  }
+
+  // Cull expired goo drops
+  for (let i = gooDrops.length - 1; i >= 0; i--) {
+    if (now - gooDrops[i].born > GOO_MAX_AGE) gooDrops.splice(i, 1);
+  }
+}
+
+export function drawGooTrails(ctx) {
+  const now = performance.now();
+  for (const g of gooDrops) {
+    const age    = now - g.born;
+    const life   = 1 - age / GOO_MAX_AGE;      // 1 → 0
+    const alpha  = life * 0.72;
+    const scale  = 0.55 + life * 0.45;          // shrinks as it fades
+    const hue    = (g.hue + 80) % 360;          // shift toward green/yellow for slimey look
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // Wobbly blob shape (irregular ellipse)
+    const rx = g.r * scale * (1 + Math.sin(g.born * 0.007) * 0.18);
+    const ry = g.r * scale * (0.55 + Math.cos(g.born * 0.009) * 0.15);
+
+    // Outer glow
+    const glow = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, rx * 1.6);
+    glow.addColorStop(0,   `hsla(${hue}, 95%, 55%, 0.35)`);
+    glow.addColorStop(1,   `hsla(${hue}, 95%, 45%, 0)`);
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(g.x, g.y, rx * 1.6, ry * 1.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Main puddle
+    const grad = ctx.createRadialGradient(g.x - rx * 0.2, g.y - ry * 0.2, 0, g.x, g.y, rx);
+    grad.addColorStop(0,   `hsl(${hue}, 90%, 72%)`);
+    grad.addColorStop(0.6, `hsl(${hue}, 88%, 48%)`);
+    grad.addColorStop(1,   `hsl(${hue}, 80%, 28%)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(g.x, g.y, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Shiny specular highlight
+    ctx.fillStyle = `hsla(${hue}, 100%, 90%, 0.55)`;
+    ctx.beginPath();
+    ctx.ellipse(g.x - rx * 0.28, g.y - ry * 0.28, rx * 0.22, ry * 0.18, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
   }
 }
 

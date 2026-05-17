@@ -11,7 +11,7 @@ export const CONFIG = {
   invincibilityDuration: 1000, // ms
 
   // Enemies
-  enemySpeed: 2,
+  enemySpeed: 0.9,
   enemySize: 22,
   enemyColor: '#e74c3c',
   enemySpawnIntervalStart: 2000, // ms at game start
