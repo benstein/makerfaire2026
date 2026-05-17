@@ -2,5 +2,6 @@
   { "version": 1, "name": "Baseline", "description": "Initial game" },
   { "version": 2, "name": "Gabi", "description": "The Maker is now hot pink" },
   { "version": 3, "name": "Zeke", "description": "The mob is now giant and deep blue" },
-  { "version": 4, "name": "Ben", "description": "The whole arena is a slowly shifting rainbow" }
+  { "version": 4, "name": "Ben", "description": "The whole arena is a slowly shifting rainbow" },
+  { "version": 5, "name": "Zeke", "description": "At 40 seconds left, all enemies vanish and 100 giant orange triangles invade from every edge!" }
 ]
