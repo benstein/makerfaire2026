@@ -8,7 +8,7 @@ import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, g
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
-import { initRendering, getCanvasSize, clearCanvas, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
+import { initRendering, getCanvasSize, clearCanvas, drawFloor3D, drawTitleScreen, drawVictoryScreen, drawGameOverScreen, resetVictoryEffects } from './game/rendering.js';
 import { drawHUD } from './ui/hud.js';
 import { loadChangelog } from './ui/changelog.js';
 import { initBuildStatus, getBuildData } from './ui/buildStatus.js';
@@ -112,9 +112,10 @@ function gameLoop(now) {
     if (state === STATES.TITLE) {
       drawTitleScreen();
     } else if (state === STATES.PLAYING) {
-      drawPlayer(ctx, now);
-      drawEnemies(ctx);
-      drawProjectiles(ctx);
+      drawFloor3D(ctx, width, height);
+      drawEnemies(ctx, width, height);
+      drawProjectiles(ctx, width, height);
+      drawPlayer(ctx, now, width, height);
       drawHUD(ctx, getPlayerHealth(), getTimeRemaining(), width);
     } else if (state === STATES.VICTORY) {
       drawVictoryScreen();

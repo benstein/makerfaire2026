@@ -1,3 +1,4 @@
 [
-  { "version": 1, "name": "Baseline", "description": "Initial game" }
+  { "version": 1, "name": "Baseline", "description": "Initial game" },
+  { "version": 2, "name": "Zeke", "description": "Everything is 3D! A perspective floor with a vanishing point. Move forward = go deep into the screen (smaller). Move back = come toward you (bigger). Enemies and bullets all scale with depth!" }
 ]

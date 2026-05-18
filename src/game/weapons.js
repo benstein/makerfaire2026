@@ -1,6 +1,7 @@
 // src/game/weapons.js
 
 import { CONFIG } from './config.js';
+import { project3D } from './rendering.js';
 
 let projectiles = [];
 let lastFireTime = 0;
@@ -37,11 +38,13 @@ export function updateProjectiles(dt, arenaWidth, arenaHeight) {
   }
 }
 
-export function drawProjectiles(ctx) {
+export function drawProjectiles(ctx, canvasW, canvasH) {
   ctx.fillStyle = CONFIG.projectileColor;
   for (const p of projectiles) {
+    const { x: sx, y: sy, scale } = project3D(p.x + p.w / 2, p.y + p.h / 2, canvasW, canvasH);
+    const r = (p.w / 2) * scale;
     ctx.beginPath();
-    ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
     ctx.fill();
   }
 }

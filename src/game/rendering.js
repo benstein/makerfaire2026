@@ -4,6 +4,68 @@ import { CONFIG } from './config.js';
 
 let canvas, ctx;
 
+// ─── 3D perspective projection ───────────────────────────────────────────────
+// World coords: x = left/right (0..canvasW), y = depth (0=far, canvasH=near)
+// Stick Y up   → y decreases → moves INTO screen (far) → looks smaller, higher
+// Stick Y down → y increases → moves TOWARD camera (near) → looks larger, lower
+
+export function project3D(worldX, worldY, canvasW, canvasH) {
+  const HORIZON = canvasH * 0.18;          // where the far edge of the floor appears
+  const t       = worldY / canvasH;        // 0 = far/top, 1 = near/bottom
+  const screenY = HORIZON + (canvasH - HORIZON) * t;
+  const pScale  = 0.18 + t * 0.82;        // 0.18× at far, 1.0× at near
+  const screenX = canvasW * 0.5 + (worldX - canvasW * 0.5) * pScale;
+  return { x: screenX, y: screenY, scale: pScale };
+}
+
+export function drawFloor3D(fctx, canvasW, canvasH) {
+  const HORIZON = canvasH * 0.18;
+  const vpX = canvasW * 0.5;
+
+  // Sky gradient
+  const sky = fctx.createLinearGradient(0, 0, 0, HORIZON);
+  sky.addColorStop(0, '#1a2a4a');
+  sky.addColorStop(1, '#4a7ab5');
+  fctx.fillStyle = sky;
+  fctx.fillRect(0, 0, canvasW, HORIZON);
+
+  // Floor gradient
+  const floor = fctx.createLinearGradient(0, HORIZON, 0, canvasH);
+  floor.addColorStop(0, '#2a4a18');
+  floor.addColorStop(1, '#3d6e22');
+  fctx.fillStyle = floor;
+  fctx.fillRect(0, HORIZON, canvasW, canvasH - HORIZON);
+
+  // Horizon glow
+  fctx.strokeStyle = '#6ab04c';
+  fctx.lineWidth = 2;
+  fctx.beginPath(); fctx.moveTo(0, HORIZON); fctx.lineTo(canvasW, HORIZON); fctx.stroke();
+
+  // Converging vertical grid lines (give the "road" perspective feel)
+  fctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  fctx.lineWidth = 1;
+  const numV = 12;
+  for (let i = 0; i <= numV; i++) {
+    const bx = (i / numV) * canvasW;
+    fctx.beginPath();
+    fctx.moveTo(vpX, HORIZON);
+    fctx.lineTo(bx, canvasH);
+    fctx.stroke();
+  }
+
+  // Horizontal depth lines — exponentially spaced (near = wide, far = compressed)
+  fctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  const numH = 10;
+  for (let i = 1; i < numH; i++) {
+    // Exponential: lines bunch up near the horizon
+    const t2 = Math.pow(i / numH, 2.2);
+    const lineY = HORIZON + (canvasH - HORIZON) * t2;
+    fctx.beginPath();
+    fctx.moveTo(0, lineY); fctx.lineTo(canvasW, lineY);
+    fctx.stroke();
+  }
+}
+
 export function initRendering(canvasEl) {
   canvas = canvasEl;
   ctx = canvas.getContext('2d');

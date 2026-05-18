@@ -1,6 +1,7 @@
 // src/game/player.js
 
 import { CONFIG } from './config.js';
+import { project3D } from './rendering.js';
 
 let x, y;
 let facingX = 0;
@@ -41,14 +42,20 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   y = Math.max(half, Math.min(arenaHeight - half, y));
 }
 
-export function drawPlayer(ctx, now) {
+export function drawPlayer(ctx, now, canvasW, canvasH) {
   if (now < invincibleUntil) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
-
-  const half = CONFIG.playerSize / 2;
+  const { x: sx, y: sy, scale } = project3D(x, y, canvasW, canvasH);
+  const size = CONFIG.playerSize * scale;
+  // Shadow on the floor
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(sx, sy + size * 0.15, size * 0.42, size * 0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Player body
   ctx.fillStyle = CONFIG.playerColor;
-  ctx.fillRect(x - half, y - half, CONFIG.playerSize, CONFIG.playerSize);
+  ctx.fillRect(sx - size / 2, sy - size / 2, size, size);
 }
 
 export function getPlayerPos() {

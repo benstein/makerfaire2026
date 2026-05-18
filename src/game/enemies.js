@@ -2,6 +2,7 @@
 
 import { CONFIG } from './config.js';
 import { getGameProgress } from './gameState.js';
+import { project3D } from './rendering.js';
 
 let enemies = [];
 let lastSpawnTime = 0;
@@ -52,10 +53,22 @@ export function updateEnemies(dt, playerPos, now, arenaWidth, arenaHeight) {
   }
 }
 
-export function drawEnemies(ctx) {
-  ctx.fillStyle = CONFIG.enemyColor;
-  for (const enemy of enemies) {
-    ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+export function drawEnemies(ctx, canvasW, canvasH) {
+  // Painter's algorithm: draw far enemies (small y = far) before near ones
+  const sorted = [...enemies].sort((a, b) => a.y - b.y);
+  for (const enemy of sorted) {
+    const cx = enemy.x + enemy.w / 2;
+    const cy = enemy.y + enemy.h / 2;
+    const { x: sx, y: sy, scale } = project3D(cx, cy, canvasW, canvasH);
+    const size = enemy.w * scale;
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.beginPath();
+    ctx.ellipse(sx, sy + size * 0.18, size * 0.45, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Enemy body
+    ctx.fillStyle = CONFIG.enemyColor;
+    ctx.fillRect(sx - size / 2, sy - size / 2, size, size);
   }
 }
 
