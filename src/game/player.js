@@ -5,9 +5,14 @@ import { project3D } from './rendering.js';
 
 let x, y;
 let facingX = 0;
-let facingY = -1; // default facing up
+let facingY = -1;
 let health;
 let invincibleUntil = 0;
+let jumpZ  = 0;   // height above ground (world units)
+let jumpVZ = 0;   // vertical velocity (negative = rising)
+
+const JUMP_POWER = 16;  // initial upward speed
+const GRAVITY    = 0.9; // downward acceleration per frame
 
 export function resetPlayer(arenaWidth, arenaHeight) {
   x = arenaWidth / 2;
@@ -16,7 +21,11 @@ export function resetPlayer(arenaWidth, arenaHeight) {
   facingY = -1;
   health = CONFIG.playerMaxHealth;
   invincibleUntil = 0;
+  jumpZ  = 0;
+  jumpVZ = 0;
 }
+
+export function getPlayerJumpZ() { return jumpZ; }
 
 export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   const scale = dt / 16.67;
@@ -40,6 +49,12 @@ export function updatePlayer(dt, input, arenaWidth, arenaHeight, now) {
   const half = CONFIG.playerSize / 2;
   x = Math.max(half, Math.min(arenaWidth - half, x));
   y = Math.max(half, Math.min(arenaHeight - half, y));
+
+  // Jump
+  if (input.jump && jumpZ <= 0) jumpVZ = -JUMP_POWER;
+  jumpVZ += GRAVITY * scale;
+  jumpZ   = Math.max(0, jumpZ + jumpVZ * scale);
+  if (jumpZ <= 0 && jumpVZ > 0) jumpVZ = 0; // landed
 }
 
 export function drawPlayer(ctx, now, canvasW, canvasH) {
@@ -47,15 +62,21 @@ export function drawPlayer(ctx, now, canvasW, canvasH) {
     if (Math.floor(now / 80) % 2 === 0) return;
   }
   const { x: sx, y: sy, scale } = project3D(x, y, canvasW, canvasH);
-  const size = CONFIG.playerSize * scale;
-  // Shadow on the floor
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  const size      = CONFIG.playerSize * scale;
+  const liftPx    = jumpZ * scale * 2.2; // screen pixels to lift when jumping
+  const shadowFade = Math.max(0.05, 1 - jumpZ / 120);
+
+  // Ground shadow (shrinks and fades as player rises)
+  const shadowScale = shadowFade * 0.42;
+  ctx.fillStyle = `rgba(0,0,0,${shadowFade * 0.35})`;
   ctx.beginPath();
-  ctx.ellipse(sx, sy + size * 0.15, size * 0.42, size * 0.12, 0, 0, Math.PI * 2);
+  ctx.ellipse(sx, sy + size * 0.15, size * shadowScale, size * 0.12, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Player body
+
+  // Player body — lifted by jump
+  const drawY = sy - liftPx;
   ctx.fillStyle = CONFIG.playerColor;
-  ctx.fillRect(sx - size / 2, sy - size / 2, size, size);
+  ctx.fillRect(sx - size / 2, drawY - size / 2, size, size);
 }
 
 export function getPlayerPos() {

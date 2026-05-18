@@ -4,7 +4,7 @@
 import { CONFIG } from './game/config.js';
 import { pollInput, getInput } from './game/input.js';
 import { STATES, getState, getTimeRemaining, startGame, endGame, goToTitle, updateTimer } from './game/gameState.js';
-import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, damagePlayer } from './game/player.js';
+import { resetPlayer, updatePlayer, drawPlayer, getPlayerPos, getPlayerFacing, getPlayerHealth, getPlayerBounds, getPlayerJumpZ, damagePlayer } from './game/player.js';
 import { resetEnemies, updateEnemies, drawEnemies, getEnemies, removeEnemy } from './game/enemies.js';
 import { resetWeapons, tryFire, updateProjectiles, drawProjectiles, getProjectiles, removeProjectile } from './game/weapons.js';
 import { aabb } from './game/collision.js';
@@ -91,11 +91,12 @@ function gameLoop(now) {
         }
       }
 
-      // Enemy-player collisions
+      // Enemy-player collisions (skipped while player is airborne)
       const playerBounds = getPlayerBounds();
       const enemies = getEnemies();
+      const isAirborne = getPlayerJumpZ() > 8; // above ground = immune to enemy touch
       for (let i = enemies.length - 1; i >= 0; i--) {
-        if (aabb(playerBounds, enemies[i])) {
+        if (!isAirborne && aabb(playerBounds, enemies[i])) {
           if (damagePlayer(now)) {
             removeEnemy(i);
             if (getPlayerHealth() <= 0) {

@@ -9,10 +9,12 @@ const state = {
   start: false,
   fireHeld: false,
   startHeld: false,
+  jump: false,    // one-shot jump — gamepad X (button 2) or keyboard Z
 };
 
-let prevFire = false;
+let prevFire  = false;
 let prevStart = false;
+let prevJump  = false;
 
 const DEADZONE = 0.2;
 
@@ -31,8 +33,11 @@ export function pollInput() {
   const kbFire = keys[' '] || false;
   const kbStart = keys['Enter'] || false;
 
+  // Keyboard jump (Z key)
+  const kbJump = keys['z'] || keys['Z'] || false;
+
   // Gamepad
-  let gpX = 0, gpY = 0, gpFire = false, gpStart = false;
+  let gpX = 0, gpY = 0, gpFire = false, gpStart = false, gpJump = false;
   if (gp) {
     const rawX = gp.axes[0];
     const rawY = gp.axes[1];
@@ -40,8 +45,9 @@ export function pollInput() {
     const dpadY = (gp.buttons[13]?.pressed ? 1 : 0) - (gp.buttons[12]?.pressed ? 1 : 0);
     gpX = dpadX !== 0 ? dpadX : (Math.abs(rawX) > DEADZONE ? rawX : 0);
     gpY = dpadY !== 0 ? dpadY : (Math.abs(rawY) > DEADZONE ? rawY : 0);
-    gpFire = gp.buttons[0]?.pressed ?? false;
+    gpFire  = gp.buttons[0]?.pressed ?? false;
     gpStart = gp.buttons[9]?.pressed ?? false;
+    gpJump  = gp.buttons[2]?.pressed ?? false; // X button on Xbox
   }
 
   // Gamepad takes priority for stick; either source works for buttons
@@ -58,6 +64,10 @@ export function pollInput() {
   state.start = startNow && !prevStart;
   state.startHeld = startNow;
   prevStart = startNow;
+
+  const jumpNow = gpJump || kbJump;
+  state.jump = jumpNow && !prevJump;
+  prevJump = jumpNow;
 
   return state;
 }
