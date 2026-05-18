@@ -2,13 +2,13 @@
 
 import { CONFIG } from '../game/config.js';
 
-export function drawHUD(ctx, health, timeRemaining, canvasWidth, maxHealth = CONFIG.playerMaxHealth) {
+export function drawHUD(ctx, health, timeRemaining, canvasWidth) {
   const padding = 20;
 
   // Hearts (top-left) — sized and styled to match the timer
   const heartSize = Math.round(CONFIG.hudFontSize * 0.85);
   const heartGap  = Math.round(heartSize * 0.2);
-  for (let i = 0; i < maxHealth; i++) {
+  for (let i = 0; i < CONFIG.playerMaxHealth; i++) {
     const hx = padding + i * (heartSize + heartGap);
     const hy = padding;
     const r  = heartSize * 0.5;

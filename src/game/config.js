@@ -18,17 +18,17 @@ export const CONFIG = {
   enemySpawnIntervalEnd: 400,    // ms at game end (ramps down)
 
   // Weapons
-  projectileSpeed: 10,
+  projectileSpeed: 7,
   projectileSize: 6,
   projectileColor: '#1f3a5f',
-  fireRateCooldown: 55, // ms between shots — rapid fire!
+  fireRateCooldown: 250, // ms between shots
 
   // Game
   gameDuration: 60, // seconds
-  arenaBackground: '#05080f',
+  arenaBackground: '#eaf2f8',
 
   // HUD
-  heartColor: '#ff4466',
-  timerColor: '#ffcc44',
+  heartColor: '#e74c3c',
+  timerColor: '#d35400',
   hudFontSize: 56,
 };
